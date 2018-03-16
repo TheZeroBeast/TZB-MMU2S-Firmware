@@ -76,6 +76,24 @@ void tmc2130_wr_CHOPCONF(uint8_t axis, uint8_t toff, uint8_t hstrt, uint8_t hend
 	tmc2130_wr(axis, TMC2130_REG_CHOPCONF, val);
 }
 
+void tmc2130_wr_PWMCONF(uint8_t axis, uint8_t pwm_ampl, uint8_t pwm_grad, uint8_t pwm_freq, uint8_t pwm_auto, uint8_t pwm_symm, uint8_t freewheel)
+{
+	uint32_t val = 0;
+	val |= (uint32_t)(pwm_ampl & 255);
+	val |= (uint32_t)(pwm_grad & 255) << 8;
+	val |= (uint32_t)(pwm_freq & 3) << 16;
+	val |= (uint32_t)(pwm_auto & 1) << 18;
+	val |= (uint32_t)(pwm_symm & 1) << 19;
+	val |= (uint32_t)(freewheel & 3) << 20;
+	tmc2130_wr(axis, TMC2130_REG_PWMCONF, val);
+}
+
+void tmc2130_wr_TPWMTHRS(uint8_t axis, uint32_t val32)
+{
+	tmc2130_wr(axis, TMC2130_REG_TPWMTHRS, val32);
+}
+
+
 void tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_t current_r)
 {
 	uint8_t intpol = 1;
@@ -100,6 +118,15 @@ void tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_
 
 int8_t tmc2130_init_axis(uint8_t axis)
 {
+/* //silent mode
+	tmc2130_setup_chopper(axis, 7, 16, 16);
+	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
+	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));
+	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
+	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00000004);
+	tmc2130_wr_PWMCONF(axis, 150, 2, 2, 1, 0, 0);
+	tmc2130_wr_TPWMTHRS(axis, 0);
+*/
 	tmc2130_setup_chopper(axis, 7, 16, 16);
 	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));

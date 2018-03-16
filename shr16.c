@@ -47,8 +47,23 @@ void shr16_set_led(uint16_t led)
 
 void shr16_set_ena(uint8_t ena)
 {
+	ena ^= 7;
+	ena = ((ena & 1) << 1) | ((ena & 2) << 2) | ((ena & 4) << 3);
+	shr16_write((shr16_v & ~SHR16_ENA_MSK) | ena);
 }
 
 void shr16_set_dir(uint8_t dir)
 {
+	dir = (dir & 1) | ((dir & 2) << 1) | ((dir & 4) << 2);
+	shr16_write((shr16_v & ~SHR16_DIR_MSK) | dir);
+}
+
+uint8_t shr16_get_ena(void)
+{
+	return ((shr16_v & 2) >> 1) | ((shr16_v & 8) >> 2) | ((shr16_v & 0x20) >> 3);
+}
+
+uint8_t shr16_get_dir(void)
+{
+	return (shr16_v & 1) | ((shr16_v & 4) >> 1) | ((shr16_v & 0x10) >> 2);
 }

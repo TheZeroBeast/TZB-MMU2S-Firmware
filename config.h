@@ -22,16 +22,22 @@
 
 //Direction/Enable signals
 #define SHR16_DIR_0 0x0001
-#define SHR16_ENC_0 0x0002
+#define SHR16_ENA_0 0x0002
 #define SHR16_DIR_1 0x0004
-#define SHR16_ENC_1 0x0008
+#define SHR16_ENA_1 0x0008
 #define SHR16_DIR_2 0x0010
-#define SHR16_ENC_2 0x0020
+#define SHR16_ENA_2 0x0020
+
+#define SHR16_DIR_MSK 0x0015
+#define SHR16_ENA_MSK 0x002c
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded
 #define TMC2130_AXC  3    //axis count
 
+//0 - IDLER
+//1 - SELECTOR
+//2 - PULLEY
 
 //UART0
 #define UART0_BDR 115200
@@ -41,3 +47,12 @@
 
 
 #define EXTRUDERS 5
+
+#define TMC2130_SG_THR     5    // stallguard treshold (sensitivity), range -128..127, real 0-3
+#define TMC2130_TCOOLTHRS  450  // usable range 400-600
+
+#define BTN_APIN A2
+//const int ButtonPin = A2;
+//const int ShiftOutClockPin = 13;
+//const int ShiftOutDataPin  =  9;
+//const int ShiftOutLatchPin = 10;

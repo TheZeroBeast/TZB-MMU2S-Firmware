@@ -38,3 +38,6 @@
 
 //UART1
 #define UART1_BDR 115200
+
+
+#define EXTRUDERS 5

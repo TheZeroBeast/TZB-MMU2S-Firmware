@@ -24,6 +24,10 @@ extern void shr16_set_ena(uint8_t ena);
 
 extern void shr16_set_dir(uint8_t dir);
 
+extern uint8_t shr16_get_ena(void);
+
+extern uint8_t shr16_get_dir(void);
+
 
 #if defined(__cplusplus)
 }

@@ -108,3 +108,6 @@
 
 //number of extruders
 #define EXTRUDERS 5
+
+//diagnostic functions
+#define _DIAG

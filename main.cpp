@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <avr/io.h>
+#include "timer0.h"
 #include "shr16.h"
 #include "uart.h"
 #include "spi.h"
@@ -13,51 +14,98 @@
 #include "mmctl.h"
 
 
-int active_extruder = -1;
 
+//#define _STATE_BOOT  0
+//#define _STATE_ERR1  1 //TMC2130 spi error - not responding 
+//#define _STATE_ERR2  2 //TMC2130 motor error - short circuit
+//#define _STATE_ERR3  3 //TMC2130 motor error - open circuit
+
+//int counter = 0;
+
+int8_t sys_state = 0;
+uint8_t sys_signals = 0;
+
+#define SIG_GET(id) (sys_signals & (1 << id))
+#define SIG_SET(id) (sys_signals |= (1 << id))
+#define SIG_CLR(id) asm("cli"); sys_signals &= ~(1 << id); asm("sei")
+
+#define SIGNAL_BTN 1
 
 void setup()
 {
+	timer0_init(); // system timer
+
 	shr16_init(); // shift register
 	shr16_set_led(0x3ff); // set all leds on
 
 	uart0_init(); //uart0 - usb
+
+#if (UART_STD == 0)
 	stdin = uart0io; //stdin = uart0
 	stdout = uart0io; //stdout = uart0
+#endif //(UART_STD == 0)
 
 	uart1_init(); //uart1
-//	stdin = uart1io; //stdin = uart1
-//	stdout = uart1io; //stdout = uart1
+
+#if (UART_STD == 1)
+	stdin = uart1io; //stdin = uart1
+	stdout = uart1io; //stdout = uart1
+#endif //(UART_STD == 1)
 
 	printf_P(PSTR("start\n"));
 
-#ifdef TMC2130_SPI_ARDUINO
-	SPI.begin();
-#else //TMC2130_SPI_ARDUINO
 	spi_init();
-#endif //TMC2130_SPI_ARDUINO
 
 	tmc2130_init(); // trinamic
+
+	delay(100);
 
 //	shr16_set_led(0x000); // set all leds off
 //	shr16_set_led(0x155); // set all green leds on, red off
 	shr16_set_led(0x2aa); // set all red leds on, green off
 
 	shr16_set_ena(7);
+
+}
+/*
+//uint16_t _leds = 1;
+#define TIMEOUT_IDS 4
+#define TIMEOUT_TIM (uint16_t)(millis() >> 10)
+uint8_t timeout_flg = 0;
+uint8_t timeout_ovf = 0;
+uint16_t timeout_exp[TIMEOUT_IDS];
+
+void timeout_set(uint8_t id, uint16_t val)
+{
+	uint8_t register msk = (1 << id);
+	uint16_t tim = TIMEOUT_TIM;
+	val += tim;
+	timeout_exp[TIMEOUT_IDS] = val;
+	timeout_flg |= msk;
+	timeout_ovf |= (tim > exp)?msk:0;
 }
 
-//uint16_t _leds = 1;
-
+uint8_t timeout_exp(uint8_t id)
+{
+	uint8_t register msk = (1 << id);
+	if ((timeout_flg & msk) == 0) return 1;
+	uint16_t exp = timeout_exp[TIMEOUT_IDS];
+	uint16_t tim = TIMEOUT_TIM;
+	if (timeout_ovf & msk)?(tim < exp):(tim > exp)) timeout_flg ^= msk;
+	return (timeout_flags & msk)?0:1;
+}
+*/
 void loop()
 {
 	char line[32];
 	int value = 0;
 	int n = 0;
 	int r = 0;
-//	static char c = 0;
+//	char c = 0;
+//	static char c1 = 0;
 
-//	putc(c, uart1io);
-//	c++;
+//	putc(c1, uart1io);
+//	c1++;
 //	while ((r = fscanf_P(uart0io, PSTR("%c"), &c)) > 0)
 //		putc(c, uart1io);
 //	while ((r = fscanf_P(uart1io, PSTR("%c"), &c)) > 0)
@@ -145,29 +193,41 @@ void loop()
 	else
 	{ //nothing received
 	}
-/*	uint8_t btn = button();
-	switch (btn)
+
+	if (SIG_GET(SIGNAL_BTN))
 	{
-	case 1:
-		printf_P(PSTR("BUTTON 1\n"));
-		if (active_extruder < (EXTRUDERS - 1))
+		SIG_CLR(SIGNAL_BTN);
+		if (abtn3_clicked(0)) 
 		{
-			switch_extruder(active_extruder + 1);
-			printf_P(PSTR("EXTRUDER+ %d\n"), active_extruder);
+			printf_P(PSTR("BTN0\n"));
+			if (active_extruder > 0) switch_extruder(active_extruder - 1);
 		}
-		break;
-	case 2:
-		printf_P(PSTR("BUTTON 2\n"));
-		break;
-	case 3:
-		printf_P(PSTR("BUTTON 3\n"));
-		if (active_extruder > 0)
+		if (abtn3_clicked(1))
 		{
-			switch_extruder(active_extruder - 1);
-			printf_P(PSTR("EXTRUDER- %d\n"), active_extruder);
+			printf_P(PSTR("BTN1\n"));
+			for (uint8_t i = 0; i < 5; i++)
+			{
+				shr16_set_led(1 << (2 * i));
+				delay(100);
+			}
+			switch_extruder(2);
 		}
-		break;
-	}*/
+		if (abtn3_clicked(2))
+		{
+			printf_P(PSTR("BTN2\n"));
+			if ((active_extruder >= 0) && (active_extruder < (EXTRUDERS - 1))) switch_extruder(active_extruder + 1);
+		}
+	}
+//	delay(10);
+
+	if (SIG_GET(0))
+	{
+		SIG_CLR(0);
+		printf_P(PSTR("SIG0\n"));
+	}
+
+//	printf_P(PSTR("COUNTER=%d\n"), timer0_sec);
+
 // LED TEST
 /*	delay(100);
 	shr16_set_led(_leds);
@@ -176,3 +236,16 @@ void loop()
 	if (_leds == 0) _leds = 1;*/
 }
 
+extern "C" {
+
+void _every_10ms(void)
+{
+	if (abtn3_update()) //update buttons
+		SIG_SET(SIGNAL_BTN); //set signal
+}
+
+void _every_100ms(void)
+{
+}
+
+}

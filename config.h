@@ -1,5 +1,8 @@
 //config.h - main configuration file
 
+//timer0
+#define TIMER0_EVERY_10ms   _every_10ms
+#define TIMER0_EVERY_100ms  _every_100ms
 
 //shr16 - 16bit shift register
 //pinout - hardcoded
@@ -60,6 +63,9 @@
 
 //UART1
 #define UART1_BDR 115200
+
+//stdin & stdout uart0/1
+#define UART_STD 0
 
 
 #define EXTRUDERS 5

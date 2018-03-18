@@ -1,6 +1,6 @@
-//abtn3.h - 3 buttons on analog channel
-#ifndef _ABTN3_H
-#define _ABTN3_H
+//timer0.h - timer0 system timer
+#ifndef _TIMER0_H
+#define _TIMER0_H
 
 #include <inttypes.h>
 #include "config.h"
@@ -11,12 +11,12 @@ extern "C" {
 #endif //defined(__cplusplus)
 
 
-extern uint8_t abtn3_update(void);
+extern uint16_t timer0_sec;
 
-extern uint8_t abtn3_clicked(uint8_t btn);
+extern void timer0_init(void);
 
 
 #if defined(__cplusplus)
 }
 #endif //defined(__cplusplus)
-#endif //_ABTN3_H
+#endif //_TIMER0_H

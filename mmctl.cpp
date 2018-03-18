@@ -1,4 +1,4 @@
-
+//mmctl.cpp - multimaterial switcher control
 #include "main.h"
 #include <Arduino.h>
 #include <stdio.h>
@@ -8,6 +8,9 @@
 #include "spi.h"
 #include "tmc2130.h"
 #include "mmctl.h"
+
+
+int active_extruder = -1;
 
 
 bool home_idler()

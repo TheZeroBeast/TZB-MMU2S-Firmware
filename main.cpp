@@ -69,16 +69,24 @@ void setup()
 	
 	if (tmc < 0)
 	{
-		if (-tmc & 1) printf_P(PSTR("TMC2130-0 error\n"));
-		if (-tmc & 2) printf_P(PSTR("TMC2130-1 error\n"));
-		if (-tmc & 4) printf_P(PSTR("TMC2130-2 error\n"));
+		int8_t _tmc = -tmc;
+		if (_tmc & 1) printf_P(PSTR("TMC2130-0 error\n"));
+		if (_tmc & 2) printf_P(PSTR("TMC2130-1 error\n"));
+		if (_tmc & 4) printf_P(PSTR("TMC2130-2 error\n"));
+		uint16_t leds = 0x3c0;
+		leds |= (_tmc & 1)?(2 << 2*0):(1 << 2*0);
+		leds |= (_tmc & 2)?(2 << 2*1):(1 << 2*1);
+		leds |= (_tmc & 4)?(2 << 2*2):(1 << 2*2);
+		shr16_set_led(leds);
 	}
+	else
+	{
+		shr16_set_led(0x155); // set all green leds on, red off
+		shr16_set_ena(7);
+	}
+//	shr16_set_ena(7);
 //	shr16_set_led(0x000); // set all leds off
-//	shr16_set_led(0x155); // set all green leds on, red off
-	shr16_set_led(0x2aa); // set all red leds on, green off
-
-	shr16_set_ena(7);
-
+//	shr16_set_led(0x2aa); // set all red leds on, green off
 }
 
 //main loop

@@ -7,6 +7,7 @@
 #include <avr/io.h>
 #include "timer0.h"
 #include "shr16.h"
+#include "adc.h"
 #include "uart.h"
 #include "spi.h"
 #include "tmc2130.h"
@@ -20,7 +21,6 @@
 //#define _STATE_ERR2  2 //TMC2130 motor error - short circuit
 //#define _STATE_ERR3  3 //TMC2130 motor error - open circuit
 
-//int counter = 0;
 
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
@@ -29,34 +29,39 @@ uint8_t sys_signals = 0;
 #define SIG_SET(id) (sys_signals |= (1 << id))
 #define SIG_CLR(id) asm("cli"); sys_signals &= ~(1 << id); asm("sei")
 
-#define SIGNAL_BTN 1
 
 void setup()
 {
+	asm("cli"); // disable interrupts
+
 	timer0_init(); // system timer
 
 	shr16_init(); // shift register
 	shr16_set_led(0x3ff); // set all leds on
 
-	uart0_init(); //uart0 - usb
+	adc_init(); // ADC
+
+	uart0_init(); // uart0 - usb
 
 #if (UART_STD == 0)
-	stdin = uart0io; //stdin = uart0
-	stdout = uart0io; //stdout = uart0
+	stdin = uart0io; // stdin = uart0
+	stdout = uart0io; // stdout = uart0
 #endif //(UART_STD == 0)
 
 	uart1_init(); //uart1
 
 #if (UART_STD == 1)
-	stdin = uart1io; //stdin = uart1
-	stdout = uart1io; //stdout = uart1
+	stdin = uart1io; // stdin = uart1
+	stdout = uart1io; // stdout = uart1
 #endif //(UART_STD == 1)
-
-	printf_P(PSTR("start\n"));
 
 	spi_init();
 
 	tmc2130_init(); // trinamic
+
+	asm("sei"); // enable interrupts
+
+	printf_P(PSTR("start\n"));
 
 	delay(100);
 
@@ -67,34 +72,7 @@ void setup()
 	shr16_set_ena(7);
 
 }
-/*
-//uint16_t _leds = 1;
-#define TIMEOUT_IDS 4
-#define TIMEOUT_TIM (uint16_t)(millis() >> 10)
-uint8_t timeout_flg = 0;
-uint8_t timeout_ovf = 0;
-uint16_t timeout_exp[TIMEOUT_IDS];
 
-void timeout_set(uint8_t id, uint16_t val)
-{
-	uint8_t register msk = (1 << id);
-	uint16_t tim = TIMEOUT_TIM;
-	val += tim;
-	timeout_exp[TIMEOUT_IDS] = val;
-	timeout_flg |= msk;
-	timeout_ovf |= (tim > exp)?msk:0;
-}
-
-uint8_t timeout_exp(uint8_t id)
-{
-	uint8_t register msk = (1 << id);
-	if ((timeout_flg & msk) == 0) return 1;
-	uint16_t exp = timeout_exp[TIMEOUT_IDS];
-	uint16_t tim = TIMEOUT_TIM;
-	if (timeout_ovf & msk)?(tim < exp):(tim > exp)) timeout_flg ^= msk;
-	return (timeout_flags & msk)?0:1;
-}
-*/
 void loop()
 {
 	char line[32];
@@ -226,7 +204,6 @@ void loop()
 		printf_P(PSTR("SIG0\n"));
 	}
 
-//	printf_P(PSTR("COUNTER=%d\n"), timer0_sec);
 
 // LED TEST
 /*	delay(100);
@@ -236,16 +213,28 @@ void loop()
 	if (_leds == 0) _leds = 1;*/
 }
 
+
+
 extern "C" {
+
+void _every_1ms(void)
+{
+}
 
 void _every_10ms(void)
 {
-	if (abtn3_update()) //update buttons
-		SIG_SET(SIGNAL_BTN); //set signal
+	adc_cyc();
 }
 
 void _every_100ms(void)
 {
+}
+
+void _adc_ready(void)
+{
+//	printf_P(PSTR("adc_ready %d\n"), adc_val[0]);
+	if (abtn3_update()) //update buttons
+		SIG_SET(SIGNAL_BTN); //set signal
 }
 
 }

@@ -1,21 +1,17 @@
 //abtn3.c - 3 buttons on analog channel
 
 #include "abtn3.h"
-#include <Arduino.h>
-//#include <avr/io.h>
+#include "adc.h"
 
 uint8_t abtn_state = 0;
 uint8_t abtn_click = 0;
 
 inline uint8_t abtn3_sample(void)
 {
-	int raw = analogRead(BTN_APIN);
+	int raw = adc_val[0];
 	// Button 1 - 0
 	// Button 2 - 344
 	// Button 3 - 516
-//	if (raw < 10) return 1;
-//	else if (raw > 300 && raw < 400) return 2;
-//	else if (raw > 450 && raw < 600) return 4;
 	if (raw < 10) return 1;
 	else if (raw > 320 && raw < 360) return 2;
 	else if (raw > 500 && raw < 530) return 4;

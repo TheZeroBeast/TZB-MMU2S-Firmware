@@ -39,6 +39,9 @@ extern uint8_t sys_signals;
 
 ISR(TIMER0_COMPB_vect)
 {
+#ifdef TIMER0_EVERY_1ms
+	TIMER0_EVERY_1ms();
+#endif //TIMER0_EVERY_10ms
 	if ((timer0_10ms_cnt--) == 0)
 	{
 		timer0_10ms_cnt = 10;

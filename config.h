@@ -1,8 +1,9 @@
 //config.h - main configuration file
 
 //timer0
-#define TIMER0_EVERY_10ms   _every_10ms
-#define TIMER0_EVERY_100ms  _every_100ms
+#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
+#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
+#define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
 
 //shr16 - 16bit shift register
 //pinout - hardcoded
@@ -34,6 +35,20 @@
 #define SHR16_DIR_MSK          0x0015
 #define SHR16_ENA_MSK          0x002c
 
+//ADC configuration
+#define ADC_CHAN_MSK      0b0000000000100000 //used AD channels bit mask (ADC5)
+#define ADC_CHAN_CNT      1          //number of used channels)
+#define ADC_OVRSAMPL      1         //oversampling multiplier
+#define ADC_READY         _adc_ready //ready callback
+
+//UART0
+#define UART0_BDR 115200
+
+//UART1
+#define UART1_BDR 115200
+
+//stdin & stdout uart0/1
+#define UART_STD 0
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded
@@ -58,21 +73,8 @@
 //1 - SELECTOR
 //2 - PULLEY
 
-//UART0
-#define UART0_BDR 115200
+//signals
+#define SIGNAL_BTN 1
 
-//UART1
-#define UART1_BDR 115200
-
-//stdin & stdout uart0/1
-#define UART_STD 0
-
-
+//number of extruders
 #define EXTRUDERS 5
-
-
-#define BTN_APIN A2
-//const int ButtonPin = A2;
-//const int ShiftOutClockPin = 13;
-//const int ShiftOutDataPin  =  9;
-//const int ShiftOutLatchPin = 10;

@@ -1,4 +1,4 @@
-//tmc2130.cpp
+//tmc2130.c - Trinamic stepper driver
 
 #include "tmc2130.h"
 #include <avr/io.h>

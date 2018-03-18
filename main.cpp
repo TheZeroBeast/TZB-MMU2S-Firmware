@@ -23,10 +23,14 @@
 
 
 int8_t sys_state = 0;
-uint8_t sys_signals = 0;
 
+// signals from interrupt to main loop
+uint8_t sys_signals = 0;
+// get state of signal (main loop or interrupt)
 #define SIG_GET(id) (sys_signals & (1 << id))
+// set state of signal (interrupt only)
 #define SIG_SET(id) (sys_signals |= (1 << id))
+// get state of signal (main loop or interrupt)
 #define SIG_CLR(id) asm("cli"); sys_signals &= ~(1 << id); asm("sei")
 
 
@@ -38,8 +42,6 @@ void setup()
 
 	shr16_init(); // shift register
 	shr16_set_led(0x3ff); // set all leds on
-
-	adc_init(); // ADC
 
 	uart0_init(); // uart0 - usb
 
@@ -59,11 +61,14 @@ void setup()
 
 	tmc2130_init(); // trinamic
 
+	adc_init(); // ADC
+
 	asm("sei"); // enable interrupts
+
+	delay(50);
 
 	printf_P(PSTR("start\n"));
 
-	delay(100);
 
 //	shr16_set_led(0x000); // set all leds off
 //	shr16_set_led(0x155); // set all green leds on, red off
@@ -100,14 +105,23 @@ void loop()
 			fprintf_P(uart0io, PSTR("%s"), line);
 		}*/
 
+#if (UART_CMD == 0)
+	FILE* input = uart0io;
+	FILE* output = uart0io;
+#endif //(UART_CMD == 0)
 
-	if ((r = fscanf_P(uart0io, PSTR("%31[^\n]%n"), line, &n)) > 0)
+#if (UART_CMD == 1)
+	FILE* input = uart1io;
+	FILE* output = uart1io;
+#endif //(UART_CMD == 0)
+
+	if ((r = fscanf_P(input, PSTR("%31[^\n]%n"), line, &n)) > 0)
 	{ //line received
 		line[n] = 0;
 		if ((r == 1) && (n == 1))
 		{ //empty line
 //			printf_P(PSTR("Empty line\n"));
-			getc(uart0io); //read LF character
+			getc(input); //read LF character
 		}
 		else if (strcmp_P(line, PSTR("RESET")) == 0)
 		{
@@ -172,9 +186,9 @@ void loop()
 	{ //nothing received
 	}
 
-	if (SIG_GET(SIGNAL_BTN))
+	if (SIG_GET(SIG_ID_BTN))
 	{
-		SIG_CLR(SIGNAL_BTN);
+		SIG_CLR(SIG_ID_BTN);
 		if (abtn3_clicked(0)) 
 		{
 			printf_P(PSTR("BTN0\n"));
@@ -198,6 +212,7 @@ void loop()
 	}
 //	delay(10);
 
+	// test signal
 	if (SIG_GET(0))
 	{
 		SIG_CLR(0);
@@ -226,15 +241,19 @@ void _every_10ms(void)
 	adc_cyc();
 }
 
+int adc = 0;
+
 void _every_100ms(void)
 {
+	printf_P(PSTR("_every_100ms %d\n"), adc);
 }
 
 void _adc_ready(void)
 {
 //	printf_P(PSTR("adc_ready %d\n"), adc_val[0]);
+	adc = adc_val[0];
 	if (abtn3_update()) //update buttons
-		SIG_SET(SIGNAL_BTN); //set signal
+		SIG_SET(SIG_ID_BTN); //set signal
 }
 
 }

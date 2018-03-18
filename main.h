@@ -6,18 +6,19 @@
 #include "config.h"
 
 
-extern int active_extruder;
+// system state
+extern int8_t sys_state;
 
-extern bool switch_extruder(int new_extruder);
+// signals from interrupt to main loop
+extern uint8_t sys_signals;
 
+// get state of signal (main loop or interrupt)
+#define SIG_GET(id) (sys_signals & (1 << id))
+// set state of signal (interrupt only)
+#define SIG_SET(id) (sys_signals |= (1 << id))
+// get state of signal (main loop only)
+#define SIG_CLR(id) asm("cli"); sys_signals &= ~(1 << id); asm("sei")
 
-extern uint8_t buttons_state;
-
-extern uint8_t buttons_click;
-
-extern void buttons_update(void);
-
-extern uint8_t button_clicked(uint8_t mask);
 
 
 #endif //_MAIN_H

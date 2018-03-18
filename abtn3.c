@@ -3,8 +3,11 @@
 #include "abtn3.h"
 #include "adc.h"
 
+
 uint8_t abtn_state = 0;
+
 uint8_t abtn_click = 0;
+
 
 inline uint8_t abtn3_sample(void)
 {

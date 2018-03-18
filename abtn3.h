@@ -11,6 +11,11 @@ extern "C" {
 #endif //defined(__cplusplus)
 
 
+extern uint8_t abtn_state;
+
+extern uint8_t abtn_click;
+
+
 extern uint8_t abtn3_update(void);
 
 extern uint8_t abtn3_clicked(uint8_t btn);

@@ -35,12 +35,6 @@
 #define SHR16_DIR_MSK          0x0015
 #define SHR16_ENA_MSK          0x002c
 
-//ADC configuration
-#define ADC_CHAN_MSK      0b0000000000100000 //used AD channels bit mask (ADC5)
-#define ADC_CHAN_CNT      1          //number of used channels)
-#define ADC_OVRSAMPL      1         //oversampling multiplier
-#define ADC_READY         _adc_ready //ready callback
-
 //UART0
 #define UART0_BDR 115200
 
@@ -76,8 +70,41 @@
 //1 - SELECTOR
 //2 - PULLEY
 
-//signals
-#define SIG_ID_BTN 1
+//ADC configuration
+#define ADC_CHAN_MSK      0b0000000000100000 //used AD channels bit mask (ADC5)
+#define ADC_CHAN_CNT      1          //number of used channels)
+#define ADC_OVRSAMPL      1          //oversampling multiplier
+#define ADC_READY         _adc_ready //ready callback
+
+
+//signals (from interrupts to main loop)
+#define SIG_ID_BTN             1 // any button changed
+
+//states (<0 =error)
+#define STA_INIT               0 //setup - initialization
+#define STA_BUSY               1 //working
+#define STA_READY              2 //ready - accepting commands
+
+#define STA_ERR_TMC0_SPI      -1 //TMC2130 axis0 spi error - not responding 
+#define STA_ERR_TMC0_MSC      -2 //TMC2130 axis0 motor error - short circuit
+#define STA_ERR_TMC0_MOC      -3 //TMC2130 axis0 motor error - open circuit
+#define STA_ERR_TMC0_PIN_STP  -4 //TMC2130 axis0 pin wirring error - stp signal
+#define STA_ERR_TMC0_PIN_DIR  -5 //TMC2130 axis0 pin wirring error - dir signal
+#define STA_ERR_TMC0_PIN_ENA  -6 //TMC2130 axis0 pin wirring error - ena signal
+
+#define STA_ERR_TMC1_SPI      -11 //TMC2130 axis1 spi error - not responding 
+#define STA_ERR_TMC1_MSC      -12 //TMC2130 axis1 motor error - short circuit
+#define STA_ERR_TMC1_MOC      -13 //TMC2130 axis1 motor error - open circuit
+#define STA_ERR_TMC1_PIN_STP  -14 //TMC2130 axis1 pin wirring error - stp signal
+#define STA_ERR_TMC1_PIN_DIR  -15 //TMC2130 axis1 pin wirring error - dir signal
+#define STA_ERR_TMC1_PIN_ENA  -16 //TMC2130 axis1 pin wirring error - ena signal
+
+#define STA_ERR_TMC2_SPI      -21 //TMC2130 axis2 spi error - not responding 
+#define STA_ERR_TMC2_MSC      -22 //TMC2130 axis2 motor error - short circuit
+#define STA_ERR_TMC2_MOC      -23 //TMC2130 axis2 motor error - open circuit
+#define STA_ERR_TMC2_PIN_STP  -24 //TMC2130 axis2 pin wirring error - stp signal
+#define STA_ERR_TMC2_PIN_DIR  -25 //TMC2130 axis2 pin wirring error - dir signal
+#define STA_ERR_TMC2_PIN_ENA  -26 //TMC2130 axis2 pin wirring error - ena signal
 
 //number of extruders
 #define EXTRUDERS 5

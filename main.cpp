@@ -13,11 +13,15 @@
 #include "tmc2130.h"
 #include "abtn3.h"
 #include "mmctl.h"
+#include "motion.h"
 
 
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 
+int active_extruder = -1;
+bool isFilamentLoaded = false;
+bool isIdlerParked = false;
 
 void process_commands(FILE* inout);
 void process_signals(void);
@@ -185,12 +189,9 @@ void process_commands(FILE* inout)
 			cmd_diag_uart1(inout);
 		else if (sscanf_P(line, PSTR("DIAG_TMC%d"), &value) > 0)
 			cmd_diag_tmc(inout, (uint8_t)value);
-		else if (strcmp_P(line, PSTR("HOME0")) == 0)
-			retOK = home_idler();
-		else if (strcmp_P(line, PSTR("HOME1")) == 0)
-			retOK = home_selector();
-		else if (strcmp_P(line, PSTR("MOVE1")) == 0)
-			retOK = move_selector();
+		else if (strcmp_P(line, PSTR("HOME")) == 0)
+			home();
+		
 		else if (strcmp_P(line, PSTR("TEST")) == 0)
 		{
 			shr16_set_dir(7);

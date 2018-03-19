@@ -19,6 +19,8 @@ extern uint8_t sys_signals;
 // get state of signal (main loop only)
 #define SIG_CLR(id) asm("cli"); sys_signals &= ~(1 << id); asm("sei")
 
-
+extern int active_extruder;
+extern bool isFilamentLoaded;
+extern bool isIdlerParked;
 
 #endif //_MAIN_H

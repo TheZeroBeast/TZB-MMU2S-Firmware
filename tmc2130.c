@@ -1,9 +1,11 @@
-//tmc2130.cpp
+//tmc2130.c - Trinamic stepper driver
 
 #include "tmc2130.h"
 #include <avr/io.h>
+#include "spi.h"
+#include <stdio.h>
 #include <avr/pgmspace.h>
-#include <SPI.h>
+
 
 
 #define TMC2130_CS_0 //signal d5  - PC6
@@ -74,7 +76,28 @@ void tmc2130_wr_CHOPCONF(uint8_t axis, uint8_t toff, uint8_t hstrt, uint8_t hend
 	val |= (uint32_t)(dedge & 1) << 29;
 	val |= (uint32_t)(diss2g & 1) << 30;
 	tmc2130_wr(axis, TMC2130_REG_CHOPCONF, val);
+	uint32_t valr = 0;
+	tmc2130_rd(axis, TMC2130_REG_CHOPCONF, &valr);
+	printf_P(PSTR("tmc2130_wr_CHOPCONF out=0x%08lx in=0x%08lx\n"), val, valr);
 }
+
+void tmc2130_wr_PWMCONF(uint8_t axis, uint8_t pwm_ampl, uint8_t pwm_grad, uint8_t pwm_freq, uint8_t pwm_auto, uint8_t pwm_symm, uint8_t freewheel)
+{
+	uint32_t val = 0;
+	val |= (uint32_t)(pwm_ampl & 255);
+	val |= (uint32_t)(pwm_grad & 255) << 8;
+	val |= (uint32_t)(pwm_freq & 3) << 16;
+	val |= (uint32_t)(pwm_auto & 1) << 18;
+	val |= (uint32_t)(pwm_symm & 1) << 19;
+	val |= (uint32_t)(freewheel & 3) << 20;
+	tmc2130_wr(axis, TMC2130_REG_PWMCONF, val);
+}
+
+void tmc2130_wr_TPWMTHRS(uint8_t axis, uint32_t val32)
+{
+	tmc2130_wr(axis, TMC2130_REG_TPWMTHRS, val32);
+}
+
 
 void tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_t current_r)
 {
@@ -98,19 +121,61 @@ void tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_
 	}
 }
 
+inline uint16_t __tcoolthrs(uint8_t axis)
+{
+	switch (axis)
+	{
+	case 0: return TMC2130_TCOOLTHRS_0;
+	case 1: return TMC2130_TCOOLTHRS_1;
+	case 2: return TMC2130_TCOOLTHRS_2;
+	}
+	return TMC2130_TCOOLTHRS;
+}
+
+inline int8_t __sg_thr(uint8_t axis)
+{
+	switch (axis)
+	{
+	case 0: return TMC2130_SG_THR_0;
+	case 1: return TMC2130_SG_THR_1;
+	case 2: return TMC2130_SG_THR_2;
+	}
+	return TMC2130_SG_THR;
+}
+
+//axis config
+//byte 0 bit 0..3 - mres
+//byte 0 bit 4..5 - reserved
+//byte 0 bit 6..7 - mode - 00-constOff 01-spreadCycle 10-stealthChop
+//byte 1 bit 0..5 - curh
+//byte 2 bit 0..5 - curr
+//byte 3 
 int8_t tmc2130_init_axis(uint8_t axis)
 {
+/* //silent mode
 	tmc2130_setup_chopper(axis, 7, 16, 16);
 	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));
-	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, TMC2130_TCOOLTHRS);
+	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
+	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00000004);
+	tmc2130_wr_PWMCONF(axis, 150, 2, 2, 1, 0, 0);
+	tmc2130_wr_TPWMTHRS(axis, 0);
+*/
+	uint8_t mres = 7;
+	uint8_t curh = 16;
+	uint8_t curr = 16;
+	uint16_t tcoolthrs = 450;
+	tmc2130_setup_chopper(axis, mres, curh, curr);
+	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
+	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
+	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
 	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
 }
 
 void tmc2130_do_step(uint8_t axis_mask)
 {
-//	if (axis_mask & 1) PORTD |= 0x10;
-//	if (axis_mask & 2) PORTB |= 0x10;
+//	if (axis_mask & 1) PORTD |= 0x10; //NG
+//	if (axis_mask & 2) PORTB |= 0x10; //NG
 	if (axis_mask & 1) PORTB |= 0x10;
 	if (axis_mask & 2) PORTD |= 0x10;
 	if (axis_mask & 4) PORTD |= 0x40;;
@@ -140,6 +205,7 @@ void tmc2130_do_step(uint8_t axis_mask)
 	asm("nop");*/
 }
 
+
 int8_t tmc2130_init()
 {
 	DDRC |= 0x40;
@@ -148,7 +214,6 @@ int8_t tmc2130_init()
 	PORTC |= 0x40;
 	PORTD |= 0x80;
 	PORTE |= 0x40;
-	SPI.begin();
 
 	DDRD |= 0x10;
 	DDRB |= 0x10;
@@ -162,22 +227,30 @@ int8_t tmc2130_init()
 	tmc2130_init_axis(2);
 
 	uint32_t val32 = 0;
-/*
-	tmc2130_rd(0, TMC2130_REG_GSTAT, &val32);
-	Serial.print("axis A 0x");
-	Serial.println(val32, 16);
+	uint8_t stat = 0;
 
-	tmc2130_rd(1, TMC2130_REG_GSTAT, &val32);
-	Serial.print("axis B 0x");
-	Serial.println(val32, 16);
+	printf_P(PSTR("SPCR=0x%02x\n"), SPCR);
+	printf_P(PSTR("SPSR=0x%02x\n"), SPSR);
 
-	tmc2130_rd(2, TMC2130_REG_GSTAT, &val32);
-	Serial.print("axis C 0x");
-	Serial.println(val32, 16);
-*/
+	stat = tmc2130_rd(0, TMC2130_REG_GSTAT, &val32);
+	printf_P(PSTR("axis 0 stat=0x%02x GSTAT=0x%08lx\n"), stat, val32);
+
+	stat = tmc2130_rd(1, TMC2130_REG_GSTAT, &val32);
+	printf_P(PSTR("axis 1 stat=0x%02x GSTAT=0x%08lx\n"), stat, val32);
+
+	stat = tmc2130_rd(2, TMC2130_REG_GSTAT, &val32);
+	printf_P(PSTR("axis 2 stat=0x%02x GSTAT=0x%08lx\n"), stat, val32);
+
 	return 1;
 }
 
+
+uint16_t tmc2130_read_sg(uint8_t axis)
+{
+	uint32_t val32 = 0;
+	tmc2130_rd(axis, TMC2130_REG_DRV_STATUS, &val32);
+	return (val32 & 0x3ff);
+}
 
 
 inline void tmc2130_cs_low(uint8_t axis)
@@ -200,51 +273,54 @@ inline void tmc2130_cs_high(uint8_t axis)
 	}
 }
 
+//Arduino SPI
+//#define TMC2130_SPI_ENTER()    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3))
+//#define TMC2130_SPI_TXRX       SPI.transfer
+//#define TMC2130_SPI_LEAVE      SPI.endTransaction
+
+//spi
+#define TMC2130_SPI_ENTER()    spi_setup(TMC2130_SPCR, TMC2130_SPSR)
+#define TMC2130_SPI_TXRX       spi_txrx
+#define TMC2130_SPI_LEAVE()
+
 uint8_t tmc2130_tx(uint8_t axis, uint8_t addr, uint32_t wval)
 {
 	//datagram1 - request
-	SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
+	TMC2130_SPI_ENTER();
 	tmc2130_cs_low(axis);
-	SPI.transfer(addr); // address
-	SPI.transfer((wval >> 24) & 0xff); // MSB
-	SPI.transfer((wval >> 16) & 0xff);
-	SPI.transfer((wval >> 8) & 0xff);
-	SPI.transfer(wval & 0xff); // LSB
+	TMC2130_SPI_TXRX(addr); // address
+	TMC2130_SPI_TXRX((wval >> 24) & 0xff); // MSB
+	TMC2130_SPI_TXRX((wval >> 16) & 0xff);
+	TMC2130_SPI_TXRX((wval >> 8) & 0xff);
+	TMC2130_SPI_TXRX(wval & 0xff); // LSB
 	tmc2130_cs_high(axis);
-	SPI.endTransaction();
+	TMC2130_SPI_LEAVE();
 }
 
 uint8_t tmc2130_rx(uint8_t axis, uint8_t addr, uint32_t* rval)
 {
 	//datagram1 - request
-	SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
+	TMC2130_SPI_ENTER();
 	tmc2130_cs_low(axis);
-	SPI.transfer(addr); // address
-	SPI.transfer(0); // MSB
-	SPI.transfer(0);
-	SPI.transfer(0);
-	SPI.transfer(0); // LSB
+	TMC2130_SPI_TXRX(addr); // address
+	TMC2130_SPI_TXRX(0); // MSB
+	TMC2130_SPI_TXRX(0);
+	TMC2130_SPI_TXRX(0);
+	TMC2130_SPI_TXRX(0); // LSB
 	tmc2130_cs_high(axis);
-	SPI.endTransaction();
+	TMC2130_SPI_LEAVE();
 	//datagram2 - response
-	SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
+	TMC2130_SPI_ENTER();
 	tmc2130_cs_low(axis);
-	uint8_t stat = SPI.transfer(0); // status
+	uint8_t stat = TMC2130_SPI_TXRX(0); // status
 	uint32_t val32 = 0;
-	val32 = SPI.transfer(0); // MSB
-	val32 = (val32 << 8) | SPI.transfer(0);
-	val32 = (val32 << 8) | SPI.transfer(0);
-	val32 = (val32 << 8) | SPI.transfer(0); // LSB
+	val32 = TMC2130_SPI_TXRX(0); // MSB
+	val32 = (val32 << 8) | TMC2130_SPI_TXRX(0);
+	val32 = (val32 << 8) | TMC2130_SPI_TXRX(0);
+	val32 = (val32 << 8) | TMC2130_SPI_TXRX(0); // LSB
 	tmc2130_cs_high(axis);
-	SPI.endTransaction();
+	TMC2130_SPI_LEAVE();
 	if (rval != 0) *rval = val32;
 	return stat;
-}
-
-uint16_t tmc2130_read_sg(uint8_t axis)
-{
-	uint32_t val32 = 0;
-	tmc2130_rd(axis, TMC2130_REG_DRV_STATUS, &val32);
-	return (val32 & 0x3ff);
 }
 

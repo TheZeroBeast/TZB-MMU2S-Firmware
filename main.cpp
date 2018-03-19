@@ -5,146 +5,192 @@
 #include <stdio.h>
 #include <string.h>
 #include <avr/io.h>
+#include "timer0.h"
 #include "shr16.h"
-#include "tmc2130.h"
+#include "adc.h"
 #include "uart.h"
+#include "spi.h"
+#include "tmc2130.h"
+#include "abtn3.h"
+#include "mmctl.h"
 
 
-int active_extruder = -1;
+int8_t sys_state = 0;
+uint8_t sys_signals = 0;
 
 
+void process_commands(FILE* inout);
+void process_signals(void);
+void process_buttons(void);
+
+
+//initialization after reset
 void setup()
 {
+	asm("cli"); // disable interrupts
+
+	timer0_init(); // system timer
+
 	shr16_init(); // shift register
 	shr16_set_led(0x3ff); // set all leds on
 
-	tmc2130_init(); // trinamic
+	uart0_init(); // uart0 - usb
 
-	uart0_init(); //uart0 - usb
-	stdin = uart0io; //stdin = uart0
-	stdout = uart0io; //stdout = uart0
+#if (UART_STD == 0)
+	stdin = uart0io; // stdin = uart0
+	stdout = uart0io; // stdout = uart0
+#endif //(UART_STD == 0)
 
 	uart1_init(); //uart1
-//	stdin = uart1io; //stdin = uart1
-//	stdout = uart1io; //stdout = uart1
+
+#if (UART_STD == 1)
+	stdin = uart1io; // stdin = uart1
+	stdout = uart1io; // stdout = uart1
+#endif //(UART_STD == 1)
+
+	spi_init();
+
+	tmc2130_init(); // trinamic
+
+	adc_init(); // ADC
+
+	asm("sei"); // enable interrupts
+
+	delay(50);
 
 	printf_P(PSTR("start\n"));
+
 
 //	shr16_set_led(0x000); // set all leds off
 //	shr16_set_led(0x155); // set all green leds on, red off
 	shr16_set_led(0x2aa); // set all red leds on, green off
 
 	shr16_set_ena(7);
+
 }
 
-//uint16_t _leds = 1;
-
-bool home_idler()
-{
-	shr16_set_dir(shr16_get_dir() & ~1);
-	for (int i = 0; i < 3000; i++)
-	{
-		tmc2130_do_step(1);
-		delay(1);
-	}
-	return true;
-}
-
-
-bool home_selector()
-{
-//	shr16_set_dir(shr16_get_dir() & ~2);
-	shr16_set_dir(shr16_get_dir() | 2);
-	int i = 0; for (; i < 4000; i++)
-	{
-		tmc2130_do_step(2);
-		delay(1);
-		uint16_t sg = tmc2130_read_sg(1);
-		if ((i > 16) && (sg < 100))
-			break;
-		printf_P(PSTR("SG=%d\n"), tmc2130_read_sg(1));
-	}
-	return (i < 4000);
-}
-
-bool move_selector()
-{
-	shr16_set_dir(shr16_get_dir() & ~2);
-//	shr16_set_dir(shr16_get_dir() | 2);
-	for (int i = 0; i < 2000; i++)
-	{
-		tmc2130_do_step(2);
-		delay(1);
-	}
-	return true;
-}
-
-
-bool home_()
-{
-	shr16_set_dir(shr16_get_dir() & ~2);
-	int i = 0; for (; i < 3000; i++)
-	{
-		tmc2130_do_step(2);
-		delay(1);
-	}
-	return true;
-}
-
+//main loop
 void loop()
+{
+	process_commands(uart0io);
+//	process_commands(uart1io);
+
+	process_signals();
+
+// LED TEST
+/*	delay(100);
+	shr16_set_led(_leds);
+	_leds <<= 1;
+	_leds &= 0x03ff;
+	if (_leds == 0) _leds = 1;*/
+}
+
+void cmd_reset(FILE* inout)
+{
+	fprintf_P(inout, PSTR("RESET\n"));
+	fflush(inout);
+	delay(100);
+	asm("sei");
+	asm("jmp 0");
+}
+
+void cmd_uart_bridge(FILE* inout)
+{
+	fprintf_P(inout, PSTR("UART bridge started, press any button to stop\n"));
+	int c0;
+	int c1;
+	while (1)
+	{
+		c0 = getc(uart0io);
+		if (c0 >= 0) putc(c0, uart1io);
+		c1 = getc(uart1io);
+		if (c1 >= 0) putc(c1, uart0io);
+		process_signals();
+		if (abtn_state) break;
+	}
+	fprintf_P(inout, PSTR("UART bridge terminated\n"));
+}
+
+bool cmd_diag_uart1(FILE* inout)
+{
+	if (inout == uart1io) return false;
+	fprintf_P(inout, PSTR("UART1 diagnostic\n"));
+	fprintf_P(inout, PSTR("connect loopback and press enter..\n"));
+	fflush(inout);
+	while (getc(inout) >= 0); //clear rx buffer
+	int c = 0;
+	while (((c = (char)getc(inout)) != '\n') && (c != '\r'))
+		process_signals(); //wait enter
+	fflush(uart0io);
+	while (getc(uart1io) >= 0); //clear rx buffer uart1
+	uint16_t err_tmo = 0;
+	uint16_t err_chr = 0;
+	for (c = 0; c < 256; c++)
+	{
+		putc(c, uart1io); //send char
+		uint8_t tmo = 100; //timeout
+		int cr = 0; //received char
+		while (((cr = getc(uart1io)) < 0) && (tmo--))
+			process_signals(); //wait char
+		if (cr == c) //char equal = OK
+			fprintf_P(inout, PSTR(" 0x%02x OK\n"), c);
+		else if (cr < 0) //timeout = NG
+		{
+			fprintf_P(inout, PSTR(" 0x%02x NG! timeout\n"), c);
+			err_tmo++;
+		}
+		else //char not equal = NG
+		{
+			fprintf_P(inout, PSTR(" 0x%02x NG! received 0x%02x\n"), c, cr);
+			err_chr++;
+		}
+	}
+	if ((err_tmo == 0) && (err_chr == 0))
+		fprintf_P(inout, PSTR("SUCCED\n"));
+	else
+	{
+		fprintf_P(inout, PSTR("ok=%d\n"), 256 - (err_chr + err_tmo));
+		fprintf_P(inout, PSTR("ne=%d\n"), err_chr);
+		fprintf_P(inout, PSTR("to=%d\n"), err_tmo);
+		fprintf_P(inout, PSTR("FAILED\n"));
+	}
+	return true;
+}
+
+bool cmd_diag_tmc(FILE* inout, uint8_t axis)
+{
+	fprintf_P(inout, PSTR("TMC2130, axis %d diag\n"), axis);
+	return true;
+}
+
+void process_commands(FILE* inout)
 {
 	char line[32];
 	int value = 0;
 	int n = 0;
 	int r = 0;
-//	static char c = 0;
-
-//	putc(c, uart1io);
-//	c++;
-//	while ((r = fscanf_P(uart0io, PSTR("%c"), &c)) > 0)
-//		putc(c, uart1io);
-//	while ((r = fscanf_P(uart1io, PSTR("%c"), &c)) > 0)
-//		putc(c, uart0io);
-
-//	while ((r = fscanf_P(uart0io, PSTR("%c"), &c)) > 0)
-//		putc(c, uart0io);
-
-/*
-		if ((r = fscanf_P(uart0io, PSTR("%s%n"), line, &n)) > 0)
-		{
-			line[n] = 0;
-			printf_P(PSTR("scan: %d %d\n"), r, n);
-			fprintf_P(uart0io, PSTR("%s"), line);
-		}*/
-
-
-	if ((r = fscanf_P(uart0io, PSTR("%31[^\n]%n"), line, &n)) > 0)
+	if ((r = fscanf_P(inout, PSTR("%31[^\n]%n"), line, &n)) > 0)
 	{ //line received
+		bool retOK = false;
 		line[n] = 0;
-		if ((r == 1) && (n == 1))
-		{ //empty line
-//			printf_P(PSTR("Empty line\n"));
-			getc(uart0io); //read LF character
-		}
+		if ((line[n - 1] == '\r') || (line[n - 1] == '\n'))
+			line[n - 1] = 0; //trim cr/lf
+		if (line[0] == 0) //empty line
+		{}
 		else if (strcmp_P(line, PSTR("RESET")) == 0)
-		{
-			printf_P(PSTR("RESET OK\n"));
-			// TODO - reset
-		}
+			cmd_reset(inout);
+		else if (strcmp_P(line, PSTR("UART_BRIDGE")) == 0)
+			cmd_uart_bridge(inout);
+		else if (strcmp_P(line, PSTR("DIAG_UART1")) == 0)
+			cmd_diag_uart1(inout);
+		else if (sscanf_P(line, PSTR("DIAG_TMC%d"), &value) > 0)
+			cmd_diag_tmc(inout, (uint8_t)value);
 		else if (strcmp_P(line, PSTR("HOME0")) == 0)
-		{
-			home_idler();
-			printf_P(PSTR("HOME 0\n"));
-		}
+			retOK = home_idler();
 		else if (strcmp_P(line, PSTR("HOME1")) == 0)
-		{
-			printf_P(PSTR("HOME 1 %d\n"), home_selector()?1:0);
-		}
+			retOK = home_selector();
 		else if (strcmp_P(line, PSTR("MOVE1")) == 0)
-		{
-			move_selector();
-			printf_P(PSTR("MOVE 1\n"));
-		}
+			retOK = move_selector();
 		else if (strcmp_P(line, PSTR("TEST")) == 0)
 		{
 			shr16_set_dir(7);
@@ -153,8 +199,6 @@ void loop()
 				tmc2130_do_step(7);
 				delay(1);
 			}
-			printf_P(PSTR("TEST OK\n"));
-			// TODO - reset
 		}
 		else if (strcmp_P(line, PSTR("TEST1")) == 0)
 		{
@@ -164,15 +208,12 @@ void loop()
 				tmc2130_do_step(7);
 				delay(1);
 			}
-			printf_P(PSTR("TEST1 OK\n"));
-			// TODO - reset
 		}
 		else if (sscanf_P(line, PSTR("T%d"), &value) > 0)
 		{ //T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
 				switch_extruder(value);
-				printf_P(PSTR("OK %d\n"), value);
 			}
 			else //value out of range
 				printf_P(PSTR("Invalid extruder %d\n"), value);
@@ -183,57 +224,79 @@ void loop()
 		}
 //		printf_P(PSTR("line: '%s'\n"), line);
 //		printf_P(PSTR("scan: %d %d\n"), r, n);
+//		printf_P(PSTR("line: [0]=%d [1]=%d [n-1]=%d [n]=%d\n"), line[0], line[1], line[n-1], line[n]);
+		if (retOK) printf_P(PSTR("OK\n"));
 	}
 	else
 	{ //nothing received
 	}
-/*	uint8_t btn = button();
-	switch (btn)
+}
+
+void process_signals(void)
+{
+	// test signal 0
+	if (SIG_GET(0))
 	{
-	case 1:
-		printf_P(PSTR("BUTTON 1\n"));
-		if (active_extruder < (EXTRUDERS - 1))
-		{
-			switch_extruder(active_extruder + 1);
-			printf_P(PSTR("EXTRUDER+ %d\n"), active_extruder);
-		}
-		break;
-	case 2:
-		printf_P(PSTR("BUTTON 2\n"));
-		break;
-	case 3:
-		printf_P(PSTR("BUTTON 3\n"));
-		if (active_extruder > 0)
-		{
-			switch_extruder(active_extruder - 1);
-			printf_P(PSTR("EXTRUDER- %d\n"), active_extruder);
-		}
-		break;
-	}*/
-// LED TEST
-/*	delay(100);
-	shr16_set_led(_leds);
-	_leds <<= 1;
-	_leds &= 0x03ff;
-	if (_leds == 0) _leds = 1;*/
+		SIG_CLR(0);
+		printf_P(PSTR("SIG0\n"));
+	}
+	// buttons changed
+	if (SIG_GET(SIG_ID_BTN))
+	{
+		SIG_CLR(SIG_ID_BTN);
+		process_buttons();
+	}
 }
 
-bool switch_extruder(int new_extruder)
+void process_buttons(void)
 {
-	//TODO - control motors
-	active_extruder = new_extruder;
-	shr16_set_led(1 << 2*active_extruder);
-	return true;
+	if (abtn3_clicked(0)) 
+	{
+//		printf_P(PSTR("BTN0\n"));
+		if (active_extruder > 0) switch_extruder(active_extruder - 1);
+	}
+	if (abtn3_clicked(1))
+	{
+//		printf_P(PSTR("BTN1\n"));
+		for (uint8_t i = 0; i < 5; i++)
+		{
+			shr16_set_led(1 << (2 * i));
+			delay(100);
+		}
+		switch_extruder(2);
+	}
+	if (abtn3_clicked(2))
+	{
+//		printf_P(PSTR("BTN2\n"));
+		if ((active_extruder >= 0) && (active_extruder < (EXTRUDERS - 1))) switch_extruder(active_extruder + 1);
+	}
 }
 
-uint8_t buttons_sample(void)
+
+extern "C" {
+
+void _every_1ms(void)
 {
-	int raw = analogRead(BTN_APIN);
-	// Button 1 - 0
-	// Button 2 - 344
-	// Button 3 - 516
-	if (raw < 10) return 1;
-	else if (raw > 300 && raw < 400) return 2;
-	else if (raw > 450 && raw < 600) return 4;
-	return(0);
+}
+
+void _every_10ms(void)
+{
+	adc_cyc();
+}
+
+//int adc = 0;
+
+void _every_100ms(void)
+{
+//	printf_P(PSTR("_every_100ms %d\n"), adc);
+}
+
+void _adc_ready(void)
+{
+//	printf_P(PSTR("adc_ready %d\n"), adc_val[0]);
+//	adc = adc_val[0];
+	if (abtn3_update()) //update buttons
+		SIG_SET(SIG_ID_BTN); //set signal
+}
+
 }

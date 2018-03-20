@@ -93,7 +93,7 @@ void setup()
 void loop()
 {
 	process_commands(uart0io);
-//	process_commands(uart1io);
+	process_commands(uart1io);
 
 	process_signals();
 
@@ -120,19 +120,40 @@ extern "C" {
 
 void process_commands(FILE* inout)
 {
-	char line[32];
+	static char line[32];
+	static uint8_t count = 0;
+	int c = -1;
+	if (count < 32)
+	{
+		if ((c = getc(inout)) >= 0)
+		{
+			if (c == '\r') c = 0;
+			if (c == '\n') c = 0;
+			line[count++] = c;
+//			printf_P(PSTR("char received: '%c' %d %d\n"), (c>=32)?c:' ', c, count);
+		}
+	}
+	else
+	{
+		count = 0;
+		//overflow
+	}
 	int value = 0;
-	int n = 0;
-	int r = 0;
-	if ((r = fscanf_P(inout, PSTR("%31[^\n]%n"), line, &n)) > 0)
+//	int n = 0;
+//	int r = 0;
+//	if ((r = fscanf_P(inout, PSTR("%31[^\n]\n%n"), line, &n)) > 0)
+	if ((count > 0) && (c == 0))
 	{ //line received
+//		printf_P(PSTR("line received: '%s' %d\n"), line, count);
+		count = 0;
 		bool retOK = false;
-		line[n] = 0;
-		if ((line[n - 1] == '\r') || (line[n - 1] == '\n'))
-			line[n - 1] = 0; //trim cr/lf
-		if (line[0] == 0) //empty line
-		{}
-		else if (strcmp_P(line, PSTR("RESET")) == 0)
+//		line[n] = 0;
+//		if ((line[n - 1] == '\r') || (line[n - 1] == '\n'))
+//			line[n - 1] = 0; //trim cr/lf
+//		if (line[0] == 0) //empty line
+//		{}
+//		else
+		if (strcmp_P(line, PSTR("RESET")) == 0)
 			cmd_reset(inout);
 #ifdef _DIAG
 		else if (strcmp_P(line, PSTR("UART_BRIDGE")) == 0)
@@ -182,7 +203,8 @@ void process_commands(FILE* inout)
 //		printf_P(PSTR("line: '%s'\n"), line);
 //		printf_P(PSTR("scan: %d %d\n"), r, n);
 //		printf_P(PSTR("line: [0]=%d [1]=%d [n-1]=%d [n]=%d\n"), line[0], line[1], line[n-1], line[n]);
-		if (retOK) printf_P(PSTR("OK\n"));
+		if (retOK) printf_P(PSTR("ok\n"));
+//		printf_P(PSTR("fscanf: %d\n"), fscanf_P(inout, PSTR("\n")));
 	}
 	else
 	{ //nothing received

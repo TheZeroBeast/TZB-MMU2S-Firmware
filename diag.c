@@ -19,8 +19,10 @@ int8_t cmd_uart_bridge(FILE* inout)
 	{
 		c0 = getc(uart0io);
 		if (c0 >= 0) putc(c0, uart1io);
+//		if (c0 >= 0) printf_P(PSTR("%d\n"), c0);
 		c1 = getc(uart1io);
-		if (c1 >= 0) putc(c1, uart0io);
+//		if (c1 >= 0) putc(c1, uart0io);
+		if (c1 >= 0) printf_P(PSTR("%d\n"), c1);
 		process_signals();
 		if (abtn_state) break;
 	}

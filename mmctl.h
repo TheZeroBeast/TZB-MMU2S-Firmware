@@ -5,8 +5,10 @@
 #include <inttypes.h>
 #include "config.h"
 
-
 extern int active_extruder;
+extern bool isFilamentLoaded;
+extern bool isIdlerParked;
+
 
 extern bool home_idler();
 

@@ -44,8 +44,6 @@
 //stdin & stdout uart0/1
 #define UART_STD 0
 
-//command input uart0/1
-#define UART_CMD 0
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded
@@ -108,3 +106,6 @@
 
 //number of extruders
 #define EXTRUDERS 5
+
+//diagnostic functions
+#define _DIAG

@@ -15,18 +15,19 @@
 #include "mmctl.h"
 #include "motion.h"
 
+#ifdef _DIAG
+#include "diag.h"
+#endif //_DIAG
+
 
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 
-int active_extruder = -1;
-bool isFilamentLoaded = false;
-bool isIdlerParked = false;
-
+extern "C" {
 void process_commands(FILE* inout);
 void process_signals(void);
 void process_buttons(void);
-
+}
 
 //initialization after reset
 void setup()
@@ -77,7 +78,7 @@ void setup()
 void loop()
 {
 	process_commands(uart0io);
-//	process_commands(uart1io);
+	process_commands(uart1io);
 
 	process_signals();
 
@@ -98,97 +99,54 @@ void cmd_reset(FILE* inout)
 	asm("jmp 0");
 }
 
-void cmd_uart_bridge(FILE* inout)
-{
-	fprintf_P(inout, PSTR("UART bridge started, press any button to stop\n"));
-	int c0;
-	int c1;
-	while (1)
-	{
-		c0 = getc(uart0io);
-		if (c0 >= 0) putc(c0, uart1io);
-		c1 = getc(uart1io);
-		if (c1 >= 0) putc(c1, uart0io);
-		process_signals();
-		if (abtn_state) break;
-	}
-	fprintf_P(inout, PSTR("UART bridge terminated\n"));
-}
 
-bool cmd_diag_uart1(FILE* inout)
-{
-	if (inout == uart1io) return false;
-	fprintf_P(inout, PSTR("UART1 diagnostic\n"));
-	fprintf_P(inout, PSTR("connect loopback and press enter..\n"));
-	fflush(inout);
-	while (getc(inout) >= 0); //clear rx buffer
-	int c = 0;
-	while (((c = (char)getc(inout)) != '\n') && (c != '\r'))
-		process_signals(); //wait enter
-	fflush(uart0io);
-	while (getc(uart1io) >= 0); //clear rx buffer uart1
-	uint16_t err_tmo = 0;
-	uint16_t err_chr = 0;
-	for (c = 0; c < 256; c++)
-	{
-		putc(c, uart1io); //send char
-		uint8_t tmo = 100; //timeout
-		int cr = 0; //received char
-		while (((cr = getc(uart1io)) < 0) && (tmo--))
-			process_signals(); //wait char
-		if (cr == c) //char equal = OK
-			fprintf_P(inout, PSTR(" 0x%02x OK\n"), c);
-		else if (cr < 0) //timeout = NG
-		{
-			fprintf_P(inout, PSTR(" 0x%02x NG! timeout\n"), c);
-			err_tmo++;
-		}
-		else //char not equal = NG
-		{
-			fprintf_P(inout, PSTR(" 0x%02x NG! received 0x%02x\n"), c, cr);
-			err_chr++;
-		}
-	}
-	if ((err_tmo == 0) && (err_chr == 0))
-		fprintf_P(inout, PSTR("SUCCED\n"));
-	else
-	{
-		fprintf_P(inout, PSTR("ok=%d\n"), 256 - (err_chr + err_tmo));
-		fprintf_P(inout, PSTR("ne=%d\n"), err_chr);
-		fprintf_P(inout, PSTR("to=%d\n"), err_tmo);
-		fprintf_P(inout, PSTR("FAILED\n"));
-	}
-	return true;
-}
-
-bool cmd_diag_tmc(FILE* inout, uint8_t axis)
-{
-	fprintf_P(inout, PSTR("TMC2130, axis %d diag\n"), axis);
-	return true;
-}
+extern "C" {
 
 void process_commands(FILE* inout)
 {
-	char line[32];
+	static char line[32];
+	static uint8_t count = 0;
+	int c = -1;
+	if (count < 32)
+	{
+		if ((c = getc(inout)) >= 0)
+		{
+			if (c == '\r') c = 0;
+			if (c == '\n') c = 0;
+			line[count++] = c;
+//			printf_P(PSTR("char received: '%c' %d %d\n"), (c>=32)?c:' ', c, count);
+		}
+	}
+	else
+	{
+		count = 0;
+		//overflow
+	}
 	int value = 0;
-	int n = 0;
-	int r = 0;
-	if ((r = fscanf_P(inout, PSTR("%31[^\n]%n"), line, &n)) > 0)
+//	int n = 0;
+//	int r = 0;
+//	if ((r = fscanf_P(inout, PSTR("%31[^\n]\n%n"), line, &n)) > 0)
+	if ((count > 0) && (c == 0))
 	{ //line received
+//		printf_P(PSTR("line received: '%s' %d\n"), line, count);
+		count = 0;
 		bool retOK = false;
-		line[n] = 0;
-		if ((line[n - 1] == '\r') || (line[n - 1] == '\n'))
-			line[n - 1] = 0; //trim cr/lf
-		if (line[0] == 0) //empty line
-		{}
-		else if (strcmp_P(line, PSTR("RESET")) == 0)
+//		line[n] = 0;
+//		if ((line[n - 1] == '\r') || (line[n - 1] == '\n'))
+//			line[n - 1] = 0; //trim cr/lf
+//		if (line[0] == 0) //empty line
+//		{}
+//		else
+		if (strcmp_P(line, PSTR("RESET")) == 0)
 			cmd_reset(inout);
+#ifdef _DIAG
 		else if (strcmp_P(line, PSTR("UART_BRIDGE")) == 0)
 			cmd_uart_bridge(inout);
 		else if (strcmp_P(line, PSTR("DIAG_UART1")) == 0)
 			cmd_diag_uart1(inout);
 		else if (sscanf_P(line, PSTR("DIAG_TMC%d"), &value) > 0)
 			cmd_diag_tmc(inout, (uint8_t)value);
+#endif //_DIAG
 		else if (strcmp_P(line, PSTR("HOME")) == 0)
 			home();
 		
@@ -214,7 +172,7 @@ void process_commands(FILE* inout)
 		{ //T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
-				switch_extruder(value);
+				retOK = switch_extruder(value);
 			}
 			else //value out of range
 				printf_P(PSTR("Invalid extruder %d\n"), value);
@@ -226,7 +184,7 @@ void process_commands(FILE* inout)
 //		printf_P(PSTR("line: '%s'\n"), line);
 //		printf_P(PSTR("scan: %d %d\n"), r, n);
 //		printf_P(PSTR("line: [0]=%d [1]=%d [n-1]=%d [n]=%d\n"), line[0], line[1], line[n-1], line[n]);
-		if (retOK) printf_P(PSTR("OK\n"));
+		if (retOK) printf_P(PSTR("ok\n"));
 	}
 	else
 	{ //nothing received
@@ -273,8 +231,6 @@ void process_buttons(void)
 	}
 }
 
-
-extern "C" {
 
 void _every_1ms(void)
 {

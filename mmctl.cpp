@@ -10,6 +10,9 @@
 #include "mmctl.h"
 #include "motion.h"
 
+int active_extruder = -1;
+bool isFilamentLoaded = false;
+bool isIdlerParked = false;
 
 
 bool switch_extruder(int new_extruder)

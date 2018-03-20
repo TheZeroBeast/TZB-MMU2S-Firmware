@@ -105,7 +105,7 @@ extern "C" {
 void process_commands(FILE* inout)
 {
 	static char line[32];
-	static uint8_t count = 0;
+	static int count = 0;
 	int c = -1;
 	if (count < 32)
 	{
@@ -128,7 +128,7 @@ void process_commands(FILE* inout)
 //	if ((r = fscanf_P(inout, PSTR("%31[^\n]\n%n"), line, &n)) > 0)
 	if ((count > 0) && (c == 0))
 	{ //line received
-//		printf_P(PSTR("line received: '%s' %d\n"), line, count);
+		printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
 //		line[n] = 0;
@@ -170,6 +170,7 @@ void process_commands(FILE* inout)
 		}
 		else if (sscanf_P(line, PSTR("T%d"), &value) > 0)
 		{ //T-code scanned
+			printf_P(PSTR("T-code scanned extruder=%d\n"), value);
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
 				retOK = switch_extruder(value);
@@ -184,7 +185,11 @@ void process_commands(FILE* inout)
 //		printf_P(PSTR("line: '%s'\n"), line);
 //		printf_P(PSTR("scan: %d %d\n"), r, n);
 //		printf_P(PSTR("line: [0]=%d [1]=%d [n-1]=%d [n]=%d\n"), line[0], line[1], line[n-1], line[n]);
-		if (retOK) printf_P(PSTR("ok\n"));
+		if (retOK)
+		{
+			printf_P(PSTR("'ok' send\n"));
+			fprintf_P(inout, PSTR("ok\n"));
+		}
 	}
 	else
 	{ //nothing received

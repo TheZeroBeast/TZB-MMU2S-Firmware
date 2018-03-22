@@ -23,4 +23,5 @@ C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\main.cpp.
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\tmc2130.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\abtn3.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\mmctl.h \
- C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\motion.h
+ C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\motion.h \
+ C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\diag.h

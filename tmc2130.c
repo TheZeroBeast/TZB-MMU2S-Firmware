@@ -54,6 +54,7 @@
 
 uint8_t tmc2130_tx(uint8_t axis, uint8_t addr, uint32_t wval);
 uint8_t tmc2130_rx(uint8_t axis, uint8_t addr, uint32_t* rval);
+uint8_t tmc2130_usteps2mres(uint16_t usteps);
 
 int8_t tmc2130_wr_CHOPCONF(uint8_t axis, uint8_t toff, uint8_t hstrt, uint8_t hend, uint8_t fd3, uint8_t disfdcc, uint8_t rndtf, uint8_t chm, uint8_t tbl, uint8_t vsense, uint8_t vhighfs, uint8_t vhighchm, uint8_t sync, uint8_t mres, uint8_t intpol, uint8_t dedge, uint8_t diss2g)
 {
@@ -144,6 +145,45 @@ inline int8_t __sg_thr(uint8_t axis)
 	return TMC2130_SG_THR;
 }
 
+inline int8_t __curh(uint8_t axis)
+{
+	switch (axis)
+	{
+	case 0: return 16;
+	case 1: return 16;
+	case 2: return 16;
+	}
+	return 16;
+}
+
+inline int8_t __curr(uint8_t axis)
+{
+	switch (axis)
+	{
+	case 0: return 16;
+	case 1: return 16;
+	case 2: return 20;
+	}
+	return 16;
+}
+
+inline int8_t __res(uint8_t axis)
+{
+	switch (axis)
+	{
+	case 0: return tmc2130_usteps2mres((uint16_t)2);
+	case 1: return tmc2130_usteps2mres((uint16_t)2);
+	case 2: return tmc2130_usteps2mres((uint16_t)2);
+	}
+	return 16;
+}
+
+uint8_t tmc2130_usteps2mres(uint16_t usteps)
+{
+	uint8_t mres = 8; while (mres && (usteps >>= 1)) mres--;
+	return mres;
+}
+
 //axis config
 //byte 0 bit 0..3 - mres
 //byte 0 bit 4..5 - reserved
@@ -162,11 +202,9 @@ int8_t tmc2130_init_axis(uint8_t axis)
 	tmc2130_wr_PWMCONF(axis, 150, 2, 2, 1, 0, 0);
 	tmc2130_wr_TPWMTHRS(axis, 0);
 */
-	uint8_t mres = 7;
-	uint8_t curh = 16;
-	uint8_t curr = 16;
-	uint16_t tcoolthrs = 450;
-	if (tmc2130_setup_chopper(axis, mres, curh, curr)) return -1;
+	//uint8_t mres = 7;
+	//uint16_t tcoolthrs = 450;
+	if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__curr(axis))) return -1;
 	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
 	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));

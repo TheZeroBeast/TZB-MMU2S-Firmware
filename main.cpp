@@ -72,6 +72,11 @@ void setup()
 
 	shr16_set_ena(7);
 
+	
+	
+	home();
+	
+
 }
 
 //main loop
@@ -82,12 +87,9 @@ void loop()
 
 	process_signals();
 
-// LED TEST
-/*	delay(100);
-	shr16_set_led(_leds);
-	_leds <<= 1;
-	_leds &= 0x03ff;
-	if (_leds == 0) _leds = 1;*/
+	demo_switch();
+		
+
 }
 
 void cmd_reset(FILE* inout)
@@ -114,7 +116,6 @@ void process_commands(FILE* inout)
 			if (c == '\r') c = 0;
 			if (c == '\n') c = 0;
 			line[count++] = c;
-//			printf_P(PSTR("char received: '%c' %d %d\n"), (c>=32)?c:' ', c, count);
 		}
 	}
 	else
@@ -123,20 +124,14 @@ void process_commands(FILE* inout)
 		//overflow
 	}
 	int value = 0;
-//	int n = 0;
-//	int r = 0;
-//	if ((r = fscanf_P(inout, PSTR("%31[^\n]\n%n"), line, &n)) > 0)
+
 	if ((count > 0) && (c == 0))
-	{ //line received
+	{ 
+		//line received
 		printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
-//		line[n] = 0;
-//		if ((line[n - 1] == '\r') || (line[n - 1] == '\n'))
-//			line[n - 1] = 0; //trim cr/lf
-//		if (line[0] == 0) //empty line
-//		{}
-//		else
+
 		if (strcmp_P(line, PSTR("RESET")) == 0)
 			cmd_reset(inout);
 #ifdef _DIAG
@@ -150,45 +145,32 @@ void process_commands(FILE* inout)
 		else if (strcmp_P(line, PSTR("HOME")) == 0)
 			home();
 		
-		else if (strcmp_P(line, PSTR("TEST")) == 0)
-		{
-			shr16_set_dir(7);
-			for (int i = 0; i < 1000; i++)
-			{
-				tmc2130_do_step(7);
-				delay(1);
-			}
-		}
-		else if (strcmp_P(line, PSTR("TEST1")) == 0)
-		{
-			shr16_set_dir(0);
-			for (int i = 0; i < 1000; i++)
-			{
-				tmc2130_do_step(7);
-				delay(1);
-			}
-		}
 		else if (sscanf_P(line, PSTR("T%d"), &value) > 0)
-		{ //T-code scanned
+		{ 
+			//T-code scanned
 			printf_P(PSTR("T-code scanned extruder=%d\n"), value);
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
 				retOK = switch_extruder(value);
 			}
-			else //value out of range
+			else 
+				//value out of range
 				printf_P(PSTR("Invalid extruder %d\n"), value);
 		}
+
+		
 		else
 		{ //unknown command
 			printf_P(PSTR("Unknown command: \"%s\"\n"), line);
 		}
-//		printf_P(PSTR("line: '%s'\n"), line);
-//		printf_P(PSTR("scan: %d %d\n"), r, n);
-//		printf_P(PSTR("line: [0]=%d [1]=%d [n-1]=%d [n]=%d\n"), line[0], line[1], line[n-1], line[n]);
+
 		if (retOK)
 		{
 			printf_P(PSTR("'ok' send\n"));
 			fprintf_P(inout, PSTR("ok\n"));
+			load_filament_intoPrinter();
+			printf_P(PSTR("loaded in printer\n"));
+			if (!isIdlerParked) park_idler(false); // park idler for free movement
 		}
 	}
 	else
@@ -216,23 +198,12 @@ void process_buttons(void)
 {
 	if (abtn3_clicked(0)) 
 	{
-//		printf_P(PSTR("BTN0\n"));
-		if (active_extruder > 0) switch_extruder(active_extruder - 1);
 	}
 	if (abtn3_clicked(1))
 	{
-//		printf_P(PSTR("BTN1\n"));
-		for (uint8_t i = 0; i < 5; i++)
-		{
-			shr16_set_led(1 << (2 * i));
-			delay(100);
-		}
-		switch_extruder(2);
 	}
 	if (abtn3_clicked(2))
 	{
-//		printf_P(PSTR("BTN2\n"));
-		if ((active_extruder >= 0) && (active_extruder < (EXTRUDERS - 1))) switch_extruder(active_extruder + 1);
 	}
 }
 

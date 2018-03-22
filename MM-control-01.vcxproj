@@ -48,8 +48,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\MM-control-01;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\libraries;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\arduino\avr\libraries;C:\Users\Sasa\Documents\Arduino\libraries;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\arduino\avr\variants\leonardo;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\avr\include\;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\avr\include\avr\;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\lib\gcc\avr\4.8.1\include;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\lib\gcc\avr\4.9.2\include;$(ProjectDir)..\..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\lib\gcc\avr\4.9.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)__vm\.MM-control-01.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\MMU_FW;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\libraries;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\arduino\avr\libraries;C:\Users\Sasa\Documents\Arduino\libraries;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\arduino\avr\variants\leonardo;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\avr\include\;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\avr\include\avr\;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\lib\gcc\avr\4.8.1\include;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\lib\gcc\avr\4.9.2\include;$(ProjectDir)..\..\..\..\InstalledPrograms\Arduino\hardware\tools\avr\lib\gcc\avr\4.9.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ProjectDir)__vm\.MMU_FW.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>__AVR_ATmega32u4__;__AVR_ATmega32U4__;F_CPU=16000000L;ARDUINO=10805;ARDUINO_AVR_LEONARDO;ARDUINO_ARCH_AVR;USB_VID=0x2341;USB_PID=0x8036;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -89,12 +89,14 @@
     <ClInclude Include="config.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClInclude Include="diag.h" />
     <ClInclude Include="main.h">
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClInclude Include="mmctl.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClInclude Include="motion.h" />
     <ClInclude Include="shr16.h">
       <FileType>CppCode</FileType>
     </ClInclude>
@@ -111,10 +113,12 @@
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClInclude Include="__vm\.MM-control-01.vsarduino.h" />
+    <ClInclude Include="__vm\.MMU_FW.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="abtn3.c" />
     <ClCompile Include="adc.c" />
+    <ClCompile Include="diag.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mmctl.cpp" />
     <ClCompile Include="motion.cpp" />
@@ -130,4 +134,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties arduino.upload.port="COM22" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

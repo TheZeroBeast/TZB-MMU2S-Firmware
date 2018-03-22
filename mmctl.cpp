@@ -33,9 +33,50 @@ bool switch_extruder(int new_extruder)
 		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
 		load_filament(); // load new filament
 	}
-
-	if (!isIdlerParked) park_idler(false); // park idler for free movement
-
-	shr16_set_led(1 << 2 * active_extruder);
+	
+	shr16_set_led(1 << 2 * (4-active_extruder));
 	return true;
+}
+
+
+void demo_switch()
+{
+	int _delay = 10000;
+
+	switch_extruder(1);
+	if (!isIdlerParked) park_idler(false); // park idler for free movement
+	delay(_delay);
+	shr16_set_led(0x2aa);
+	delay(800);
+	shr16_set_led(0x155);
+
+	switch_extruder(3);
+	if (!isIdlerParked) park_idler(false); // park idler for free movement
+	delay(_delay);
+	shr16_set_led(0x2aa);
+	delay(800);
+	shr16_set_led(0x155);
+
+	switch_extruder(0);
+	if (!isIdlerParked) park_idler(false); // park idler for free movement
+	delay(_delay);
+	shr16_set_led(0x2aa);
+	delay(800);
+	shr16_set_led(0x155);
+
+	switch_extruder(2);
+	if (!isIdlerParked) park_idler(false); // park idler for free movement
+	delay(_delay);
+	shr16_set_led(0x2aa);
+	delay(800);
+	shr16_set_led(0x155);
+
+	switch_extruder(3);
+	if (!isIdlerParked) park_idler(false); // park idler for free movement
+	delay(_delay);
+	shr16_set_led(0x2aa);
+	delay(800);
+	shr16_set_led(0x155);
+
+
 }

@@ -39,13 +39,13 @@ void setup()
 	shr16_init(); // shift register
 	shr16_set_led(0x3ff); // set all leds on
 
-	uart0_init(); // uart0 - usb
-
+	//uart0_init(); // uart0 - usb
+/*
 #if (UART_STD == 0)
 	stdin = uart0io; // stdin = uart0
 	stdout = uart0io; // stdout = uart0
 #endif //(UART_STD == 0)
-
+*/
 	uart1_init(); //uart1
 
 #if (UART_STD == 1)
@@ -82,7 +82,7 @@ void setup()
 //main loop
 void loop()
 {
-	process_commands(uart0io);
+	//process_commands(uart0io);
 	process_commands(uart1io);
 
 	process_signals();

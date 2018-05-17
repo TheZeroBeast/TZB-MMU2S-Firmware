@@ -42,9 +42,6 @@
     <ClInclude Include="spi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="timer0.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="tmc2130.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -58,6 +55,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="diag.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Buttons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -80,9 +80,6 @@
     <ClCompile Include="spi.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="timer0.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="tmc2130.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -93,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="diag.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Buttons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

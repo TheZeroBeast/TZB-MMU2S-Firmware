@@ -15,7 +15,6 @@ C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\main.cpp.
  D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/USBDesc.h \
  D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/USBCore.h \
  D:\InstalledPrograms\Arduino\hardware\arduino\avr\variants\leonardo/pins_arduino.h \
- C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\timer0.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\shr16.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\adc.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\uart.h \
@@ -24,4 +23,5 @@ C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\main.cpp.
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\abtn3.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\mmctl.h \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\motion.h \
- C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\diag.h
+ C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\Buttons.h \
+ D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/arduino.h

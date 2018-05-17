@@ -5,6 +5,9 @@
 #define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
 #define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
 
+
+#define green_board
+
 //shr16 - 16bit shift register
 //pinout - hardcoded
 //#define SHR16_CLK //signal d13 - PC7
@@ -53,8 +56,8 @@
 #define TMC2130_SPSR           SPI_SPSR(TMC2130_SPI_RATE)
 //params:
 // SG_THR stallguard treshold (sensitivity), range -128..127, real 0-3
-#define TMC2130_SG_THR_0       3
-#define TMC2130_SG_THR_1       5
+#define TMC2130_SG_THR_0       1
+#define TMC2130_SG_THR_1       6
 #define TMC2130_SG_THR_2       5
 // TCOOLTHRS coolstep treshold, usable range 400-600
 #define TMC2130_TCOOLTHRS_0    450
@@ -108,4 +111,4 @@
 #define EXTRUDERS 5
 
 //diagnostic functions
-#define _DIAG
+//#define _DIAG

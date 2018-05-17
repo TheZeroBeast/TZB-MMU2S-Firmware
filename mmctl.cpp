@@ -14,69 +14,76 @@ int active_extruder = -1;
 bool isFilamentLoaded = false;
 bool isIdlerParked = false;
 
+bool isPrinting = false;
+bool isHomed = false;
 
 bool switch_extruder(int new_extruder)
 {
+	isPrinting = true;
+	bool _return = false;
+	if (!isHomed) { home(); }
+  
+  
+    shr16_set_led(2 << 2 * (4 - active_extruder));
+
 	int previous_extruder = active_extruder;
 	active_extruder = new_extruder;
-	
-	printf_P(PSTR("Current extruder :%d\n"), previous_extruder);
-	printf_P(PSTR("New extruder :%d\n"), active_extruder);
 
 	if (previous_extruder == active_extruder)
 	{
-		if (!isFilamentLoaded) load_filament(); // just load filament if not loaded
+		if (!isFilamentLoaded)
+		{
+			load_filament(); // just load filament if not loaded
+			_return = true;
+		}
 	}
 	else
 	{
 		if (isFilamentLoaded) { unload_filament(); } // unload filament first
 		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
 		load_filament(); // load new filament
+		_return = true;
 	}
 	
-	shr16_set_led(1 << 2 * (4-active_extruder));
-	return true;
+	shr16_set_led(0x000);
+	shr16_set_led(1 << 2 * (4 - active_extruder));
+	return _return;
 }
 
 
-void demo_switch()
+
+bool select_extruder(int new_extruder)
 {
-	int _delay = 10000;
 
-	switch_extruder(1);
-	if (!isIdlerParked) park_idler(false); // park idler for free movement
-	delay(_delay);
-	shr16_set_led(0x2aa);
-	delay(800);
-	shr16_set_led(0x155);
+	bool _return = false;
+	if (!isHomed) { home(); }
 
-	switch_extruder(3);
-	if (!isIdlerParked) park_idler(false); // park idler for free movement
-	delay(_delay);
-	shr16_set_led(0x2aa);
-	delay(800);
-	shr16_set_led(0x155);
+	Serial.println(new_extruder);
+	shr16_set_led(2 << 2 * (4 - active_extruder));
 
-	switch_extruder(0);
-	if (!isIdlerParked) park_idler(false); // park idler for free movement
-	delay(_delay);
-	shr16_set_led(0x2aa);
-	delay(800);
-	shr16_set_led(0x155);
+	
 
-	switch_extruder(2);
-	if (!isIdlerParked) park_idler(false); // park idler for free movement
-	delay(_delay);
-	shr16_set_led(0x2aa);
-	delay(800);
-	shr16_set_led(0x155);
+	int previous_extruder = active_extruder;
+	active_extruder = new_extruder;
 
-	switch_extruder(3);
-	if (!isIdlerParked) park_idler(false); // park idler for free movement
-	delay(_delay);
-	shr16_set_led(0x2aa);
-	delay(800);
-	shr16_set_led(0x155);
+	if (previous_extruder == active_extruder)
+	{
+		if (!isFilamentLoaded)
+		{
+			_return = true;
+		}
+	}
+	else
+	{
+		if (isIdlerParked) park_idler(true);
+		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+		park_idler(false);
+		_return = true;
+	}
 
-
+	shr16_set_led(0x000);
+	shr16_set_led(1 << 2 * (4 - active_extruder));
+	return _return;
 }
+
+

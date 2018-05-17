@@ -1,6 +1,6 @@
 C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\MM-control-01.cpp.o: \
  C:\Users\Sasa\AppData\Local\Temp\VMBuilds\MM-control-01\leonardo\Debug\MM-control-01.cpp \
- D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/Arduino.h \
+ D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/arduino.h \
  D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/binary.h \
  D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/WCharacter.h \
  D:\InstalledPrograms\Arduino\hardware\arduino\avr\cores\arduino/WString.h \

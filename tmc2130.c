@@ -150,7 +150,7 @@ inline int8_t __curh(uint8_t axis)
 	switch (axis)
 	{
 	case 0: return 16;
-	case 1: return 16;
+	case 1: return 10;
 	case 2: return 16;
 	}
 	return 16;
@@ -160,9 +160,9 @@ inline int8_t __curr(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 16;
-	case 1: return 16;
-	case 2: return 20;
+	case 0: return 30;
+	case 1: return 30;
+	case 2: return 25;
 	}
 	return 16;
 }
@@ -171,7 +171,7 @@ inline int8_t __res(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return tmc2130_usteps2mres((uint16_t)2);
+	case 0: return tmc2130_usteps2mres((uint16_t)16);
 	case 1: return tmc2130_usteps2mres((uint16_t)2);
 	case 2: return tmc2130_usteps2mres((uint16_t)2);
 	}
@@ -217,48 +217,26 @@ uint8_t tmc2130_check_axis(uint8_t axis)
 	return 0x3f;
 }
 
-void tmc2130_do_step(uint8_t axis_mask)
-{
-//	if (axis_mask & 1) PORTD |= 0x10; //NG
-//	if (axis_mask & 2) PORTB |= 0x10; //NG
-	if (axis_mask & 1) PORTB |= 0x10;
-	if (axis_mask & 2) PORTD |= 0x10;
-	if (axis_mask & 4) PORTD |= 0x40;;
-	asm("nop");
-	PORTD &= ~0x10;
-	PORTB &= ~0x10;
-	PORTD &= ~0x40;
-	asm("nop");
-/*	switch (axis)
-	{
-	case 0:
-		PORTD |= 0x10;
-		asm("nop");
-		PORTD &= ~0x10;
-		break;
-	case 1:
-		PORTB |= 0x10;
-		asm("nop");
-		PORTB &= ~0x10;
-		break;
-	case 2:
-		PORTD |= 0x40;
-		asm("nop");
-		PORTD &= ~0x40;
-		break;
-	}
-	asm("nop");*/
-}
 
 
 int8_t tmc2130_init()
 {
 	DDRC |= 0x40;
 	DDRD |= 0x80;
-	DDRE |= 0x40;
+#ifdef green_board
+	DDRE |= 0x40;  // green board
+#else
+	DDRB |= 0x80   // black board
+#endif // green_board
+
 	PORTC |= 0x40;
 	PORTD |= 0x80;
-	PORTE |= 0x40;
+
+#ifdef green_board
+	PORTE |= 0x40;  // green board
+#else
+	PORTB |= 0x80;  // black board
+#endif
 
 	DDRD |= 0x10;
 	DDRB |= 0x10;
@@ -305,7 +283,11 @@ inline void tmc2130_cs_low(uint8_t axis)
 	{
 	case 0: PORTC &= ~0x40; break;
 	case 1: PORTD &= ~0x80; break;
-	case 2: PORTE &= ~0x40; break;
+#ifdef green_board
+	case 2: PORTE &= ~0x40; break; //// green board
+#else
+	case 2: PORTB &= ~0x80; break; //// black board
+#endif 
 	}
 }
 
@@ -315,7 +297,11 @@ inline void tmc2130_cs_high(uint8_t axis)
 	{
 	case 0: PORTC |= 0x40; break;
 	case 1: PORTD |= 0x80; break;
-	case 2: PORTE |= 0x40; break;
+#ifdef green_board
+	case 2: PORTE |= 0x40; break; //// green board
+#else
+	 case 2: PORTB |= 0x80; break; //// black board
+#endif
 	}
 }
 

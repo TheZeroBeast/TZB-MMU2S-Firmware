@@ -1,12 +1,11 @@
 //config.h - main configuration file
 
 //timer0
-#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
-#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
-#define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
+//#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
+//#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
+//#define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
 
-
-#define green_board
+//#define green_board
 
 //shr16 - 16bit shift register
 //pinout - hardcoded

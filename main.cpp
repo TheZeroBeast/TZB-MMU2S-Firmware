@@ -19,7 +19,7 @@
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 int _loop = 0;
-
+int _c = 0;
  
 extern "C" {
 void process_commands(FILE* inout);
@@ -31,9 +31,16 @@ void process_commands(FILE* inout);
 //initialization after reset
 void setup()
 {
+
+	Serial.begin(115200);
+	delay(1500);
+	
+
 	shr16_init(); // shift register
-	shr16_set_led(0x3ff); // set all leds on
+	led_blink(0);
+
 	uart1_init(); //uart1
+	led_blink(1);
 
 #if (UART_STD == 1)
 	stdin = uart1io; // stdin = uart1
@@ -41,27 +48,29 @@ void setup()
 #endif //(UART_STD == 1)
 
 	spi_init();
-	tmc2130_init(); // trinamic
+	led_blink(2);
+
+	tmc2130_init(1); // trinamic
+	led_blink(3);
+		
 	adc_init(); // ADC
-
-	delay(50);
-
-  shr16_set_ena(7);
-  shr16_set_led(0x000);
+	led_blink(4);
+		
+	shr16_set_ena(7);
+	shr16_set_led(0x000);
 	
+	init_Pulley();
+	 
 	home();
-	
-	Serial.begin(115200);
-
+	tmc2130_init(0); // trinamic
 	
 }
 
 //main loop
 void loop()
 {
+	
 	process_commands(uart1io);
- 
-
 
 
 	if (!isPrinting)
@@ -129,10 +138,13 @@ void process_commands(FILE* inout)
 			//T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
-				retOK = switch_extruder(value);
+				Serial.print("[ TOOLCHANGE : ");
+				Serial.print(toolChanges);
+				Serial.println(" ]");
+
+				retOK = switch_extruder_withSensor(value);
 				
 				delay(200);
-
 				if (retOK)
 				{
 					fprintf_P(inout, PSTR("ok\n"));
@@ -145,10 +157,6 @@ void process_commands(FILE* inout)
 				
 			}
 		}
-
-
-		
-
 	}
 	else
 	{ //nothing received

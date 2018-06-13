@@ -7,6 +7,7 @@
 #include <Arduino.h>
 #include "main.h"
 #include "mmctl.h"
+#include "Buttons.h"
 
 
 const int selector_steps_after_homing = -3700;
@@ -14,14 +15,15 @@ const int idler_steps_after_homing = -130;
 
 const int selector_steps = 2790/4;
 const int idler_steps = 1420 / 4;    // 2 msteps = 180 / 4
-const int idler_parking_steps = (idler_steps / 2)+40;  // 
+const int idler_parking_steps = (idler_steps / 2) + 40;  // 40
 
 const int bowden_length = 1000;
 
-
+// endstop to tube  - 30 mm, 550 steps
 
 
 void move(int _idler, int _selector, int _pulley);
+void move_proportional(int _idler, int _selector);
 
 int set_idler_direction(int _steps);
 int set_selector_direction(int _steps);
@@ -33,6 +35,9 @@ void park_idler(bool _unpark);
 void load_filament();
 void unload_filament();
 void load_filament_inPrinter();
+
+
+void load_filament_withSensor();
 
 void do_pulley_step();
 void do_idler_step();
@@ -54,7 +59,7 @@ void set_positions(int _current_extruder, int _next_extruder)
 	int _idler_steps = (_current_extruder - _next_extruder) * idler_steps;
 
 	// move both to new position
-	move(_idler_steps, _selector_steps,0);
+	move_proportional(_idler_steps, _selector_steps);
 }
 
 void load_filament()
@@ -78,17 +83,136 @@ void load_filament()
 	for (int i = 0; i < 9450; i++)   // 8800
 	{
 		do_pulley_step();
-		
+
 		if (i > 200 && i < 4000 && _speed > 600) _speed = _speed - 3;
 		if (i > 100 && i < 4000 && _speed > 600) _speed = _speed - 1;
-		if (i > 8300 && _speed < 3000) _speed = _speed + 2;  
+		if (i > 8300 && _speed < 3000) _speed = _speed + 2;
 		delayMicroseconds(_speed);
 	}
-	
+
 	isFilamentLoaded = true;  // filament loaded 
 }
 
- 
+void load_filament_withSensor()
+{
+	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+
+	shr16_set_dir(shr16_get_dir() & ~4);
+
+	int _loadSteps = 0;
+	Serial.println("-----------------------------");
+	Serial.print("LOAD ");
+	Serial.println(active_extruder);
+
+	// we can expect something like 570 steps to get in sensor
+	do
+	{
+		do_pulley_step();
+		_loadSteps++;
+		delayMicroseconds(5500);
+
+	} while (digitalRead(A1) == 0 && _loadSteps < 1200);
+	
+	Serial.print("  - steps :");
+	Serial.println(_loadSteps);
+	Serial.print("  - switch is :");
+	Serial.println(digitalRead(A1));
+	
+
+	if (digitalRead(A1) == 0)
+	{
+		// attempt to correct
+		Serial.println("!!!!!!!!!! Attempt to correct !!!!!!!!!!!");
+		
+
+		shr16_set_dir(shr16_get_dir() | 4);
+		for (int i = 500; i >= 0; i--)
+		{
+			do_pulley_step();
+			delayMicroseconds(6000);
+		}
+
+		shr16_set_dir(shr16_get_dir() & ~4);
+		_loadSteps = 0;
+		do
+		{
+			do_pulley_step();
+			_loadSteps++;
+			delayMicroseconds(6000);
+
+		} while (digitalRead(A1) == 0 && _loadSteps < 1500);
+
+		Serial.print("     - switch is :");
+		Serial.print(digitalRead(A1));
+		Serial.print("     - steps :");
+		Serial.println(_loadSteps);
+	}
+
+
+	if (digitalRead(A1) == 0)
+	{
+		// error in loading
+		Serial.println("ERROR on loading");
+		Serial.print("  - switch is :");
+		Serial.println(digitalRead(A1));
+
+		park_idler(false);
+		do
+		{
+			shr16_set_led(0x000);
+			delay(100);
+			shr16_set_led(1 << 1 * (4 - active_extruder));
+			delay(100);
+		} while ( buttonClicked() == 0 );
+
+		park_idler(true);
+		// TODO: do not repeat same code, try to do it until succesfull load
+		_loadSteps = 0;
+		do
+		{
+			do_pulley_step();
+			_loadSteps++;
+			delayMicroseconds(5500);
+
+		} while (_loadSteps < 700 );
+		// ?
+	}
+	else
+	{
+		Serial.print("  CORRECT, steps :");
+		Serial.println(_loadSteps);
+	}
+
+	float _speed = 4500;
+
+	for (int i = 0; i < 8500; i++)   // 8800
+	{
+		do_pulley_step();
+		
+		if (i > 10 && i < 4000 && _speed > 600) _speed = _speed - 4;
+		if (i > 100 && i < 4000 && _speed > 600) _speed = _speed - 1;
+		if (i > 8000 && _speed < 3000) _speed = _speed + 2;  
+		delayMicroseconds(_speed);
+	}
+
+	isFilamentLoaded = true;  // filament loaded 
+}
+
+void load_filament_test()
+{
+	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+
+	shr16_set_dir(shr16_get_dir() & ~4);
+
+	int _loadSteps = 0;
+
+	park_idler(false);
+	delay(200);
+	park_idler(true);
+	delay(200);
+	
+	isFilamentLoaded = true;  // filament loaded 
+}
 
 
 void unload_filament()
@@ -103,7 +227,7 @@ void unload_filament()
 	float _first_point = 1100;
 	float _second_point = 9300;  //8500
 
-	for (int i = 9400; i > 0; i--)    //8950
+	for (int i = 9800; i > 0; i--)    //8950
 	{
 		do_pulley_step();
 
@@ -115,6 +239,7 @@ void unload_filament()
 	}
 
 	// move filament here and there to settle down in cooling PTFE tube
+
 	_speed = 8000;
 	shr16_set_dir(shr16_get_dir() & ~4);
 	for (int i = 150; i > 0; i--)
@@ -132,7 +257,180 @@ void unload_filament()
 }
 
 
+void unload_filament_withSensor()
+{
+	// unloads filament from extruder - filament is above Bondtech gears
 
+	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+
+	shr16_set_dir(shr16_get_dir() | 4);
+
+	float _speed = 2000;
+	float _first_point = 1800;
+	float _second_point = 8700;  //8500
+	int _endstop_hit = 0;
+	Serial.println("-----------------------------");
+	Serial.print("UNLOAD ");
+	Serial.println(active_extruder);
+
+	int _unloadSteps = 9500;
+	do
+	{
+		do_pulley_step();
+		_unloadSteps--;
+
+		if (_unloadSteps < 1400 && _speed < 6000) _speed = _speed + 3;
+		if (_unloadSteps < _first_point && _speed < 2500) _speed = _speed + 2;
+		if (_unloadSteps < _second_point && _unloadSteps > 5000 && _speed > 550) _speed = _speed - 2;
+
+		delayMicroseconds(_speed);
+		if (digitalRead(A1) == 0)
+		{
+			_endstop_hit++;
+		}
+
+	} while (_endstop_hit < 50 && _unloadSteps > 0);
+	
+	Serial.print(" - steps : ");
+	Serial.println(_unloadSteps);
+
+	Serial.print(" - switch is :");
+	Serial.println(digitalRead(A1));
+
+	for (int i = 150; i > 0; i--)
+	{
+		do_pulley_step();
+		delayMicroseconds(5000);
+	}
+
+
+	if (digitalRead(A1) == 1)
+	{
+		for (int i = 10; i > 0; i--)
+		{
+			if (digitalRead(A1) == 1)
+			{
+				shr16_set_dir(shr16_get_dir() | 4);
+				for (int i = 180; i > 0; i--)
+				{
+					do_pulley_step();
+					delayMicroseconds(5000);
+				}
+
+				shr16_set_dir(shr16_get_dir() & ~4);
+				for (int i = 150; i > 0; i--)
+				{
+					do_pulley_step();
+					delayMicroseconds(5000);
+				}
+				
+				shr16_set_dir(shr16_get_dir() | 4);
+				int _steps = 4000;
+				do
+				{
+					do_pulley_step();
+					_steps--;
+					delayMicroseconds(4000);
+				} while (digitalRead(A1) == 1 && _steps > 0);
+				Serial.println("!!!!!!!!!! Attempt to correct !!!!!!!!!!!");
+				Serial.print("  -- steps to correct : ");
+				Serial.println(_steps);
+			}
+			delay(100);
+		}
+
+		if (digitalRead(A1) == 0)
+		{
+			for (int i = 150; i > 0; i--)
+			{
+				do_pulley_step();
+				delayMicroseconds(5000);
+			}
+		}
+
+	}
+
+	Serial.print(" - switch is :");
+	Serial.println(digitalRead(A1));
+
+	if (digitalRead(A1) == 1)
+	{
+		// error in unloading
+		Serial.println("ERROR on unload");
+		Serial.print(" - switch is :");
+		Serial.println(digitalRead(A1));
+		
+		park_idler(false);
+		do
+		{
+			shr16_set_led(0x000);
+			shr16_set_led(1 << 2 * (4 - active_extruder));
+			delay(80);
+			shr16_set_led(1 << 2 * (4 - active_extruder));
+			delay(80);
+			shr16_set_led(0x000);
+			delay(500);
+		} while (buttonClicked() == 0);
+
+		park_idler(true);
+		
+	}
+	else
+	{
+
+
+		// correct unloading
+
+		_speed = 7000;
+		// unload to PTFE tube
+		shr16_set_dir(shr16_get_dir() | 4);
+		for (int i = 550; i > 0; i--)   // 570
+		{
+			do_pulley_step();
+			delayMicroseconds(_speed);
+		}
+
+		_speed = 5000;
+		// cooling move
+		shr16_set_dir(shr16_get_dir() & ~4);
+		for (int i = 150; i > 0; i--)
+		{
+			do_pulley_step();
+			delayMicroseconds(_speed);
+		}
+		shr16_set_dir(shr16_get_dir() | 4);
+		for (int i = 160; i > 0; i--)
+		{
+			do_pulley_step();
+			delayMicroseconds(_speed);
+		}
+	}
+	
+	isFilamentLoaded = false; // filament unloaded 
+}
+
+
+void unload_filament_test()
+{
+	// unloads filament from extruder - filament is above Bondtech gears
+
+	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+
+	shr16_set_dir(shr16_get_dir() | 4);
+
+	for (int i = 100; i > 0; i--)
+	{
+		do_pulley_step();
+		delayMicroseconds(5000);
+	}
+
+	park_idler(false);
+	delay(200);
+	park_idler(true);
+	delay(200);
+	
+	isFilamentLoaded = false; // filament unloaded 
+}
 
 void load_filament_inPrinter()
 {
@@ -140,19 +438,55 @@ void load_filament_inPrinter()
 
 	shr16_set_dir(shr16_get_dir() & ~4);
 	
-	for (int i = 0; i <= 180; i++)
+	//tmc2130_init_axis_current(2, 5, 8);   // 10 initial value
+
+	for (int i = 0; i <= 80; i++)  
 	{
 		do_pulley_step();
-		delayMicroseconds(3400);
+		delayMicroseconds(3200);
 	}
 
-	// last steps done with releasing idler
-	move(idler_parking_steps*-1, 0, idler_parking_steps);
+	tmc2130_init_axis_current(2, 2, 3);    
+	for (int i = 0; i <= 300; i++)
+	{
+		do_pulley_step();
+		delayMicroseconds(2400);   //3200
+	}
 	
+	/*
+	// last steps done with releasing idler
+	tmc2130_init_axis_current(2, 5, 4);
+	move(idler_parking_steps*-1, 0, idler_parking_steps);
+	*/
+
+
+	tmc2130_init_axis_current(2, 5, 30);
+	park_idler(false);
 	isIdlerParked = true;
 }
 
+void init_Pulley()
+{
+	float _speed = 4000;
+	
 
+	shr16_set_dir(shr16_get_dir() & ~4);
+	for (int i = 200; i > 0; i--)
+	{
+		do_pulley_step();
+		delayMicroseconds(_speed);
+		shr16_set_led(1 << 2 * (int)(i/50));
+	}
+
+	shr16_set_dir(shr16_get_dir() | 4);
+	for (int i = 200; i > 0; i--)
+	{
+		do_pulley_step();
+		delayMicroseconds(_speed);
+		shr16_set_led(1 << 2 * (4-(int)(i / 50)));
+	}
+
+}
 
 
 void do_pulley_step()
@@ -203,8 +537,6 @@ bool home_idler()
 			move(1, 0,0);
 			delayMicroseconds(100);
 			uint16_t sg = tmc2130_read_sg(0);
-			//printf_P(PSTR("SG=%d\n"), tmc2130_read_sg(0));
-			//if ((i > 2) && (sg < 100))	break;
 		}
 	}
 	return true;
@@ -212,7 +544,7 @@ bool home_idler()
 bool home_selector()
 {
 	 
-	for (int c = 3; c > 0; c--)   // not really functional, let's do it rather more times to be sure
+	for (int c = 5; c > 0; c--)   // not really functional, let's do it rather more times to be sure
 	{
 		move(0, (c*20) * -1,0);
 		delay(50);
@@ -221,12 +553,15 @@ bool home_selector()
 			move(0, 1,0);
 			uint16_t sg = tmc2130_read_sg(1);
 			if ((i > 16) && (sg < 100))
-				break;
+			break;
 		}
 	}
-	 
+
+	
 	return true;
 }
+
+
 bool home()
 {
 	shr16_set_led(0x2aa);
@@ -251,11 +586,54 @@ bool home()
 
   isHomed = true;
 }
+ 
 
 
 
+void move_proportional(int _idler, int _selector)
+{
+	// gets steps to be done and set direction
+	_idler = set_idler_direction(_idler);
+	_selector = set_selector_direction(_selector);
+
+	float _idler_step = (float)_idler/(float)_selector;
+	float _idler_pos = 0;
+	int _speed = 2500;
+	int _start = _selector - 250;
+	int _end = 250;
+
+	do
+	{
+		if (_idler_pos >= 1)
+		{
+			if (_idler > 0) { PORTB |= 0x10; }
+		}
+		if (_selector > 0) { PORTD |= 0x10; }
+		
+		asm("nop");
+		
+		if (_idler_pos >= 1)
+		{
+			if (_idler > 0) { PORTB &= ~0x10; _idler--;  }
+		}
+
+		if (_selector > 0) { PORTD &= ~0x10; _selector--; }
+		asm("nop");
+
+		if (_idler_pos >= 1)
+		{
+			_idler_pos = _idler_pos - 1;
+		}
 
 
+		_idler_pos = _idler_pos + _idler_step;
+
+		delayMicroseconds(_speed);
+		if (_speed > 900 && _selector > _start) { _speed = _speed - 10; }
+		if (_speed < 2500 && _selector < _end) { _speed = _speed + 10; }
+
+	} while (_selector != 0 || _idler != 0 );
+}
 
 void move(int _idler, int _selector, int _pulley)
 {

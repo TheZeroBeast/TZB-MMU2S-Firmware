@@ -22,9 +22,10 @@ extern "C" {
 #endif //defined(__cplusplus)
 
 
-extern int8_t tmc2130_init();
+extern int8_t tmc2130_init(uint8_t homing);
 
-extern int8_t tmc2130_init_axis(uint8_t axis);
+extern int8_t tmc2130_init_axis(uint8_t axis, uint8_t homing);
+extern int8_t tmc2130_init_axis_current(uint8_t axis, uint8_t current_h, uint8_t current_r);
 
 extern uint8_t tmc2130_check_axis(uint8_t axis);
 

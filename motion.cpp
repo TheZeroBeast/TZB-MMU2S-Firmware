@@ -32,11 +32,8 @@ int set_pulley_direction(int _steps);
 void cut_filament();
 
 void park_idler(bool _unpark);
-void load_filament();
-void unload_filament();
+
 void load_filament_inPrinter();
-
-
 void load_filament_withSensor();
 
 void do_pulley_step();
@@ -62,40 +59,12 @@ void set_positions(int _current_extruder, int _next_extruder)
 	move_proportional(_idler_steps, _selector_steps);
 }
 
-void load_filament()
-{
-	// loads filament from parking position into the extruder and stops above Bondtech gears.
-	// Rest done after printer confirms by "OK"
 
-	// 1 step = 0.049 mm
-	// bowden - PTFE length = 330 mm
-	// 60 mm to pass first Festo ( 1220 steps )
-	// 7800 steps to get out from second FESTO
-	// 35 mm from second FESTO to bondtech gears ( 720 steps )
-	// 8550 steps total length
-
-	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-
-	shr16_set_dir(shr16_get_dir() & ~4);
-
-	float _speed = 5500;
-
-	for (int i = 0; i < 9450; i++)   // 8800
-	{
-		do_pulley_step();
-
-		if (i > 200 && i < 4000 && _speed > 600) _speed = _speed - 3;
-		if (i > 100 && i < 4000 && _speed > 600) _speed = _speed - 1;
-		if (i > 8300 && _speed < 3000) _speed = _speed + 2;
-		delayMicroseconds(_speed);
-	}
-
-	isFilamentLoaded = true;  // filament loaded 
-}
 
 void load_filament_withSensor()
 {
 	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+	tmc2130_init_axis_current(2, 1, 30);
 
 	shr16_set_dir(shr16_get_dir() & ~4);
 
@@ -195,71 +164,15 @@ void load_filament_withSensor()
 		delayMicroseconds(_speed);
 	}
 
+	tmc2130_init_axis_current(2, 0, 0);
 	isFilamentLoaded = true;  // filament loaded 
 }
-
-void load_filament_test()
-{
-	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-
-	shr16_set_dir(shr16_get_dir() & ~4);
-
-	int _loadSteps = 0;
-
-	park_idler(false);
-	delay(200);
-	park_idler(true);
-	delay(200);
-	
-	isFilamentLoaded = true;  // filament loaded 
-}
-
-
-void unload_filament()
-{
-	// unloads filament from extruder - filament is above Bondtech gears
-
-	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-
-	shr16_set_dir(shr16_get_dir() | 4);
-
-	float _speed = 2000;
-	float _first_point = 1100;
-	float _second_point = 9300;  //8500
-
-	for (int i = 9800; i > 0; i--)    //8950
-	{
-		do_pulley_step();
-
-		if (i < 400 && _speed < 6000) _speed = _speed + 3;
-		if (i < _first_point && _speed < 2500) _speed = _speed + 2;
-		if (i < _second_point && i > 5000 &&  _speed > 600) _speed = _speed - 2;
-
-		delayMicroseconds(_speed);
-	}
-
-	// move filament here and there to settle down in cooling PTFE tube
-
-	_speed = 8000;
-	shr16_set_dir(shr16_get_dir() & ~4);
-	for (int i = 150; i > 0; i--)
-	{
-		do_pulley_step();
-		delayMicroseconds(_speed);
-	}
-	shr16_set_dir(shr16_get_dir() | 4);
-	for (int i = 140; i > 0; i--)
-	{
-		do_pulley_step();
-		delayMicroseconds(_speed);
-	}
-	isFilamentLoaded = false; // filament unloaded 
-}
-
 
 void unload_filament_withSensor()
 {
 	// unloads filament from extruder - filament is above Bondtech gears
+	tmc2130_init_axis_current(2, 1, 30);
+
 
 	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
 
@@ -284,7 +197,7 @@ void unload_filament_withSensor()
 		if (_unloadSteps < _second_point && _unloadSteps > 5000 && _speed > 550) _speed = _speed - 2;
 
 		delayMicroseconds(_speed);
-		if (digitalRead(A1) == 0)
+		if (digitalRead(A1) == 0 && _unloadSteps < 2500)
 		{
 			_endstop_hit++;
 		}
@@ -381,7 +294,7 @@ void unload_filament_withSensor()
 
 		// correct unloading
 
-		_speed = 7000;
+		_speed = 5000;
 		// unload to PTFE tube
 		shr16_set_dir(shr16_get_dir() | 4);
 		for (int i = 550; i > 0; i--)   // 570
@@ -390,7 +303,7 @@ void unload_filament_withSensor()
 			delayMicroseconds(_speed);
 		}
 
-		_speed = 5000;
+		_speed = 3000;
 		// cooling move
 		shr16_set_dir(shr16_get_dir() & ~4);
 		for (int i = 150; i > 0; i--)
@@ -406,29 +319,7 @@ void unload_filament_withSensor()
 		}
 	}
 	
-	isFilamentLoaded = false; // filament unloaded 
-}
-
-
-void unload_filament_test()
-{
-	// unloads filament from extruder - filament is above Bondtech gears
-
-	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-
-	shr16_set_dir(shr16_get_dir() | 4);
-
-	for (int i = 100; i > 0; i--)
-	{
-		do_pulley_step();
-		delayMicroseconds(5000);
-	}
-
-	park_idler(false);
-	delay(200);
-	park_idler(true);
-	delay(200);
-	
+	tmc2130_init_axis_current(2, 0, 0);
 	isFilamentLoaded = false; // filament unloaded 
 }
 
@@ -437,20 +328,21 @@ void load_filament_inPrinter()
 	// loads filament after confirmed by printer into the Bontech pulley gears so they can grab them
 
 	shr16_set_dir(shr16_get_dir() & ~4);
-	
-	//tmc2130_init_axis_current(2, 5, 8);   // 10 initial value
 
-	for (int i = 0; i <= 80; i++)  
+	tmc2130_init_axis_current(2, 1, 15);   // 10 initial value
+
+	for (int i = 0; i <= 250; i++)
 	{
+		if (i == 125) { tmc2130_init_axis_current(2, 1, 10); };
 		do_pulley_step();
-		delayMicroseconds(3200);
+		delayMicroseconds(2600);
 	}
 
-	tmc2130_init_axis_current(2, 2, 3);    
-	for (int i = 0; i <= 300; i++)
+	tmc2130_init_axis_current(2, 1, 3);    
+	for (int i = 0; i <= 400; i++)
 	{
 		do_pulley_step();
-		delayMicroseconds(2400);   //3200
+		delayMicroseconds(2200);   //3200
 	}
 	
 	/*
@@ -459,8 +351,7 @@ void load_filament_inPrinter()
 	move(idler_parking_steps*-1, 0, idler_parking_steps);
 	*/
 
-
-	tmc2130_init_axis_current(2, 5, 30);
+	tmc2130_init_axis_current(2, 0, 0);
 	park_idler(false);
 	isIdlerParked = true;
 }
@@ -488,7 +379,6 @@ void init_Pulley()
 
 }
 
-
 void do_pulley_step()
 {
 	PORTD |= 0x40;;
@@ -497,8 +387,6 @@ void do_pulley_step()
 	asm("nop");
 }
 
-
-
 void do_idler_step()
 {
 	PORTB |= 0x10;;
@@ -506,7 +394,6 @@ void do_idler_step()
 	PORTB &= ~0x10;
 	asm("nop");
 }
-
 
 void park_idler(bool _unpark)
 {
@@ -524,7 +411,6 @@ void park_idler(bool _unpark)
 	 
 }
 
-
 bool home_idler()
 {
 	for (int c = 1; c > 0; c--)  // not really functional, let's do it rather more times to be sure
@@ -541,6 +427,7 @@ bool home_idler()
 	}
 	return true;
 }
+
 bool home_selector()
 {
 	 
@@ -560,7 +447,6 @@ bool home_selector()
 	
 	return true;
 }
-
 
 bool home()
 {

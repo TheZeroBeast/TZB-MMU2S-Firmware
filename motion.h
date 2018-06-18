@@ -12,16 +12,12 @@ extern bool home_selector();
 
 
 void park_idler(bool _unpark);
-void load_filament();
+
 void load_filament_withSensor();
 void load_filament_inPrinter();
-void unload_filament();
 void unload_filament_withSensor();
 void set_positions(int _current_extruder, int _next_extruder);
 void init_Pulley();
-
-void unload_filament_test();
-void load_filament_test();
 
 #endif
 

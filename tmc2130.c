@@ -151,7 +151,7 @@ inline int8_t __curh(uint8_t axis)
 	{
 	case 0: return 24;
 	case 1: return 20;
-	case 2: return 5;
+	case 2: return 1;
 	}
 	return 16;
 }
@@ -173,7 +173,7 @@ inline int8_t __currh(uint8_t axis)
 	{
 	case 0: return 30;  //30
 	case 1: return 30;  //30
-	case 2: return 25;  //25 
+	case 2: return 1;  //25 
 	}
 	return 16;
 }

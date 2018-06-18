@@ -10,6 +10,7 @@
 #include "mmctl.h"
 #include "motion.h"
 
+int lengthCorrection = 0;
 int active_extruder = -1;
 bool isFilamentLoaded = false;
 bool isIdlerParked = false;
@@ -51,75 +52,6 @@ bool switch_extruder_withSensor(int new_extruder)
 
 		
 		load_filament_withSensor(); // load new filament
-		_return = true;
-	}
-
-	shr16_set_led(0x000);
-	shr16_set_led(1 << 2 * (4 - active_extruder));
-	return _return;
-
-
-}
-
-bool switch_extruder(int new_extruder)
-{
-	isPrinting = true;
-	bool _return = false;
-	if (!isHomed) { home(); }
-  
-  
-    shr16_set_led(2 << 2 * (4 - active_extruder));
-
-	int previous_extruder = active_extruder;
-	active_extruder = new_extruder;
-
-	if (previous_extruder == active_extruder)
-	{
-		if (!isFilamentLoaded)
-		{
-			load_filament(); // just load filament if not loaded
-			_return = true;
-		}
-	}
-	else
-	{
-		if (isFilamentLoaded) { unload_filament(); } // unload filament first
-		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
-		load_filament(); // load new filament
-		_return = true;
-	}
-	
-	shr16_set_led(0x000);
-	shr16_set_led(1 << 2 * (4 - active_extruder));
-	return _return;
-}
-
-bool switch_extruder_test(int new_extruder)
-{
-
-	isPrinting = true;
-	bool _return = false;
-	if (!isHomed) { home(); }
-
-
-	shr16_set_led(2 << 2 * (4 - active_extruder));
-
-	int previous_extruder = active_extruder;
-	active_extruder = new_extruder;
-
-	if (previous_extruder == active_extruder)
-	{
-		if (!isFilamentLoaded)
-		{
-			load_filament_test(); // just load filament if not loaded
-			_return = true;
-		}
-	}
-	else
-	{
-		if (isFilamentLoaded) { unload_filament_test(); } // unload filament first
-		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
-		load_filament_test(); // load new filament
 		_return = true;
 	}
 

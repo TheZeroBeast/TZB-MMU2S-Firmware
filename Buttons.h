@@ -11,5 +11,5 @@
 
 
 #endif
-
+void setupMenu();
 int buttonClicked();

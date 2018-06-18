@@ -14,6 +14,7 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "Buttons.h"
+#include "EEPROM.h"
 
 
 int8_t sys_state = 0;
@@ -64,6 +65,7 @@ void setup()
 	home();
 	tmc2130_init(0); // trinamic
 	
+	
 }
 
 //main loop
@@ -71,29 +73,41 @@ void loop()
 {
 	
 	process_commands(uart1io);
-
+	//load_filament_inPrinter();
+	//delay(3000);
 
 	if (!isPrinting)
 	{
-		int _button = buttonClicked();
-		if (_button != 0) 
+		
+		if (buttonClicked() != 0)
 		{ 
 			delay(1000); 
-			int _button = buttonClicked();
-			if (_button == 1)
+
+			switch (buttonClicked())
 			{
-				if (active_extruder < 4)
-				{
-					select_extruder(active_extruder+1);
-				}
+				case 1:
+					if (active_extruder < 4) select_extruder(active_extruder + 1);
+					break;
+				case 2:
+					delay(1000);
+					if (buttonClicked() == 2)
+					{
+						Serial.println("Setup menu");
+						setupMenu();
+
+					}
+					break;
+				case 4:
+					if (active_extruder > 0) select_extruder(active_extruder - 1);
+					break;
+
+				default:
+					break;
 			}
-			if (_button == 4)
-			{
-				if (active_extruder > 0)
-				{
-					select_extruder(active_extruder-1);
-				}
-			}
+
+
+			
+			
 		}
 		
 		

@@ -329,27 +329,43 @@ void load_filament_inPrinter()
 
 	shr16_set_dir(shr16_get_dir() & ~4);
 
-	tmc2130_init_axis_current(2, 1, 15);   // 10 initial value
-
+	/*PLA
+	tmc2130_init_axis_current(2, 1, 15);   
 	for (int i = 0; i <= 250; i++)
 	{
 		if (i == 125) { tmc2130_init_axis_current(2, 1, 10); };
 		do_pulley_step();
 		delayMicroseconds(2600);
 	}
+	*/
 
+	//FLEX
+	tmc2130_init_axis_current(2, 1, 15);
+	for (int i = 0; i <= 500; i++)
+	{
+		if (i == 125) { tmc2130_init_axis_current(2, 1, 10); };
+		do_pulley_step();
+		delayMicroseconds(2600);
+	}
+
+
+	/*PLA
 	tmc2130_init_axis_current(2, 1, 3);    
 	for (int i = 0; i <= 400; i++)
 	{
 		do_pulley_step();
 		delayMicroseconds(2200);   //3200
 	}
-	
-	/*
-	// last steps done with releasing idler
-	tmc2130_init_axis_current(2, 5, 4);
-	move(idler_parking_steps*-1, 0, idler_parking_steps);
 	*/
+
+	// FLEX
+	tmc2130_init_axis_current(2, 1, 3);
+	for (int i = 0; i <= 800; i++)
+	{
+		do_pulley_step();
+		delayMicroseconds(2000);   //3200
+	}
+
 
 	tmc2130_init_axis_current(2, 0, 0);
 	park_idler(false);

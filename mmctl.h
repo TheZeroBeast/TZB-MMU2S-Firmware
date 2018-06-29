@@ -5,18 +5,23 @@
 #include <inttypes.h>
 #include "config.h"
 
+extern int lengthCorrection;
+extern bool isPrinting;
+extern bool isHomed;
+extern int toolChanges;
 
 extern int active_extruder;
+extern bool isFilamentLoaded;
+extern bool isIdlerParked;
+
 
 extern bool home_idler();
-
 extern bool home_selector();
 
-extern bool move_selector();
+extern bool switch_extruder_withSensor(int new_extruder);
 
-extern bool home_();
-
-extern bool switch_extruder(int new_extruder);
+extern bool select_extruder(int new_extruder);
+void led_blink(int _no);
 
 
 #endif //_MMCTL_H

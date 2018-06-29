@@ -8,69 +8,103 @@
 #include "spi.h"
 #include "tmc2130.h"
 #include "mmctl.h"
+#include "motion.h"
 
-
+int lengthCorrection = 0;
 int active_extruder = -1;
+bool isFilamentLoaded = false;
+bool isIdlerParked = false;
+int toolChanges = 0;
+
+bool isPrinting = false;
+bool isHomed = false;
 
 
-bool home_idler()
+bool switch_extruder_withSensor(int new_extruder)
 {
-	shr16_set_dir(shr16_get_dir() & ~1);
-	int i = 0; for (; i < 4000; i++)
-	{
-		tmc2130_do_step(1);
-		delay(1);
-		uint16_t sg = tmc2130_read_sg(0);
-		if ((i > 16) && (sg < 100))
-			break;
-		printf_P(PSTR("SG=%d\n"), tmc2130_read_sg(0));
-	}
-	return true;
-}
+	
+	isPrinting = true;
+	bool _return = false;
+	if (!isHomed) { home(); }
+	toolChanges++;
 
-bool home_selector()
-{
-//	shr16_set_dir(shr16_get_dir() & ~2);
-	shr16_set_dir(shr16_get_dir() | 2);
-	int i = 0; for (; i < 4000; i++)
-	{
-		tmc2130_do_step(2);
-		delay(1);
-		uint16_t sg = tmc2130_read_sg(1);
-		if ((i > 16) && (sg < 100))
-			break;
-		printf_P(PSTR("SG=%d\n"), tmc2130_read_sg(1));
-	}
-	return (i < 4000);
-}
+	shr16_set_led(2 << 2 * (4 - active_extruder));
 
-bool move_selector()
-{
-	shr16_set_dir(shr16_get_dir() & ~2);
-//	shr16_set_dir(shr16_get_dir() | 2);
-	for (int i = 0; i < 2000; i++)
-	{
-		tmc2130_do_step(2);
-		delay(1);
-	}
-	return true;
-}
-
-bool home_()
-{
-	shr16_set_dir(shr16_get_dir() & ~2);
-	int i = 0; for (; i < 3000; i++)
-	{
-		tmc2130_do_step(2);
-		delay(1);
-	}
-	return true;
-}
-
-bool switch_extruder(int new_extruder)
-{
-	//TODO - control motors
+	int previous_extruder = active_extruder;
 	active_extruder = new_extruder;
-	shr16_set_led(1 << 2*active_extruder);
-	return true;
+
+	if (previous_extruder == active_extruder)
+	{
+		if (!isFilamentLoaded)
+		{
+			load_filament_withSensor(); // just load filament if not loaded
+			_return = true;
+		}
+		else
+		{
+			_return = false;  // nothing really happened
+		}
+	}
+	else
+	{
+		if (isFilamentLoaded) { unload_filament_withSensor(); } // unload filament first
+		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+
+		
+		load_filament_withSensor(); // load new filament
+		_return = true;
+	}
+
+	shr16_set_led(0x000);
+	shr16_set_led(1 << 2 * (4 - active_extruder));
+	return _return;
+
+
 }
+
+bool select_extruder(int new_extruder)
+{
+
+	bool _return = false;
+	if (!isHomed) { home(); }
+
+	Serial.println(new_extruder);
+	shr16_set_led(2 << 2 * (4 - active_extruder));
+
+	int previous_extruder = active_extruder;
+	active_extruder = new_extruder;
+
+	if (previous_extruder == active_extruder)
+	{
+		if (!isFilamentLoaded)
+		{
+			_return = true;
+		}
+	}
+	else
+	{
+		if (isIdlerParked) park_idler(true);
+		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+		park_idler(false);
+		_return = true;
+	}
+
+	shr16_set_led(0x000);
+	shr16_set_led(1 << 2 * (4 - active_extruder));
+	return _return;
+}
+
+void led_blink(int _no)
+{
+	shr16_set_led(1 << 2 * _no);
+	delay(130);
+	shr16_set_led(0x000);
+	delay(80);
+	shr16_set_led(1 << 2 * _no);
+	delay(130);
+
+	shr16_set_led(0x000);
+	delay(100);
+}
+
+

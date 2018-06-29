@@ -32,12 +32,21 @@ void process_commands(FILE* inout);
 //initialization after reset
 void setup()
 {
-
-	Serial.begin(115200);
-	delay(1500);
+	//Serial.begin(115200);
+//	delay(1500);
 	
 
 	shr16_init(); // shift register
+
+	eeprom_update_byte((uint8_t*)0, 0);
+	if (eeprom_read_byte((uint8_t*)0) != 0)
+	{
+	led_blink(0);
+	led_blink(0);
+	led_blink(0);
+	delay(2000);
+	}
+
 	led_blink(0);
 
 	uart1_init(); //uart1
@@ -92,7 +101,7 @@ void loop()
 					delay(1000);
 					if (buttonClicked() == 2)
 					{
-						Serial.println("Setup menu");
+						//Serial.println("Setup menu");
 						setupMenu();
 
 					}
@@ -142,7 +151,7 @@ void process_commands(FILE* inout)
 	if ((count > 0) && (c == 0))
 	{ 
 		//line received
-		printf_P(PSTR("line received: '%s' %d\n"), line, count);
+		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
 
@@ -152,9 +161,9 @@ void process_commands(FILE* inout)
 			//T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
-				Serial.print("[ TOOLCHANGE : ");
-				Serial.print(toolChanges);
-				Serial.println(" ]");
+				//Serial.print("[ TOOLCHANGE : ");
+				//Serial.print(toolChanges);
+				//Serial.println(" ]");
 
 				retOK = switch_extruder_withSensor(value);
 				

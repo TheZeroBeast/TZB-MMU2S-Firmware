@@ -23,7 +23,7 @@ void shr16_write(uint16_t v)
 {
 	PORTB &= ~0x40;
 	asm("nop");
-	for (uint16_t m = 0x8000; m; m >>= 1)
+	uint16_t m; for (m = 0x8000; m; m >>= 1)
 	{
 		if (m & v)
 			PORTB |= 0x20;

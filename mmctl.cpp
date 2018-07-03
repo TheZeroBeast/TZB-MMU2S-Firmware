@@ -64,7 +64,6 @@ bool switch_extruder_withSensor(int new_extruder)
 
 bool select_extruder(int new_extruder)
 {
-
 	bool _return = false;
 	if (!isHomed) { home(); }
 

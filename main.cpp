@@ -37,7 +37,7 @@ void setup()
 	
 
 	shr16_init(); // shift register
-
+/*
 	eeprom_update_byte((uint8_t*)0, 0);
 	if (eeprom_read_byte((uint8_t*)0) != 0)
 	{
@@ -46,16 +46,24 @@ void setup()
 	led_blink(0);
 	delay(2000);
 	}
-
+*/
+	uart0_init(); //uart0
 	led_blink(0);
 
 	uart1_init(); //uart1
 	led_blink(1);
 
+#if (UART_STD == 0)
+	stdin = uart0io; // stdin = uart0
+	stdout = uart0io; // stdout = uart0
+#endif //(UART_STD == 0)
+
 #if (UART_STD == 1)
 	stdin = uart1io; // stdin = uart1
 	stdout = uart1io; // stdout = uart1
 #endif //(UART_STD == 1)
+
+	fprintf_P(uart0io, PSTR("MMCONTROL01 start\n"));
 
 	spi_init();
 	led_blink(2);

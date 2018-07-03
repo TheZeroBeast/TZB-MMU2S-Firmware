@@ -68,7 +68,7 @@ bool select_extruder(int new_extruder)
 	bool _return = false;
 	if (!isHomed) { home(); }
 
-	//Serial.println(new_extruder);
+	Serial.println(new_extruder);
 	shr16_set_led(2 << 2 * (4 - active_extruder));
 
 	int previous_extruder = active_extruder;

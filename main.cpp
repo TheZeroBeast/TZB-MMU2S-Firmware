@@ -33,10 +33,6 @@ void process_commands(FILE* inout);
 void setup()
 {
 
-	Serial.begin(115200);
-	delay(1500);
-	
-
 	shr16_init(); // shift register
 	led_blink(0);
 
@@ -92,9 +88,7 @@ void loop()
 					delay(1000);
 					if (buttonClicked() == 2)
 					{
-						Serial.println("Setup menu");
 						setupMenu();
-
 					}
 					break;
 				case 4:
@@ -152,10 +146,6 @@ void process_commands(FILE* inout)
 			//T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
-				Serial.print("[ TOOLCHANGE : ");
-				Serial.print(toolChanges);
-				Serial.println(" ]");
-
 				retOK = switch_extruder_withSensor(value);
 				
 				delay(200);

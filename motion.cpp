@@ -69,9 +69,6 @@ void load_filament_withSensor()
 	shr16_set_dir(shr16_get_dir() & ~4);
 
 	int _loadSteps = 0;
-	Serial.println("-----------------------------");
-	Serial.print("LOAD ");
-	Serial.println(active_extruder);
 
 	// we can expect something like 570 steps to get in sensor
 	do
@@ -81,19 +78,10 @@ void load_filament_withSensor()
 		delayMicroseconds(5500);
 
 	} while (digitalRead(A1) == 0 && _loadSteps < 1200);
-	
-	Serial.print("  - steps :");
-	Serial.println(_loadSteps);
-	Serial.print("  - switch is :");
-	Serial.println(digitalRead(A1));
-	
 
 	if (digitalRead(A1) == 0)
 	{
 		// attempt to correct
-		Serial.println("!!!!!!!!!! Attempt to correct !!!!!!!!!!!");
-		
-
 		shr16_set_dir(shr16_get_dir() | 4);
 		for (int i = 500; i >= 0; i--)
 		{
@@ -111,20 +99,12 @@ void load_filament_withSensor()
 
 		} while (digitalRead(A1) == 0 && _loadSteps < 1500);
 
-		Serial.print("     - switch is :");
-		Serial.print(digitalRead(A1));
-		Serial.print("     - steps :");
-		Serial.println(_loadSteps);
 	}
 
 
 	if (digitalRead(A1) == 0)
 	{
 		// error in loading
-		Serial.println("ERROR on loading");
-		Serial.print("  - switch is :");
-		Serial.println(digitalRead(A1));
-
 		park_idler(false);
 		do
 		{
@@ -148,8 +128,7 @@ void load_filament_withSensor()
 	}
 	else
 	{
-		Serial.print("  CORRECT, steps :");
-		Serial.println(_loadSteps);
+		// nothing
 	}
 
 	float _speed = 4500;
@@ -182,9 +161,6 @@ void unload_filament_withSensor()
 	float _first_point = 1800;
 	float _second_point = 8700;  //8500
 	int _endstop_hit = 0;
-	Serial.println("-----------------------------");
-	Serial.print("UNLOAD ");
-	Serial.println(active_extruder);
 
 	int _unloadSteps = 9500;
 	do
@@ -203,12 +179,6 @@ void unload_filament_withSensor()
 		}
 
 	} while (_endstop_hit < 50 && _unloadSteps > 0);
-	
-	Serial.print(" - steps : ");
-	Serial.println(_unloadSteps);
-
-	Serial.print(" - switch is :");
-	Serial.println(digitalRead(A1));
 
 	for (int i = 150; i > 0; i--)
 	{
@@ -245,9 +215,6 @@ void unload_filament_withSensor()
 					_steps--;
 					delayMicroseconds(4000);
 				} while (digitalRead(A1) == 1 && _steps > 0);
-				Serial.println("!!!!!!!!!! Attempt to correct !!!!!!!!!!!");
-				Serial.print("  -- steps to correct : ");
-				Serial.println(_steps);
 			}
 			delay(100);
 		}
@@ -263,15 +230,8 @@ void unload_filament_withSensor()
 
 	}
 
-	Serial.print(" - switch is :");
-	Serial.println(digitalRead(A1));
-
 	if (digitalRead(A1) == 1)
 	{
-		// error in unloading
-		Serial.println("ERROR on unload");
-		Serial.print(" - switch is :");
-		Serial.println(digitalRead(A1));
 		
 		park_idler(false);
 		do
@@ -341,7 +301,7 @@ void load_filament_inPrinter()
 
 	//FLEX
 	tmc2130_init_axis_current(2, 1, 15);
-	for (int i = 0; i <= 500; i++)
+	for (int i = 0; i <= 600; i++)
 	{
 		if (i == 125) { tmc2130_init_axis_current(2, 1, 10); };
 		do_pulley_step();
@@ -363,7 +323,7 @@ void load_filament_inPrinter()
 	for (int i = 0; i <= 800; i++)
 	{
 		do_pulley_step();
-		delayMicroseconds(2000);   //3200
+		delayMicroseconds(3000);   //3200
 	}
 
 
@@ -490,8 +450,6 @@ bool home()
 }
  
 
-
-
 void move_proportional(int _idler, int _selector)
 {
 	// gets steps to be done and set direction
@@ -562,9 +520,6 @@ void move(int _idler, int _selector, int _pulley)
 
 	} while (_selector != 0 || _idler != 0 || _pulley != 0);
 }
-
-
-
 
 
 int set_idler_direction(int _steps)

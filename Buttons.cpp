@@ -5,9 +5,11 @@
 #include "Buttons.h"
 #include "shr16.h"
 #include "mmctl.h"
+#include "motion.h"
 
 const int ButtonPin = A2;
 
+void settings_bowden_length();
 
 void setupMenu()
 {
@@ -35,13 +37,23 @@ void setupMenu()
 		switch (buttonClicked())
 		{
 		case 1:
-			if (_menu > 0) { _menu--; delay(800); Serial.println(_menu); }
+			if (_menu > 0) { _menu--; delay(800); }
 			break;
 		case 2:
-			if (_menu == 4) { _exit = true; }
+				
+			switch (_menu)
+			{
+				case 1:
+					settings_bowden_length();
+					break;
+
+				case 4: // exit menu
+					_exit = true;
+					break;
+			}
 			break;
 		case 4:
-			if (_menu < 4) { _menu++; delay(800); Serial.println(_menu); }
+			if (_menu < 4) { _menu++; delay(800); }
 			break;
 		}
 		
@@ -58,6 +70,27 @@ void setupMenu()
 	shr16_set_led(0x000);
 	shr16_set_led(1 << 2 * (4 - active_extruder));
 }
+
+
+void settings_bowden_length()
+{
+	// load filament above Bondtech gears to check correct length of bowden tube
+	if (!isFilamentLoaded)
+	{
+		load_filament_withSensor();
+		do
+		{
+			shr16_set_led(1 << 2 * 4);
+			delay(50);
+			shr16_set_led(2 << 2 * 4);
+			delay(50);
+			shr16_set_led(2 << 2 * 1);
+			delay(50);
+		} while (buttonClicked() != 2);
+		unload_filament_withSensor();
+	}
+}
+
 
 int buttonClicked()
 {

@@ -68,7 +68,6 @@ bool select_extruder(int new_extruder)
 	bool _return = false;
 	if (!isHomed) { home(); }
 
-	Serial.println(new_extruder);
 	shr16_set_led(2 << 2 * (4 - active_extruder));
 
 	int previous_extruder = active_extruder;
@@ -97,14 +96,14 @@ bool select_extruder(int new_extruder)
 void led_blink(int _no)
 {
 	shr16_set_led(1 << 2 * _no);
-	delay(130);
-	shr16_set_led(0x000);
 	delay(80);
+	shr16_set_led(0x000);
+	delay(40);
 	shr16_set_led(1 << 2 * _no);
-	delay(130);
+	delay(80);
 
 	shr16_set_led(0x000);
-	delay(100);
+	delay(40);
 }
 
 

@@ -21,6 +21,9 @@ extern bool home_selector();
 extern bool switch_extruder_withSensor(int new_extruder);
 
 extern bool select_extruder(int new_extruder);
+
+extern bool feed_filament();
+
 void led_blink(int _no);
 
 

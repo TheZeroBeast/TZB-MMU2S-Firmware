@@ -4,6 +4,7 @@
 
 #include "Buttons.h"
 #include "shr16.h"
+#include "tmc2130.h"
 #include "mmctl.h"
 #include "motion.h"
 
@@ -77,16 +78,49 @@ void settings_bowden_length()
 	// load filament above Bondtech gears to check correct length of bowden tube
 	if (!isFilamentLoaded)
 	{
+		int _prev_correction = lengthCorrection;
+
 		load_filament_withSensor();
+
+		tmc2130_init_axis_current(0, 1, 30);
 		do
 		{
+
+			switch (buttonClicked())
+			{
+			case 1:
+				if (lengthCorrection > 0)
+				{
+					lengthCorrection = lengthCorrection - 1;
+					move(0, 0, -10);
+					delay(400);
+				}
+				break;
+
+			case 4:
+				if (lengthCorrection < 200)
+				{
+					lengthCorrection = lengthCorrection + 1;
+					move(0, 0, 10);
+					delay(400);
+				}
+				break;
+			}
+
 			shr16_set_led(1 << 2 * 4);
-			delay(50);
+			delay(10);
 			shr16_set_led(2 << 2 * 4);
-			delay(50);
+			delay(10);
 			shr16_set_led(2 << 2 * 1);
 			delay(50);
+
+
 		} while (buttonClicked() != 2);
+
+		if (_prev_correction != lengthCorrection)
+		{
+			eeprom_update_byte((uint8_t*)0, lengthCorrection);
+		}
 		unload_filament_withSensor();
 	}
 }

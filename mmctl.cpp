@@ -9,6 +9,7 @@
 #include "tmc2130.h"
 #include "mmctl.h"
 #include "motion.h"
+#include "Buttons.h"
 
 int lengthCorrection = 0;
 int active_extruder = -1;
@@ -19,6 +20,49 @@ int toolChanges = 0;
 bool isPrinting = false;
 bool isHomed = false;
 
+bool feed_filament()
+{
+	bool _feed = true;
+	bool _loaded = false;
+
+	int _c = 0;
+	int _delay = 0;
+	park_idler(false);
+
+	set_pulley_dir_push();
+	tmc2130_init_axis_current(0, 1, 15);
+
+	do
+	{
+		do_pulley_step();
+		
+		_c++;
+		if (_c > 50) { shr16_set_led(2 << 2 * (4 - active_extruder)); };
+		if (_c > 100) { shr16_set_led(0x000); _c = 0; _delay++; };
+
+		if (digitalRead(A1) == 1) { _loaded = true; _feed = false; };
+		if (buttonClicked() != 0 && _delay > 10) { _loaded = false; _feed = false; }
+		delayMicroseconds(4000);
+	} while (_feed);
+
+	if (_loaded)
+	{
+		// unload to PTFE tube
+		set_pulley_dir_pull();
+		for (int i = 600; i > 0; i--)   // 570
+		{
+			do_pulley_step();
+			delayMicroseconds(3000);
+		}
+	}
+
+
+
+	tmc2130_init_axis_current(0, 0, 0);
+	park_idler(true);
+	shr16_set_led(1 << 2 * (4 - active_extruder));
+	return true;
+}
 
 bool switch_extruder_withSensor(int new_extruder)
 {
@@ -49,7 +93,6 @@ bool switch_extruder_withSensor(int new_extruder)
 	{
 		if (isFilamentLoaded) { unload_filament_withSensor(); } // unload filament first
 		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
-
 		
 		load_filament_withSensor(); // load new filament
 		_return = true;
@@ -96,14 +139,14 @@ bool select_extruder(int new_extruder)
 void led_blink(int _no)
 {
 	shr16_set_led(1 << 2 * _no);
-	delay(80);
-	shr16_set_led(0x000);
 	delay(40);
+	shr16_set_led(0x000);
+	delay(20);
 	shr16_set_led(1 << 2 * _no);
-	delay(80);
+	delay(40);
 
 	shr16_set_led(0x000);
-	delay(40);
+	delay(10);
 }
 
 

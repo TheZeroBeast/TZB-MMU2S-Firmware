@@ -33,10 +33,6 @@ void process_commands(FILE* inout);
 void setup()
 {
 
-	Serial.begin(115200);
-	delay(1500);
-	
-
 	shr16_init(); // shift register
 	led_blink(0);
 
@@ -64,6 +60,25 @@ void setup()
 	 
 	home();
 	tmc2130_init(0); // trinamic
+
+
+
+	
+	// read correction to bowden tube
+	if (eeprom_read_byte((uint8_t*)0) != 0 && eeprom_read_byte((uint8_t*)0) < 200)
+	{
+		lengthCorrection = eeprom_read_byte((uint8_t*)0);
+	}
+	else
+	{
+		lengthCorrection = 100;
+	}
+	
+	// check if to goto settings menu
+	if (buttonClicked() == 2)
+	{
+		setupMenu();
+	}
 	
 	
 }
@@ -73,15 +88,13 @@ void loop()
 {
 	
 	process_commands(uart1io);
-	//load_filament_inPrinter();
-	//delay(3000);
 
 	if (!isPrinting)
 	{
 		
 		if (buttonClicked() != 0)
 		{ 
-			delay(1000); 
+			delay(500); 
 
 			switch (buttonClicked())
 			{
@@ -89,12 +102,11 @@ void loop()
 					if (active_extruder < 4) select_extruder(active_extruder + 1);
 					break;
 				case 2:
+					shr16_set_led(2 << 2 * (4 - active_extruder));
 					delay(1000);
 					if (buttonClicked() == 2)
 					{
-						Serial.println("Setup menu");
-						setupMenu();
-
+						feed_filament();
 					}
 					break;
 				case 4:
@@ -104,14 +116,11 @@ void loop()
 				default:
 					break;
 			}
-
-
-			
-			
+			shr16_set_led(1 << 2 * (4 - active_extruder));
+			delay(500);
 		}
-		
-		
 	}
+
 	 
 }
 
@@ -140,24 +149,20 @@ void process_commands(FILE* inout)
 	int value = 0;
 
 	if ((count > 0) && (c == 0))
-	{ 
+	{
 		//line received
-		printf_P(PSTR("line received: '%s' %d\n"), line, count);
+		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
 
 
 		if (sscanf_P(line, PSTR("T%d"), &value) > 0)
-		{ 
+		{
 			//T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
-				Serial.print("[ TOOLCHANGE : ");
-				Serial.print(toolChanges);
-				Serial.println(" ]");
-
 				retOK = switch_extruder_withSensor(value);
-				
+
 				delay(200);
 				if (retOK)
 				{
@@ -168,9 +173,50 @@ void process_commands(FILE* inout)
 				{
 					fprintf_P(inout, PSTR("ok\n"));
 				}
-				
+
 			}
 		}
+		 
+		if (sscanf_P(line, PSTR("L%d"), &value) > 0)
+		{
+			// Load filament
+			if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded)
+			{
+
+				select_extruder(value);
+				feed_filament();
+
+				delay(200);
+				if (retOK)
+				{
+					fprintf_P(inout, PSTR("ok\n"));
+				}
+				else
+				{
+					fprintf_P(inout, PSTR("ok\n"));
+				}
+
+			}
+		}
+		
+		if (sscanf_P(line, PSTR("U%d"), &value) > 0)
+		{
+			// Unload filament
+			unload_filament_withSensor();
+			delay(200);
+			if (retOK)
+			{
+				fprintf_P(inout, PSTR("ok\n"));
+			}
+			else
+			{
+				fprintf_P(inout, PSTR("ok\n"));
+			}
+			isPrinting = false;
+			select_extruder(0);
+		}
+		 
+
 	}
 	else
 	{ //nothing received

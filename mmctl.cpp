@@ -27,7 +27,7 @@ bool feed_filament()
 
 	int _c = 0;
 	int _delay = 0;
-	park_idler(false);
+	park_idler(true);
 
 	set_pulley_dir_push();
 	tmc2130_init_axis_current(0, 1, 15);
@@ -59,7 +59,7 @@ bool feed_filament()
 
 
 	tmc2130_init_axis_current(0, 0, 0);
-	park_idler(true);
+	park_idler(false);
 	shr16_set_led(1 << 2 * (4 - active_extruder));
 	return true;
 }

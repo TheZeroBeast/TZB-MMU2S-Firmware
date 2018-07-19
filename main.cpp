@@ -187,14 +187,7 @@ void process_commands(FILE* inout)
 				feed_filament();
 
 				delay(200);
-				if (retOK)
-				{
-					fprintf_P(inout, PSTR("ok\n"));
-				}
-				else
-				{
-					fprintf_P(inout, PSTR("ok\n"));
-				}
+				fprintf_P(inout, PSTR("ok\n"));
 
 			}
 		}
@@ -204,18 +197,12 @@ void process_commands(FILE* inout)
 			// Unload filament
 			unload_filament_withSensor();
 			delay(200);
-			if (retOK)
-			{
-				fprintf_P(inout, PSTR("ok\n"));
-			}
-			else
-			{
-				fprintf_P(inout, PSTR("ok\n"));
-			}
+			fprintf_P(inout, PSTR("ok\n"));
+
 			isPrinting = false;
 			select_extruder(0);
 		}
-		 
+
 
 	}
 	else

@@ -49,15 +49,28 @@ void setup()
 
 	tmc2130_init(1); // trinamic
 	led_blink(3);
-		
+
 	adc_init(); // ADC
 	led_blink(4);
-		
+
 	shr16_set_ena(7);
 	shr16_set_led(0x000);
-	
+
 	init_Pulley();
-	 
+
+
+	// if FINDA is sensing filament do not home and try to unload 
+	if (digitalRead(A1) == 1)
+	{
+		do
+		{
+			shr16_set_led(0x155);
+			delay(300);
+			shr16_set_led(0x000);
+			delay(300);
+		} while (buttonClicked() == 0);
+	}
+	
 	home();
 	tmc2130_init(0); // trinamic
 
@@ -74,7 +87,7 @@ void setup()
 		lengthCorrection = 100;
 	}
 	
-	// check if to goto settings menu
+	// check if to goto the settings menu
 	if (buttonClicked() == 2)
 	{
 		setupMenu();

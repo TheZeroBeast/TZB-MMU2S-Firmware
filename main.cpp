@@ -64,7 +64,14 @@ void setup()
 	{
 		do
 		{
-			shr16_set_led(0x155);
+			if (digitalRead(A1) == 1)
+			{
+				shr16_set_led(0x2aa);
+			}
+			else
+			{
+				shr16_set_led(0x155);
+			}
 			delay(300);
 			shr16_set_led(0x000);
 			delay(300);

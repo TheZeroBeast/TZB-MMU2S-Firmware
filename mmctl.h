@@ -11,6 +11,7 @@ extern bool isHomed;
 extern int toolChanges;
 
 extern int active_extruder;
+extern int previous_extruder;
 extern bool isFilamentLoaded;
 extern bool isIdlerParked;
 

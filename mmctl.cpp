@@ -13,6 +13,7 @@
 
 int lengthCorrection = 0;
 int active_extruder = -1;
+int previous_extruder = -1;
 bool isFilamentLoaded = false;
 bool isIdlerParked = false;
 int toolChanges = 0;
@@ -74,13 +75,14 @@ bool switch_extruder_withSensor(int new_extruder)
 
 	shr16_set_led(2 << 2 * (4 - active_extruder));
 
-	int previous_extruder = active_extruder;
+	previous_extruder = active_extruder;
 	active_extruder = new_extruder;
 
 	if (previous_extruder == active_extruder)
 	{
 		if (!isFilamentLoaded)
 		{
+			shr16_set_led(2 << 2 * (4 - active_extruder));
 			load_filament_withSensor(); // just load filament if not loaded
 			_return = true;
 		}
@@ -94,6 +96,7 @@ bool switch_extruder_withSensor(int new_extruder)
 		if (isFilamentLoaded) { unload_filament_withSensor(); } // unload filament first
 		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
 		
+		shr16_set_led(2 << 2 * (4 - active_extruder));
 		load_filament_withSensor(); // load new filament
 		_return = true;
 	}

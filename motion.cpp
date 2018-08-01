@@ -112,7 +112,7 @@ void load_filament_withSensor()
 		{
 			shr16_set_led(0x000);
 			delay(800);
-			shr16_set_led(1 << 1 * (4 - active_extruder));
+			shr16_set_led(2 << 2 * (4 - active_extruder));
 			delay(800);
 		} while ( buttonClicked() == 0 );
 
@@ -228,14 +228,14 @@ void unload_filament_withSensor()
 		do
 		{
 			shr16_set_led(0x000);
-			shr16_set_led(1 << 2 * (4 - active_extruder));
+			shr16_set_led(2 << 2 * (4 - previous_extruder));
 			delay(40);
-			shr16_set_led(1 << 2 * (4 - active_extruder));
+			shr16_set_led(2 << 2 * (4 - previous_extruder));
 			delay(40);
 			shr16_set_led(0x000);
 			delay(100);
 		} while (buttonClicked() == 0);
-		shr16_set_led(1 << 2 * (4 - active_extruder));
+		shr16_set_led(1 << 2 * (4 - previous_extruder));
 		park_idler(true);
 	}
 	else

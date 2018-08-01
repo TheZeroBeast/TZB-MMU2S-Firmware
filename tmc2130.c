@@ -149,9 +149,9 @@ inline int8_t __curh(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 24;
+	case 0: return 1;
 	case 1: return 20;
-	case 2: return 1;
+	case 2: return 24;
 	}
 	return 16;
 }
@@ -160,9 +160,9 @@ inline int8_t __curr(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 35;  //30
-	case 1: return 35;  //30
-	case 2: return 30;  //25 
+	case 0: return 30;   
+	case 1: return 35;   
+	case 2: return 35;   
 	}
 	return 16;
 }
@@ -171,9 +171,9 @@ inline int8_t __currh(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 30;  //30
-	case 1: return 30;  //30
-	case 2: return 1;  //25 
+	case 0: return 1;   
+	case 1: return 30;  
+	case 2: return 30;   
 	}
 	return 16;
 }
@@ -182,9 +182,9 @@ inline int8_t __res(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return tmc2130_usteps2mres((uint16_t)16);
+	case 0: return tmc2130_usteps2mres((uint16_t)2);
 	case 1: return tmc2130_usteps2mres((uint16_t)2);
-	case 2: return tmc2130_usteps2mres((uint16_t)2);
+	case 2: return tmc2130_usteps2mres((uint16_t)16);
 	}
 	return 16;
 }
@@ -255,20 +255,12 @@ int8_t tmc2130_init(uint8_t homing)
 {
 	DDRC |= 0x40;
 	DDRD |= 0x80;
-#ifdef green_board
-	DDRE |= 0x40;  // green board
-#else
-	DDRB |= 0x80;   // black board
-#endif // green_board
+	DDRB |= 0x80;
+
 
 	PORTC |= 0x40;
 	PORTD |= 0x80;
-
-#ifdef green_board
-	PORTE |= 0x40;  // green board
-#else
-	PORTB |= 0x80;  // black board
-#endif
+	PORTB |= 0x80;   
 
 	DDRD |= 0x10;
 	DDRB |= 0x10;
@@ -281,23 +273,7 @@ int8_t tmc2130_init(uint8_t homing)
 	ret += tmc2130_init_axis(0, homing)?-1:0;
 	ret += tmc2130_init_axis(1,homing)?-2:0;
 	ret += tmc2130_init_axis(2,homing)?-4:0;
-	
-/*
-	uint32_t val32 = 0;
-	uint8_t stat = 0;
 
-	printf_P(PSTR("SPCR=0x%02x\n"), SPCR);
-	printf_P(PSTR("SPSR=0x%02x\n"), SPSR);
-
-	stat = tmc2130_rd(0, TMC2130_REG_GSTAT, &val32);
-	printf_P(PSTR("axis 0 stat=0x%02x GSTAT=0x%08lx\n"), stat, val32);
-
-	stat = tmc2130_rd(1, TMC2130_REG_GSTAT, &val32);
-	printf_P(PSTR("axis 1 stat=0x%02x GSTAT=0x%08lx\n"), stat, val32);
-
-	stat = tmc2130_rd(2, TMC2130_REG_GSTAT, &val32);
-	printf_P(PSTR("axis 2 stat=0x%02x GSTAT=0x%08lx\n"), stat, val32);
-*/
 	return ret;
 }
 
@@ -316,11 +292,7 @@ inline void tmc2130_cs_low(uint8_t axis)
 	{
 	case 0: PORTC &= ~0x40; break;
 	case 1: PORTD &= ~0x80; break;
-#ifdef green_board
-	case 2: PORTE &= ~0x40; break; //// green board
-#else
 	case 2: PORTB &= ~0x80; break; //// black board
-#endif 
 	}
 }
 
@@ -330,11 +302,7 @@ inline void tmc2130_cs_high(uint8_t axis)
 	{
 	case 0: PORTC |= 0x40; break;
 	case 1: PORTD |= 0x80; break;
-#ifdef green_board
-	case 2: PORTE |= 0x40; break; //// green board
-#else
-	 case 2: PORTB |= 0x80; break; //// black board
-#endif
+	case 2: PORTB |= 0x80; break; //// black board
 	}
 }
 

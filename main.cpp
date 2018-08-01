@@ -15,6 +15,7 @@
 #include "motion.h"
 #include "Buttons.h"
 #include "EEPROM.h"
+#include <avr/wdt.h>
 
 
 int8_t sys_state = 0;
@@ -64,14 +65,7 @@ void setup()
 	{
 		do
 		{
-			if (digitalRead(A1) == 1)
-			{
-				shr16_set_led(0x2aa);
-			}
-			else
-			{
-				shr16_set_led(0x155);
-			}
+			shr16_set_led(0x155);
 			delay(300);
 			shr16_set_led(0x000);
 			delay(300);
@@ -221,6 +215,15 @@ void process_commands(FILE* inout)
 
 			isPrinting = false;
 			select_extruder(0);
+		}
+
+		if (sscanf_P(line, PSTR("X%d"), &value) > 0)
+		{
+			// MMU reset
+               if(value==0)
+                    {
+                    wdt_enable(WDTO_15MS);
+                    }
 		}
 
 

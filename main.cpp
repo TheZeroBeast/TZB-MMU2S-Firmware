@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <avr/io.h>
+//#include <avr/interrupt.h>
+//#include <avr/wdt.h>
 #include "shr16.h"
 #include "adc.h"
 #include "uart.h"
@@ -32,18 +34,29 @@ void process_commands(FILE* inout);
 //initialization after reset
 void setup()
 {
+//	wdt_disable();
 
 	shr16_init(); // shift register
 	led_blink(0);
 
+	uart0_init(); //uart0
+
 	uart1_init(); //uart1
+
 	led_blink(1);
 
-#if (UART_STD == 1)
+#if (UART_STD == 0)
+	stdin = uart0io; // stdin = uart0
+	stdout = uart0io; // stdout = uart0
+#elif (UART_STD == 1)
 	stdin = uart1io; // stdin = uart1
 	stdout = uart1io; // stdout = uart1
 #endif //(UART_STD == 1)
 
+	fprintf_P(uart1io, PSTR("start\n"));
+	fprintf_P(uart1io, PSTR("MMControl-01\n"));
+
+/*
 	spi_init();
 	led_blink(2);
 
@@ -81,8 +94,6 @@ void setup()
 	home();
 	tmc2130_init(0); // trinamic
 
-
-
 	
 	// read correction to bowden tube
 	if (eeprom_read_byte((uint8_t*)0) != 0 && eeprom_read_byte((uint8_t*)0) < 200)
@@ -99,7 +110,7 @@ void setup()
 	{
 		setupMenu();
 	}
-	
+	*/
 	
 }
 
@@ -108,7 +119,8 @@ void loop()
 {
 	
 	process_commands(uart1io);
-
+//	process_commands(uart0io);
+/*
 	if (!isPrinting)
 	{
 		
@@ -140,7 +152,7 @@ void loop()
 			delay(500);
 		}
 	}
-
+*/
 	 
 }
 
@@ -149,6 +161,8 @@ extern "C" {
 
 void process_commands(FILE* inout)
 {
+//	printf_P(PSTR("process_commands\n"));
+
 	static char line[32];
 	static int count = 0;
 	int c = -1;
@@ -174,8 +188,7 @@ void process_commands(FILE* inout)
 		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
-
-
+/*
 		if (sscanf_P(line, PSTR("T%d"), &value) > 0)
 		{
 			//T-code scanned
@@ -222,8 +235,24 @@ void process_commands(FILE* inout)
 			isPrinting = false;
 			select_extruder(0);
 		}
-
-
+*/
+		if (strcmp_P(line, PSTR("TST")) == 0)
+		{
+			fprintf_P(inout, PSTR("ok\n"));
+		}
+		else if (strcmp_P(line, PSTR("STA")) == 0)
+		{
+			fprintf_P(inout, PSTR("%d ok\n"), digitalRead(A1));
+		}
+		else if (strcmp_P(line, PSTR("RST")) == 0)
+		{
+			// Reset
+			asm("cli");
+			asm("jmp 0");
+			//cli();
+			//wdt_enable(WDTO_15MS);
+			//while (1);
+		}
 	}
 	else
 	{ //nothing received

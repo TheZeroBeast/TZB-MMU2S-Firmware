@@ -47,6 +47,7 @@
 #define UART_STD 1
 #define UART_COM 1
 
+#define FW_VERSION 90 //it means version 0.9.0
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded

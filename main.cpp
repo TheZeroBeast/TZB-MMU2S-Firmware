@@ -55,6 +55,8 @@ void setup()
 	stdout = uart1io; // stdout = uart1
 #endif //(UART_STD == 1)
 
+	fprintf_P(uart_com, PSTR("start\n")); //startup message
+
 	spi_init();
 	led_blink(2);
 
@@ -238,6 +240,13 @@ void process_commands(FILE* inout)
 		{
 			if (value == 0) // Read finda
 				fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
+		}
+		else if (sscanf_P(line, PSTR("S%d"), &value) > 0)
+		{
+			if (value == 0) // return ok
+				fprintf_P(inout, PSTR("ok\n"));
+			else if (value == 1) // Read version
+				fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
 		}
 	}
 	else

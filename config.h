@@ -45,6 +45,7 @@
 
 //stdin & stdout uart0/1
 #define UART_STD 1
+#define UART_COM 1
 
 
 //TMC2130 - Trinamic stepper driver

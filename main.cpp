@@ -175,8 +175,6 @@ void process_commands(FILE* inout)
 		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
-
-
 		if (sscanf_P(line, PSTR("T%d"), &value) > 0)
 		{
 			//T-code scanned
@@ -197,8 +195,7 @@ void process_commands(FILE* inout)
 
 			}
 		}
-		 
-		if (sscanf_P(line, PSTR("L%d"), &value) > 0)
+		else if (sscanf_P(line, PSTR("L%d"), &value) > 0)
 		{
 			// Load filament
 			if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded)
@@ -212,8 +209,7 @@ void process_commands(FILE* inout)
 
 			}
 		}
-		
-		if (sscanf_P(line, PSTR("U%d"), &value) > 0)
+		else if (sscanf_P(line, PSTR("U%d"), &value) > 0)
 		{
 			// Unload filament
 			unload_filament_withSensor();
@@ -223,17 +219,16 @@ void process_commands(FILE* inout)
 			isPrinting = false;
 			select_extruder(0);
 		}
-
-		if (sscanf_P(line, PSTR("X%d"), &value) > 0)
+		else if (sscanf_P(line, PSTR("X%d"), &value) > 0)
 		{
-			// MMU reset
-               if(value==0)
-                    {
-                    wdt_enable(WDTO_15MS);
-                    }
+			if (value == 0) // MMU reset
+				wdt_enable(WDTO_15MS);
 		}
-
-
+		else if (sscanf_P(line, PSTR("P%d"), &value) > 0)
+		{
+			if (value == 0) // Read finda
+				fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
+		}
 	}
 	else
 	{ //nothing received

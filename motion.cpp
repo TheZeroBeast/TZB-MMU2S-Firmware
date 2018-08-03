@@ -38,7 +38,7 @@ void do_idler_step();
 
 void set_positions(int _current_extruder, int _next_extruder);
 
-
+bool checkOk();
 
 void cut_filament()
 {
@@ -107,15 +107,69 @@ void load_filament_withSensor()
 	// still not at FINDA, error on loading, let's wait for user input
 	if (digitalRead(A1) == 0)
 	{
+		bool _continue = false;
+		bool _isOk = false;
+
+
+
 		park_idler(false);
 		do
 		{
 			shr16_set_led(0x000);
 			delay(800);
-			shr16_set_led(2 << 2 * (4 - active_extruder));
+			if (!_isOk)
+			{
+				shr16_set_led(2 << 2 * (4 - active_extruder));
+			}
+			else
+			{
+				shr16_set_led(1 << 2 * (4 - active_extruder));
+				delay(100);
+				shr16_set_led(2 << 2 * (4 - active_extruder));
+				delay(100);
+			}
 			delay(800);
-		} while ( buttonClicked() == 0 );
 
+			switch (buttonClicked())
+			{
+				case 4:
+					// just move filament little bit
+					park_idler(true);
+					set_pulley_dir_push();
+
+					for (int i = 0; i < 200; i++)
+					{
+						do_pulley_step();
+						delayMicroseconds(5500);
+					}
+					park_idler(false);
+					break;
+				case 2:
+					// check if everything is ok
+					park_idler(true);
+					_isOk = checkOk();
+					park_idler(false);
+					break;
+				case 1:
+					// continue with loading
+					park_idler(true);
+					_isOk = checkOk();
+					park_idler(false);
+
+					if (_isOk)
+					{
+						_continue = true;
+					}
+					break;
+			}
+			
+		} while ( !_continue );
+
+		
+		
+		
+		
+		
 		park_idler(true);
 		// TODO: do not repeat same code, try to do it until succesfull load
 		_loadSteps = 0;
@@ -224,17 +278,64 @@ void unload_filament_withSensor()
 	// error, wait for user input
 	if (digitalRead(A1) == 1)
 	{
+		bool _continue = false;
+		bool _isOk = false;
+
 		park_idler(false);
 		do
 		{
 			shr16_set_led(0x000);
-			shr16_set_led(2 << 2 * (4 - previous_extruder));
-			delay(40);
-			shr16_set_led(2 << 2 * (4 - previous_extruder));
-			delay(40);
-			shr16_set_led(0x000);
 			delay(100);
-		} while (buttonClicked() == 0);
+			if (!_isOk)
+			{
+				shr16_set_led(2 << 2 * (4 - active_extruder));
+			}
+			else
+			{
+				shr16_set_led(1 << 2 * (4 - active_extruder));
+				delay(100);
+				shr16_set_led(2 << 2 * (4 - active_extruder));
+				delay(100);
+			}
+			delay(100);
+
+
+			switch (buttonClicked())
+			{
+			case 4:
+				// just move filament little bit
+				park_idler(true);
+				set_pulley_dir_pull();
+
+				for (int i = 0; i < 200; i++)
+				{
+					do_pulley_step();
+					delayMicroseconds(5500);
+				}
+				park_idler(false);
+				break;
+			case 2:
+				// check if everything is ok
+				park_idler(true);
+				_isOk = checkOk();
+				park_idler(false);
+				break;
+			case 1:
+				// continue with unloading
+				park_idler(true);
+				_isOk = checkOk();
+				park_idler(false);
+
+				if (_isOk)
+				{
+					_continue = true;
+				}
+				break;
+			}
+
+
+		} while (!_continue);
+		
 		shr16_set_led(1 << 2 * (4 - previous_extruder));
 		park_idler(true);
 	}
@@ -581,3 +682,67 @@ void set_pulley_dir_pull()
 }
 
 
+bool checkOk()
+{
+	bool _ret = false;
+	int _steps = 0;
+	int _endstop_hit = 0;
+
+
+	// filament in FINDA, let's try to unload it
+	set_pulley_dir_pull();
+	if (digitalRead(A1) == 1)
+	{
+		_steps = 3000;
+		_endstop_hit = 0;
+		do
+		{
+			do_pulley_step();
+			delayMicroseconds(3000);
+			if (digitalRead(A1) == 0) _endstop_hit++;
+			_steps--;
+		} while (_steps > 0 && _endstop_hit < 50);
+	}
+
+	if (digitalRead(A1) == 0)
+	{
+		// looks ok, load filament to FINDA
+		set_pulley_dir_push();
+		
+		_steps = 3000;
+		_endstop_hit = 0;
+		do
+		{
+			do_pulley_step();
+			delayMicroseconds(3000);
+			if (digitalRead(A1) == 1) _endstop_hit++;
+			_steps--;
+		} while (_steps > 0 && _endstop_hit < 50);
+
+		if (_steps == 0)
+		{
+			// we ran out of steps, means something is again wrong, abort
+			_ret = false;
+		}
+		else
+		{
+			// looks ok !
+			// unload to PTFE tube
+			set_pulley_dir_pull();
+			for (int i = 600; i > 0; i--)   // 570
+			{
+				do_pulley_step();
+				delayMicroseconds(3000);
+			}
+			_ret = true;
+		}
+
+	}
+	else
+	{
+		// something is wrong, abort
+		_ret = false;
+	}
+
+	return _ret;
+}

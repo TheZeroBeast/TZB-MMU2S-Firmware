@@ -15,6 +15,7 @@
 #include "motion.h"
 #include "Buttons.h"
 #include "EEPROM.h"
+#include <avr/wdt.h>
 
 
 int8_t sys_state = 0;
@@ -221,6 +222,15 @@ void process_commands(FILE* inout)
 
 			isPrinting = false;
 			select_extruder(0);
+		}
+
+		if (sscanf_P(line, PSTR("X%d"), &value) > 0)
+		{
+			// MMU reset
+               if(value==0)
+                    {
+                    wdt_enable(WDTO_15MS);
+                    }
 		}
 
 

@@ -44,8 +44,7 @@
 #define UART1_BDR 115200
 
 //stdin & stdout uart0/1
-#define UART_STD 0
-
+#define UART_STD 1
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded

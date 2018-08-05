@@ -44,7 +44,8 @@
 #define UART1_BDR 115200
 
 //stdin & stdout uart0/1
-#define UART_STD 1
+#define UART_STD 0
+//communication uart0/1
 #define UART_COM 1
 
 #define FW_VERSION 90 //it means version 0.9.0

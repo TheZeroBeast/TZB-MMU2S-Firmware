@@ -33,7 +33,7 @@ void process_commands(FILE* inout);
 //initialization after reset
 void setup()
 {
-
+	//Test
 	shr16_init(); // shift register
 	led_blink(0);
 

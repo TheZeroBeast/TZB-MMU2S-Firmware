@@ -22,7 +22,13 @@ int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 int _loop = 0;
 int _c = 0;
- 
+
+#if (UART_COM == 0)
+FILE* uart_com = uart0io;
+#elif (UART_COM == 1)
+FILE* uart_com = uart1io;
+#endif //(UART_COM == 0)
+
 extern "C" {
 void process_commands(FILE* inout);
 
@@ -37,13 +43,19 @@ void setup()
 	shr16_init(); // shift register
 	led_blink(0);
 
+	uart0_init(); //uart0
 	uart1_init(); //uart1
 	led_blink(1);
 
-#if (UART_STD == 1)
+#if (UART_STD == 0)
+	stdin = uart0io; // stdin = uart0
+	stdout = uart0io; // stdout = uart0
+#elif (UART_STD == 1)
 	stdin = uart1io; // stdin = uart1
 	stdout = uart1io; // stdout = uart1
 #endif //(UART_STD == 1)
+
+	fprintf_P(uart_com, PSTR("start\n")); //startup message
 
 	spi_init();
 	led_blink(2);
@@ -108,7 +120,7 @@ void setup()
 void loop()
 {
 	
-	process_commands(uart1io);
+	process_commands(uart_com);
 
 	if (!isPrinting)
 	{
@@ -175,8 +187,6 @@ void process_commands(FILE* inout)
 		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
 		bool retOK = false;
-
-
 		if (sscanf_P(line, PSTR("T%d"), &value) > 0)
 		{
 			//T-code scanned
@@ -197,8 +207,7 @@ void process_commands(FILE* inout)
 
 			}
 		}
-		 
-		if (sscanf_P(line, PSTR("L%d"), &value) > 0)
+		else if (sscanf_P(line, PSTR("L%d"), &value) > 0)
 		{
 			// Load filament
 			if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded)
@@ -212,8 +221,7 @@ void process_commands(FILE* inout)
 
 			}
 		}
-		
-		if (sscanf_P(line, PSTR("U%d"), &value) > 0)
+		else if (sscanf_P(line, PSTR("U%d"), &value) > 0)
 		{
 			// Unload filament
 			unload_filament_withSensor();
@@ -223,17 +231,23 @@ void process_commands(FILE* inout)
 			isPrinting = false;
 			select_extruder(0);
 		}
-
-		if (sscanf_P(line, PSTR("X%d"), &value) > 0)
+		else if (sscanf_P(line, PSTR("X%d"), &value) > 0)
 		{
-			// MMU reset
-               if(value==0)
-                    {
-                    wdt_enable(WDTO_15MS);
-                    }
+			if (value == 0) // MMU reset
+				wdt_enable(WDTO_15MS);
 		}
-
-
+		else if (sscanf_P(line, PSTR("P%d"), &value) > 0)
+		{
+			if (value == 0) // Read finda
+				fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
+		}
+		else if (sscanf_P(line, PSTR("S%d"), &value) > 0)
+		{
+			if (value == 0) // return ok
+				fprintf_P(inout, PSTR("ok\n"));
+			else if (value == 1) // Read version
+				fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
+		}
 	}
 	else
 	{ //nothing received

@@ -10,7 +10,7 @@ extern bool home();
 extern bool home_idler();
 extern bool home_selector();
  
-extern int8_t filament_types[EXTRUDERS];
+extern int8_t filament_type[EXTRUDERS];
 
 
 void park_idler(bool _unpark);

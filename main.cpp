@@ -254,9 +254,9 @@ void process_commands(FILE* inout)
 		else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0)
 		{
 			if (((value >= 0) && (value < EXTRUDERS)) &&
-				((value0 >= 0) && (value0 < 2)) &&
+				((value0 >= 0) && (value0 <= 2)))
 			{
-				filament_types[value] = value0;
+				filament_type[value] = value0;
 				fprintf_P(inout, PSTR("ok\n"));
 			}
 		}

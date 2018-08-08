@@ -180,6 +180,7 @@ void process_commands(FILE* inout)
 		//overflow
 	}
 	int value = 0;
+	int value0 = 0;
 
 	if ((count > 0) && (c == 0))
 	{
@@ -247,6 +248,17 @@ void process_commands(FILE* inout)
 				fprintf_P(inout, PSTR("ok\n"));
 			else if (value == 1) // Read version
 				fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
+			else if (value == 2) // Read build nr
+				fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
+		}
+		else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0)
+		{
+			if (((value >= 0) && (value < EXTRUDERS)) &&
+				((value0 >= 0) && (value0 <= 2)))
+			{
+				filament_type[value] = value0;
+				fprintf_P(inout, PSTR("ok\n"));
+			}
 		}
 	}
 	else

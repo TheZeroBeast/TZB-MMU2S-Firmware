@@ -3,12 +3,14 @@
 #ifndef _MOTION_h
 #define _MOTION_h
 
+#include "config.h"
+#include <inttypes.h>
+
 extern bool home();
 extern bool home_idler();
 extern bool home_selector();
  
-
-
+extern int8_t filament_type[EXTRUDERS];
 
 
 void park_idler(bool _unpark);
@@ -27,6 +29,8 @@ void set_pulley_dir_push();
 
 void move(int _idler, int _selector, int _pulley);
 void move_proportional(int _idler, int _selector);
+
+
 
 #endif
 

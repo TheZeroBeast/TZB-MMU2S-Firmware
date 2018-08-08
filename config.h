@@ -49,7 +49,7 @@
 #define UART_COM 1
 
 #define FW_VERSION 90 //it means version 0.9.0
-#define FW_BUILD   70 //number of commits in 'master'
+#define FW_BUILDNR 70 //number of commits in 'master'
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded

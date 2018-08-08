@@ -21,6 +21,7 @@ const int bowden_length = 1000;
 
 // endstop to tube  - 30 mm, 550 steps
 
+int8_t filament_type[EXTRUDERS] = {-1, -1, -1, -1, -1};
 
 int set_idler_direction(int _steps);
 int set_selector_direction(int _steps);
@@ -156,7 +157,7 @@ void load_filament_withSensor()
 					_isOk = checkOk();
 					park_idler(false);
 
-					if (_isOk)
+					if (_isOk) //pridat do podminky flag ze od tiskarny prislo continue
 					{
 						_continue = true;
 					}

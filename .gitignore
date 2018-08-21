@@ -8,3 +8,5 @@
 .project
 .settings
 /Debug
+/__vm/.MM-Control.vsarduino.h
+/.vs/MM-control-01/v14/.suo

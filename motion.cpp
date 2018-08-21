@@ -193,8 +193,8 @@ void load_filament_withSensor()
 	{
 		do_pulley_step();
 		
-		if (i > 10 && i < 4000 && _speed > 600) _speed = _speed - 4;
-		if (i > 100 && i < 4000 && _speed > 600) _speed = _speed - 1;
+		if (i > 10 && i < 4000 && _speed > 650) _speed = _speed - 4;
+		if (i > 100 && i < 4000 && _speed > 650) _speed = _speed - 1;
 		if (i > 8000 && _speed < 3000) _speed = _speed + 2;  
 		delayMicroseconds(_speed);
 	}
@@ -364,44 +364,21 @@ void load_filament_inPrinter()
 
 	//PLA
 	tmc2130_init_axis_current(0, 1, 15);   
-	for (int i = 0; i <= 300; i++)
+	for (int i = 0; i <= 320; i++)
 	{
 		if (i == 150) { tmc2130_init_axis_current(0, 1, 10); };
 		do_pulley_step();
 		delayMicroseconds(2600);
 	}
 
-	// FLEX
-	/*
-	tmc2130_init_axis_current(0, 1, 15);
-	for (int i = 0; i <= 600; i++)
-	{
-		if (i == 125) { tmc2130_init_axis_current(0, 1, 10); };
-		do_pulley_step();
-		delayMicroseconds(2600);
-	}
-	*/
-
 	//PLA
 	tmc2130_init_axis_current(0, 1, 3);    
-	for (int i = 0; i <= 400; i++)
+	for (int i = 0; i <= 450; i++)
 	{
 		do_pulley_step();
-		delayMicroseconds(2200);   //3200
+		delayMicroseconds(2200); 
 	}
-	
-
-	// FLEX
-	/*
-	tmc2130_init_axis_current(0, 1, 3);
-	for (int i = 0; i <= 800; i++)
-	{
-		do_pulley_step();
-		delayMicroseconds(3000);   //3200
-	}
-	*/
-
-
+		
 	tmc2130_init_axis_current(0, 0, 0);
 	park_idler(false);
 	isIdlerParked = true;
@@ -413,7 +390,7 @@ void init_Pulley()
 	
 
 	set_pulley_dir_push();
-	for (int i = 100; i > 0; i--)
+	for (int i = 50; i > 0; i--)
 	{
 		do_pulley_step();
 		delayMicroseconds(_speed);
@@ -421,7 +398,7 @@ void init_Pulley()
 	}
 
 	set_pulley_dir_pull();
-	for (int i = 100; i > 0; i--)
+	for (int i = 50; i > 0; i--)
 	{
 		do_pulley_step();
 		delayMicroseconds(_speed);
@@ -432,12 +409,6 @@ void init_Pulley()
 
 void do_pulley_step()
 {
-	/*
-	PORTD |= 0x40;;
-	asm("nop");
-	PORTD &= ~0x40;
-	asm("nop");
-	*/
 	PORTB |= 0x10;
 	asm("nop");
 	PORTB &= ~0x10;
@@ -446,12 +417,6 @@ void do_pulley_step()
 
 void do_idler_step()
 {
-	/*
-	PORTB |= 0x10;;
-	asm("nop");
-	PORTB &= ~0x10;
-	asm("nop");
-	*/
 	PORTD |= 0x40;
 	asm("nop");
 	PORTD &= ~0x40;
@@ -512,7 +477,7 @@ bool home_selector()
 		{
 			move(0, 1,0);
 			uint16_t sg = tmc2130_read_sg(1);
-			if ((i > 16) && (sg < 100))	break;
+			if ((i > 16) && (sg < 10))	break;
 
 			_c++;
 			if (i == 3000) { _l++; }
@@ -520,7 +485,6 @@ bool home_selector()
 			if (_c > 200) { shr16_set_led(0x000); _c = 0; };
 		}
 	}
-
 	
 	return true;
 }

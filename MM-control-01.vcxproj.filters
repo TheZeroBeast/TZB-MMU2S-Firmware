@@ -60,6 +60,9 @@
     <ClInclude Include="Buttons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="__vm\.MM-Control.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="abtn3.c">

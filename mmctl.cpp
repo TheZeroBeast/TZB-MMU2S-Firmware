@@ -71,6 +71,14 @@ bool switch_extruder_withSensor(int new_extruder)
 	isPrinting = true;
 	bool _return = false;
 	if (!isHomed) { home(); }
+	
+	if (active_extruder == 5)
+	{
+		move(0, -700, 0);
+		active_extruder = 4;
+	}
+	
+	
 	toolChanges++;
 
 	shr16_set_led(2 << 2 * (4 - active_extruder));
@@ -128,15 +136,36 @@ bool select_extruder(int new_extruder)
 	}
 	else
 	{
-		if (isIdlerParked) park_idler(true);
-		set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
-		park_idler(false);
+		if (new_extruder == 5)
+		{
+			move(0, 700, 0);
+		}
+		else
+		{
+			if (previous_extruder == 5)
+			{
+				move(0, -700, 0);
+			}
+			else
+			{
+				if (isIdlerParked) park_idler(true);
+				set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+				park_idler(false);
+			}
+		}
 		_return = true;
 	}
 
 	shr16_set_led(0x000);
 	shr16_set_led(1 << 2 * (4 - active_extruder));
 	return _return;
+}
+
+bool service_position(bool service)
+{
+	move(0, 600, 0);
+
+	return true;
 }
 
 void led_blink(int _no)

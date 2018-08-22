@@ -31,15 +31,12 @@ FILE* uart_com = uart1io;
 
 extern "C" {
 void process_commands(FILE* inout);
-
-
-//int buttonClicked();
 }
 
 //initialization after reset
 void setup()
 {
-	//Test
+
 	shr16_init(); // shift register
 	led_blink(0);
 
@@ -132,14 +129,20 @@ void loop()
 			switch (buttonClicked())
 			{
 				case 1:
-					if (active_extruder < 4) select_extruder(active_extruder + 1);
+					if (active_extruder < 5)
+					{
+							select_extruder(active_extruder + 1);
+					}
 					break;
 				case 2:
-					shr16_set_led(2 << 2 * (4 - active_extruder));
-					delay(1000);
-					if (buttonClicked() == 2)
+					if (active_extruder < 5)
 					{
-						feed_filament();
+						shr16_set_led(2 << 2 * (4 - active_extruder));
+						delay(500);
+						if (buttonClicked() == 2)
+						{
+							feed_filament();
+						}
 					}
 					break;
 				case 4:
@@ -151,6 +154,14 @@ void loop()
 			}
 			shr16_set_led(1 << 2 * (4 - active_extruder));
 			delay(500);
+		}
+
+		if (active_extruder == 5)
+		{
+			shr16_set_led(2 << 2 * 0);
+			delay(50);
+			shr16_set_led(1 << 2 * 0);
+			delay(50);
 		}
 	}
 

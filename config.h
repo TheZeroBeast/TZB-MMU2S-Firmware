@@ -1,5 +1,8 @@
 //config.h - main configuration file
 
+#define FW_VERSION 90 //it means version 0.9.0
+#define FW_BUILDNR 72 //number of commits in 'master'
+
 //timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
 //#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
@@ -47,9 +50,6 @@
 #define UART_STD 0
 //communication uart0/1
 #define UART_COM 1
-
-#define FW_VERSION 90 //it means version 0.9.0
-#define FW_BUILDNR 70 //number of commits in 'master'
 
 //TMC2130 - Trinamic stepper driver
 //pinout - hardcoded

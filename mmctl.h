@@ -22,6 +22,7 @@ extern bool home_selector();
 extern bool switch_extruder_withSensor(int new_extruder);
 
 extern bool select_extruder(int new_extruder);
+extern bool service_position(bool service);
 
 extern bool feed_filament();
 

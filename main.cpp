@@ -198,25 +198,15 @@ void process_commands(FILE* inout)
 		//line received
 		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
 		count = 0;
-		bool retOK = false;
 		if (sscanf_P(line, PSTR("T%d"), &value) > 0)
 		{
 			//T-code scanned
 			if ((value >= 0) && (value < EXTRUDERS))
 			{
-				retOK = switch_extruder_withSensor(value);
+				switch_extruder_withSensor(value);
 
 				delay(200);
-				if (retOK)
-				{
-					fprintf_P(inout, PSTR("ok\n"));
-					load_filament_inPrinter();
-				}
-				else
-				{
-					fprintf_P(inout, PSTR("ok\n"));
-				}
-
+				fprintf_P(inout, PSTR("ok\n"));
 			}
 		}
 		else if (sscanf_P(line, PSTR("L%d"), &value) > 0)
@@ -270,7 +260,15 @@ void process_commands(FILE* inout)
 				filament_type[value] = value0;
 				fprintf_P(inout, PSTR("ok\n"));
 			}
-		}
+		} 
+    else if (sscanf_P(line, PSTR("C%d"), &value) > 0)
+    {
+      if (value == 0) //C0 continue loading current filament (used after T-code), maybe add different code for each extruder (the same way as T-codes) in the future?
+      {
+        load_filament_inPrinter();    
+        fprintf_P(inout, PSTR("ok\n"));
+      }
+    }
 	}
 	else
 	{ //nothing received

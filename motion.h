@@ -29,6 +29,8 @@ void set_pulley_dir_push();
 
 void move(int _idler, int _selector, int _pulley);
 void move_proportional(int _idler, int _selector);
+void eject_filament(int extruder);
+void recover_after_eject();
 
 
 

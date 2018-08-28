@@ -260,15 +260,31 @@ void process_commands(FILE* inout)
 				filament_type[value] = value0;
 				fprintf_P(inout, PSTR("ok\n"));
 			}
-		} 
-    else if (sscanf_P(line, PSTR("C%d"), &value) > 0)
-    {
-      if (value == 0) //C0 continue loading current filament (used after T-code), maybe add different code for each extruder (the same way as T-codes) in the future?
-      {
-        load_filament_inPrinter();    
-        fprintf_P(inout, PSTR("ok\n"));
-      }
-    }
+		}
+		else if (sscanf_P(line, PSTR("C%d"), &value) > 0)
+		{
+			if (value == 0) //C0 continue loading current filament (used after T-code), maybe add different code for each extruder (the same way as T-codes) in the future?
+			{
+				load_filament_inPrinter();
+				fprintf_P(inout, PSTR("ok\n"));
+			}
+		}
+		else if (sscanf_P(line, PSTR("E%d"), &value) > 0)
+		{
+			if ((value >= 0) && (value < EXTRUDERS)) //Ex: eject filament
+			{
+				eject_filament(value);
+				fprintf_P(inout, PSTR("ok\n"));
+			}
+		}
+		else if (sscanf_P(line, PSTR("R%d"), &value) > 0)
+		{
+			if (value == 0) //R0: recover after eject filament
+			{
+				recover_after_eject();
+				fprintf_P(inout, PSTR("ok\n"));
+			}
+		}
 	}
 	else
 	{ //nothing received

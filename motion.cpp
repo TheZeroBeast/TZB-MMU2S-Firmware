@@ -408,8 +408,8 @@ void unload_filament_withSensor()
 			delayMicroseconds(_speed);
 		}
 	}
-	tmc2130_init_axis_current(0, 0, 0);
 	park_idler(false);
+	tmc2130_init_axis_current(0, 0, 0);
 	isFilamentLoaded = false; // filament unloaded 
 }
 
@@ -437,9 +437,8 @@ void load_filament_inPrinter()
 		delayMicroseconds(2200); 
 	}
 		
-	tmc2130_init_axis_current(0, 0, 0);
 	park_idler(false);
-	isIdlerParked = true;
+	tmc2130_init_axis_current(0, 0, 0);
 }
 
 void init_Pulley()

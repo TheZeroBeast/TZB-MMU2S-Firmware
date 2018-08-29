@@ -1,7 +1,7 @@
 //config.h - main configuration file
 
 #define FW_VERSION 90 //it means version 0.9.0
-#define FW_BUILDNR 81 //number of commits in 'master'
+#define FW_BUILDNR 85 //number of commits in 'master'
 
 //timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback

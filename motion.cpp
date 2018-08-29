@@ -18,8 +18,10 @@ const int idler_steps = 1420 / 4;    // 2 msteps = 180 / 4
 const int idler_parking_steps = (idler_steps / 2) + 40;  // 40
 
 const int bowden_length = 1000;
-
 // endstop to tube  - 30 mm, 550 steps
+
+int selector_steps_for_eject = 0;
+int idler_steps_for_eject = 0;
 
 int8_t filament_type[EXTRUDERS] = {-1, -1, -1, -1, -1};
 
@@ -55,7 +57,61 @@ void set_positions(int _current_extruder, int _next_extruder)
 	move_proportional(_idler_steps, _selector_steps);
 }
 
+void eject_filament(int extruder)
+{
+	//move selector sideways and push filament forward little bit, so user can catch it, unpark idler at the end to user can pull filament out
 
+	int selector_position = 0;
+	int steps = 0;
+
+	int8_t selector_offset_for_eject = 0;
+	int8_t idler_offset_for_eject = 0;
+		
+	//if there is still filament detected by PINDA unload it first
+	if (isFilamentLoaded)  unload_filament_withSensor();
+	
+	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+	tmc2130_init_axis_current(0, 1, 30);
+		
+	//if we are want to eject fil 0-2, move seelctor to position 4 (right), if we want to eject filament 3 - 4, move selector to position 0 (left)
+	//maybe we can also move selector to service position in the future?
+	if (extruder <= 2) selector_position = 4;
+	else selector_position = 0;
+
+	//count offset (number of positions) for desired selector and idler position for ejecting
+	selector_offset_for_eject = active_extruder - selector_position;
+	idler_offset_for_eject = active_extruder - extruder;
+
+	//count number of desired steps for selector and idler and store it in static variable
+	selector_steps_for_eject = (selector_offset_for_eject * selector_steps) * -1;
+	idler_steps_for_eject = idler_offset_for_eject * idler_steps;
+
+	//move selector and idler to new position
+	move_proportional(idler_steps_for_eject, selector_steps_for_eject);
+
+	//push filament forward
+	do
+	{
+		do_pulley_step();
+		steps++;
+		delayMicroseconds(1500);
+	} while (steps < 2500);
+
+	//unpark idler so user can easily remove filament
+	park_idler(false);
+	tmc2130_init_axis_current(0, 0, 0);
+}
+
+void recover_after_eject()
+{
+	//restore state before eject filament
+	//if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
+	tmc2130_init_axis_current(0, 1, 30);
+	move_proportional(-idler_steps_for_eject, -selector_steps_for_eject);
+	tmc2130_init_axis_current(0, 0, 0);
+	//unpark idler
+	//park_idler(false);
+}
 
 void load_filament_withSensor()
 {
@@ -352,6 +408,7 @@ void unload_filament_withSensor()
 			delayMicroseconds(_speed);
 		}
 	}
+	park_idler(false);
 	tmc2130_init_axis_current(0, 0, 0);
 	isFilamentLoaded = false; // filament unloaded 
 }
@@ -380,9 +437,8 @@ void load_filament_inPrinter()
 		delayMicroseconds(2200); 
 	}
 		
-	tmc2130_init_axis_current(0, 0, 0);
 	park_idler(false);
-	isIdlerParked = true;
+	tmc2130_init_axis_current(0, 0, 0);
 }
 
 void init_Pulley()

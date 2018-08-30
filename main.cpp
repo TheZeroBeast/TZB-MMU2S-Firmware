@@ -231,7 +231,6 @@ void process_commands(FILE* inout)
 			fprintf_P(inout, PSTR("ok\n"));
 
 			isPrinting = false;
-			select_extruder(0);
 		}
 		else if (sscanf_P(line, PSTR("X%d"), &value) > 0)
 		{

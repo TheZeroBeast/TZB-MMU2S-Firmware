@@ -16,6 +16,7 @@
 #include "Buttons.h"
 #include "EEPROM.h"
 #include <avr/wdt.h>
+#include "permanent_storage.h"
 
 
 int8_t sys_state = 0;
@@ -95,9 +96,9 @@ void setup()
 
 	
 	// read correction to bowden tube
-	if (eeprom_read_byte((uint8_t*)0) != 0 && eeprom_read_byte((uint8_t*)0) < 200)
+	if (eeprom_read_byte(eepromLengthCorrection) != 0 && eeprom_read_byte(eepromLengthCorrection) < 200)
 	{
-		lengthCorrection = eeprom_read_byte((uint8_t*)0);
+		lengthCorrection = eeprom_read_byte(eepromLengthCorrection);
 	}
 	else
 	{

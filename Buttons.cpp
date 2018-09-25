@@ -7,6 +7,7 @@
 #include "tmc2130.h"
 #include "mmctl.h"
 #include "motion.h"
+#include "permanent_storage.h"
 
 const int ButtonPin = A2;
 
@@ -119,7 +120,7 @@ void settings_bowden_length()
 
 		if (_prev_correction != lengthCorrection)
 		{
-			eeprom_update_byte((uint8_t*)0, lengthCorrection);
+			eeprom_update_byte(eepromLengthCorrection, lengthCorrection);
 		}
 		unload_filament_withSensor();
 	}

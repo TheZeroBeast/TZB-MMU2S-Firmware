@@ -6,7 +6,7 @@
 #include "config.h"
 #include <inttypes.h>
 
-extern bool home();
+extern void home();
 extern bool home_idler();
 extern bool home_selector();
  

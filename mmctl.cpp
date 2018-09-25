@@ -161,7 +161,7 @@ bool select_extruder(int new_extruder)
 	return _return;
 }
 
-bool service_position(bool service)
+bool service_position()
 {
 	move(0, 600, 0);
 

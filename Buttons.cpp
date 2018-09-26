@@ -38,10 +38,10 @@ void setupMenu()
 
 		switch (buttonClicked())
 		{
-		case 1:
+		case Btn::right:
 			if (_menu > 0) { _menu--; delay(800); }
 			break;
-		case 2:
+		case Btn::middle:
 				
 			switch (_menu)
 			{
@@ -54,7 +54,7 @@ void setupMenu()
 					break;
 			}
 			break;
-		case 4:
+		case Btn::left:
 			if (_menu < 4) { _menu++; delay(800); }
 			break;
 		}
@@ -87,7 +87,7 @@ void settings_bowden_length()
 
 			switch (buttonClicked())
 			{
-			case 1:
+			case Btn::right:
 				if (lengthCorrection > 0)
 				{
 					lengthCorrection = lengthCorrection - 1;
@@ -96,7 +96,7 @@ void settings_bowden_length()
 				}
 				break;
 
-			case 4:
+			case Btn::left:
 				if (lengthCorrection < 200)
 				{
 					lengthCorrection = lengthCorrection + 1;
@@ -114,7 +114,7 @@ void settings_bowden_length()
 			delay(50);
 
 
-		} while (buttonClicked() != 2);
+		} while (buttonClicked() != Btn::middle);
 
 		eeprom_update_byte(eepromLengthCorrection, lengthCorrection);
 		unload_filament_withSensor();
@@ -123,20 +123,15 @@ void settings_bowden_length()
 
 //! @brief Is button pushed?
 //!
-//! @retval 0 No button pushed
-//! @retval 1 Button 1 pushed
-//! @retval 2 Button 2 pushed
-//! @retval 4 Button 3 pushed
-int buttonClicked()
+//! @return button pushed
+Btn buttonClicked()
 {
 	int raw = analogRead(ButtonPin);
-	int _return = 0;
 
-	 
-	if (raw < 50) _return = 1;
-	if (raw > 80 && raw < 100) _return = 2;
-	if (raw > 160 && raw < 180) _return = 4;
+	if (raw < 50) return Btn::right;
+	if (raw > 80 && raw < 100) return Btn::middle;
+	if (raw > 160 && raw < 180) return Btn::left;
 
-	return(_return);
+	return Btn::none;
 }
 

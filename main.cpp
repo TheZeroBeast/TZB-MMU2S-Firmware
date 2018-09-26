@@ -86,7 +86,7 @@ void setup()
 			delay(300);
 			shr16_set_led(0x000);
 			delay(300);
-		} while (buttonClicked() == 0);
+		} while (buttonClicked() == Btn::none);
 	}
 	
 	home();
@@ -106,7 +106,7 @@ void setup()
 	}
 	
 	// check if to goto the settings menu
-	if (buttonClicked() == 2)
+	if (buttonClicked() == Btn::middle)
 	{
 		setupMenu();
 	}
@@ -119,19 +119,19 @@ void setup()
 
 void manual_extruder_selector()
 {
-	if (5&buttonClicked())
+	if ((Btn::left|Btn::right) & buttonClicked())
 	{
 		delay(500);
 
 		switch (buttonClicked())
 		{
-		case 1:
+		case Btn::right:
 			if (active_extruder < 5)
 			{
 				select_extruder(active_extruder + 1);
 			}
 			break;
-		case 4:
+		case Btn::left:
 			if (active_extruder > 0) select_extruder(active_extruder - 1);
 			break;
 
@@ -159,11 +159,11 @@ void loop()
 	if (!isPrinting)
 	{
 		manual_extruder_selector();
-		if(2 == buttonClicked() && active_extruder < 5)
+		if(Btn::middle == buttonClicked() && active_extruder < 5)
 		{
 			shr16_set_led(2 << 2 * (4 - active_extruder));
 			delay(500);
-			if (buttonClicked() == 2)
+			if (Btn::middle == buttonClicked())
 			{
 				feed_filament();
 			}

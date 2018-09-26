@@ -189,7 +189,7 @@ void load_filament_withSensor()
 
 			switch (buttonClicked())
 			{
-				case 4:
+				case Btn::left:
 					// just move filament little bit
 					park_idler(true);
 					set_pulley_dir_push();
@@ -201,13 +201,13 @@ void load_filament_withSensor()
 					}
 					park_idler(false);
 					break;
-				case 2:
+				case Btn::middle:
 					// check if everything is ok
 					park_idler(true);
 					_isOk = checkOk();
 					park_idler(false);
 					break;
-				case 1:
+				case Btn::right:
 					// continue with loading
 					park_idler(true);
 					_isOk = checkOk();
@@ -359,7 +359,7 @@ void unload_filament_withSensor()
 
 			switch (buttonClicked())
 			{
-			case 4:
+			case Btn::left:
 				// just move filament little bit
 				park_idler(true);
 				set_pulley_dir_pull();
@@ -371,13 +371,13 @@ void unload_filament_withSensor()
 				}
 				park_idler(false);
 				break;
-			case 2:
+			case Btn::middle:
 				// check if everything is ok
 				park_idler(true);
 				_isOk = checkOk();
 				park_idler(false);
 				break;
-			case 1:
+			case Btn::right:
 				// continue with unloading
 				park_idler(true);
 				_isOk = checkOk();

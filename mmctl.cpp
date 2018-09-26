@@ -42,7 +42,7 @@ bool feed_filament()
 		if (_c > 100) { shr16_set_led(0x000); _c = 0; _delay++; };
 
 		if (digitalRead(A1) == 1) { _loaded = true; _feed = false; };
-		if (buttonClicked() != 0 && _delay > 10) { _loaded = false; _feed = false; }
+		if (buttonClicked() != Btn::none && _delay > 10) { _loaded = false; _feed = false; }
 		delayMicroseconds(4000);
 	} while (_feed);
 

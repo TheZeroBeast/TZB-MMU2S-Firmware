@@ -79,8 +79,6 @@ void settings_bowden_length()
 	// load filament above Bondtech gears to check correct length of bowden tube
 	if (!isFilamentLoaded)
 	{
-		int _prev_correction = lengthCorrection;
-
 		load_filament_withSensor();
 
 		tmc2130_init_axis_current(0, 1, 30);
@@ -118,10 +116,7 @@ void settings_bowden_length()
 
 		} while (buttonClicked() != 2);
 
-		if (_prev_correction != lengthCorrection)
-		{
-			eeprom_update_byte(eepromLengthCorrection, lengthCorrection);
-		}
+		eeprom_update_byte(eepromLengthCorrection, lengthCorrection);
 		unload_filament_withSensor();
 	}
 }

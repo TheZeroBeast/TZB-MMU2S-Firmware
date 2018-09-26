@@ -121,7 +121,12 @@ void settings_bowden_length()
 	}
 }
 
-
+//! @brief Is button pushed?
+//!
+//! @retval 0 No button pushed
+//! @retval 1 Button 1 pushed
+//! @retval 2 Button 2 pushed
+//! @retval 4 Button 3 pushed
 int buttonClicked()
 {
 	int raw = analogRead(ButtonPin);

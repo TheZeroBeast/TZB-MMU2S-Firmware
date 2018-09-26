@@ -119,7 +119,7 @@ void setup()
 
 void manual_extruder_selector()
 {
-	if (buttonClicked() != 0)
+	if (5&buttonClicked())
 	{
 		delay(500);
 
@@ -129,17 +129,6 @@ void manual_extruder_selector()
 			if (active_extruder < 5)
 			{
 				select_extruder(active_extruder + 1);
-			}
-			break;
-		case 2:
-			if (active_extruder < 5)
-			{
-				shr16_set_led(2 << 2 * (4 - active_extruder));
-				delay(500);
-				if (buttonClicked() == 2)
-				{
-					feed_filament();
-				}
 			}
 			break;
 		case 4:
@@ -170,6 +159,15 @@ void loop()
 	if (!isPrinting)
 	{
 		manual_extruder_selector();
+		if(2 == buttonClicked() && active_extruder < 5)
+		{
+			shr16_set_led(2 << 2 * (4 - active_extruder));
+			delay(500);
+			if (buttonClicked() == 2)
+			{
+				feed_filament();
+			}
+		}
 	}
 }
 

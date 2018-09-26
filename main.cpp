@@ -114,59 +114,63 @@ void setup()
 	
 }
 
+
+
+
+void manual_extruder_selector()
+{
+	if (buttonClicked() != 0)
+	{
+		delay(500);
+
+		switch (buttonClicked())
+		{
+		case 1:
+			if (active_extruder < 5)
+			{
+				select_extruder(active_extruder + 1);
+			}
+			break;
+		case 2:
+			if (active_extruder < 5)
+			{
+				shr16_set_led(2 << 2 * (4 - active_extruder));
+				delay(500);
+				if (buttonClicked() == 2)
+				{
+					feed_filament();
+				}
+			}
+			break;
+		case 4:
+			if (active_extruder > 0) select_extruder(active_extruder - 1);
+			break;
+
+		default:
+			break;
+		}
+		shr16_set_led(1 << 2 * (4 - active_extruder));
+		delay(500);
+	}
+
+	if (active_extruder == 5)
+	{
+		shr16_set_led(2 << 2 * 0);
+		delay(50);
+		shr16_set_led(1 << 2 * 0);
+		delay(50);
+	}
+}
+
 //main loop
 void loop()
 {
-	
 	process_commands(uart_com);
 
 	if (!isPrinting)
 	{
-		
-		if (buttonClicked() != 0)
-		{ 
-			delay(500); 
-
-			switch (buttonClicked())
-			{
-				case 1:
-					if (active_extruder < 5)
-					{
-							select_extruder(active_extruder + 1);
-					}
-					break;
-				case 2:
-					if (active_extruder < 5)
-					{
-						shr16_set_led(2 << 2 * (4 - active_extruder));
-						delay(500);
-						if (buttonClicked() == 2)
-						{
-							feed_filament();
-						}
-					}
-					break;
-				case 4:
-					if (active_extruder > 0) select_extruder(active_extruder - 1);
-					break;
-
-				default:
-					break;
-			}
-			shr16_set_led(1 << 2 * (4 - active_extruder));
-			delay(500);
-		}
-
-		if (active_extruder == 5)
-		{
-			shr16_set_led(2 << 2 * 0);
-			delay(50);
-			shr16_set_led(1 << 2 * 0);
-			delay(50);
-		}
+		manual_extruder_selector();
 	}
-
-	 
 }
 
 

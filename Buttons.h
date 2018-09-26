@@ -10,6 +10,7 @@
 #endif
 
 
-#endif
 void setupMenu();
 int buttonClicked();
+
+#endif //_BUTTONS_h

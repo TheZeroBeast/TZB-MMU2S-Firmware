@@ -8,10 +8,31 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "permanent_storage.h"
+#include "main.h"
 
 const int ButtonPin = A2;
 
 void settings_bowden_length();
+
+void settings_select_filament()
+{
+	bool exit = false;
+	while (!exit)
+	{
+		manual_extruder_selector();
+
+		if(Btn::middle == buttonClicked() && active_extruder < 5)
+		{
+			shr16_set_led(2 << 2 * (4 - active_extruder));
+			delay(500);
+			if (Btn::middle == buttonClicked())
+			{
+				if (active_extruder < 5) settings_bowden_length();
+				else exit = true;
+			}
+		}
+	}
+}
 
 void setupMenu()
 {
@@ -46,7 +67,8 @@ void setupMenu()
 			switch (_menu)
 			{
 				case 1:
-					settings_bowden_length();
+					settings_select_filament();
+					_exit = true;
 					break;
 
 				case 4: // exit menu

@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include "config.h"
 
+void manual_extruder_selector();
 
 // system state
 extern int8_t sys_state;

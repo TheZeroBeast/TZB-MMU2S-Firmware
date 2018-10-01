@@ -16,9 +16,9 @@ typedef struct
 static eeprom_t * const eepromBase = reinterpret_cast<eeprom_t*>(0);
 static const uint16_t eepromEmpty = 0xffff;
 static const uint16_t eepromLengthCorrectionBase = 7900u; //!< legacy
-static const uint16_t eepromBowdenLenDefault = 8000u;
-static const uint16_t eepromBowdenLenMinimum = 7800u;
-static const uint16_t eepromBowdenLenMaximum = 8200u;
+static const uint16_t eepromBowdenLenDefault = 8900u;
+static const uint16_t eepromBowdenLenMinimum = 6900u;
+static const uint16_t eepromBowdenLenMaximum = 10900u;
 
 
 static bool validFilament(uint8_t filament)
@@ -46,7 +46,7 @@ uint16_t BowdenLength::get()
 			const uint8_t LengthCorrectionLegacy = eeprom_read_byte(&(eepromBase->eepromLengthCorrection));
 			if (LengthCorrectionLegacy <= 200)
 			{
-				bowdenLength = eepromLengthCorrectionBase + LengthCorrectionLegacy;
+				bowdenLength = eepromLengthCorrectionBase + LengthCorrectionLegacy * 10;
 			}
 		}
 		if (validBowdenLen(bowdenLength)) return bowdenLength;

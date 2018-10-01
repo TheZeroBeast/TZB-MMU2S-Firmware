@@ -16,7 +16,6 @@ public:
 	static uint16_t get();
 	static const uint8_t stepSize = 10u;
 private:
-	void validate();
 	uint8_t m_filament;
 	uint16_t m_length;
 };

@@ -6,7 +6,22 @@
 
 #include <stdint.h>
 
-uint8_t * const eepromLengthCorrection = reinterpret_cast<uint8_t*>(0); // 1 byte
+class BowdenLength
+{
+public:
+	BowdenLength();
+	bool increase();
+	bool decrease();
+	~BowdenLength();
+	static uint16_t get();
+	static const uint8_t stepSize = 10u;
+private:
+	void validate();
+	uint8_t m_filament;
+	uint16_t m_length;
+};
+
+
 
 
 #endif /* PERMANENT_STORAGE_H_ */

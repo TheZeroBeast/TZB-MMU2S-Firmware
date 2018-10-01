@@ -11,7 +11,6 @@
 #include "motion.h"
 #include "Buttons.h"
 
-int lengthCorrection = 0;
 int active_extruder = -1;
 int previous_extruder = -1;
 bool isFilamentLoaded = false;

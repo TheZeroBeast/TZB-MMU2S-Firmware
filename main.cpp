@@ -91,19 +91,6 @@ void setup()
 	
 	home();
 	tmc2130_init(0); // trinamic
-
-
-
-	
-	// read correction to bowden tube
-	if (eeprom_read_byte(eepromLengthCorrection) != 0 && eeprom_read_byte(eepromLengthCorrection) < 200)
-	{
-		lengthCorrection = eeprom_read_byte(eepromLengthCorrection);
-	}
-	else
-	{
-		lengthCorrection = 100;
-	}
 	
 	// check if to goto the settings menu
 	if (buttonClicked() == Btn::middle)

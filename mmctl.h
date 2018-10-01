@@ -5,7 +5,6 @@
 #include <inttypes.h>
 #include "config.h"
 
-extern int lengthCorrection;
 extern bool isPrinting;
 extern bool isHomed;
 extern int toolChanges;

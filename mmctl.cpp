@@ -116,6 +116,13 @@ bool switch_extruder_withSensor(int new_extruder)
 
 }
 
+//! @brief select extruder
+//!
+//! Known limitation is, that if extruder 5 - service position was selected before
+//! it is not possible to select any other extruder than extruder 4.
+//!
+//! @param new_extruder Extruder to be selected
+//! @return
 bool select_extruder(int new_extruder)
 {
 

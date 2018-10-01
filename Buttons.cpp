@@ -27,7 +27,12 @@ void settings_select_filament()
 			if (Btn::middle == buttonClicked())
 			{
 				if (active_extruder < 4) settings_bowden_length();
-				else return;
+				else
+				{
+					select_extruder(4);
+					select_extruder(0);
+					return;
+				}
 			}
 		}
 	}

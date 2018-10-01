@@ -26,7 +26,7 @@ void settings_select_filament()
 			delay(500);
 			if (Btn::middle == buttonClicked())
 			{
-				if (active_extruder < 4) settings_bowden_length();
+				if (active_extruder < 5) settings_bowden_length();
 				else
 				{
 					select_extruder(4);

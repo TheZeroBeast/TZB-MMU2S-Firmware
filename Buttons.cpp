@@ -16,19 +16,18 @@ void settings_bowden_length();
 
 void settings_select_filament()
 {
-	bool exit = false;
-	while (!exit)
+	while (1)
 	{
 		manual_extruder_selector();
 
-		if(Btn::middle == buttonClicked() && active_extruder < 5)
+		if(Btn::middle == buttonClicked())
 		{
 			shr16_set_led(2 << 2 * (4 - active_extruder));
 			delay(500);
 			if (Btn::middle == buttonClicked())
 			{
-				if (active_extruder < 5) settings_bowden_length();
-				else exit = true;
+				if (active_extruder < 4) settings_bowden_length();
+				else return;
 			}
 		}
 	}

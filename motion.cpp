@@ -218,6 +218,8 @@ void load_filament_withSensor()
 						_continue = true;
 					}
 					break;
+				default:
+					break;
 			}
 			
 		} while ( !_continue );
@@ -390,6 +392,8 @@ void unload_filament_withSensor()
 				{
 					_continue = true;
 				}
+				break;
+			default:
 				break;
 			}
 

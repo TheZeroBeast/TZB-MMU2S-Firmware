@@ -83,6 +83,8 @@ void setupMenu()
 		case Btn::left:
 			if (_menu < 4) { _menu++; delay(800); }
 			break;
+		default:
+			break;
 		}
 		
 	} while (!_exit);
@@ -128,6 +130,8 @@ void settings_bowden_length()
 					move(0, 0, bowdenLength.stepSize);
 					delay(400);
 				}
+				break;
+			default:
 				break;
 			}
 

@@ -11,7 +11,6 @@
 #include "motion.h"
 #include "Buttons.h"
 
-int lengthCorrection = 0;
 int active_extruder = -1;
 int previous_extruder = -1;
 bool isFilamentLoaded = false;
@@ -42,7 +41,7 @@ bool feed_filament()
 		if (_c > 100) { shr16_set_led(0x000); _c = 0; _delay++; };
 
 		if (digitalRead(A1) == 1) { _loaded = true; _feed = false; };
-		if (buttonClicked() != 0 && _delay > 10) { _loaded = false; _feed = false; }
+		if (buttonClicked() != Btn::none && _delay > 10) { _loaded = false; _feed = false; }
 		delayMicroseconds(4000);
 	} while (_feed);
 
@@ -116,6 +115,13 @@ bool switch_extruder_withSensor(int new_extruder)
 
 }
 
+//! @brief select extruder
+//!
+//! Known limitation is, that if extruder 5 - service position was selected before
+//! it is not possible to select any other extruder than extruder 4.
+//!
+//! @param new_extruder Extruder to be selected
+//! @return
 bool select_extruder(int new_extruder)
 {
 

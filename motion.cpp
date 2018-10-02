@@ -8,7 +8,7 @@
 #include "main.h"
 #include "mmctl.h"
 #include "Buttons.h"
-
+#include "permanent_storage.h"
 
 const int selector_steps_after_homing = -3700;
 const int idler_steps_after_homing = -130;
@@ -189,7 +189,7 @@ void load_filament_withSensor()
 
 			switch (buttonClicked())
 			{
-				case 4:
+				case Btn::left:
 					// just move filament little bit
 					park_idler(true);
 					set_pulley_dir_push();
@@ -201,13 +201,13 @@ void load_filament_withSensor()
 					}
 					park_idler(false);
 					break;
-				case 2:
+				case Btn::middle:
 					// check if everything is ok
 					park_idler(true);
 					_isOk = checkOk();
 					park_idler(false);
 					break;
-				case 1:
+				case Btn::right:
 					// continue with loading
 					park_idler(true);
 					_isOk = checkOk();
@@ -243,16 +243,19 @@ void load_filament_withSensor()
 		// nothing
 	}
 
-	float _speed = 4500;
-
-	for (int i = 0; i < 7900 + ( lengthCorrection * 10 ); i++)   
 	{
-		do_pulley_step();
-		
-		if (i > 10 && i < 4000 && _speed > 650) _speed = _speed - 4;
-		if (i > 100 && i < 4000 && _speed > 650) _speed = _speed - 1;
-		if (i > 8000 && _speed < 3000) _speed = _speed + 2;  
-		delayMicroseconds(_speed);
+	float _speed = 4500;
+	const uint16_t steps = BowdenLength::get();
+
+		for (uint16_t i = 0; i < steps; i++)
+		{
+			do_pulley_step();
+
+			if (i > 10 && i < 4000 && _speed > 650) _speed = _speed - 4;
+			if (i > 100 && i < 4000 && _speed > 650) _speed = _speed - 1;
+			if (i > 8000 && _speed < 3000) _speed = _speed + 2;
+			delayMicroseconds(_speed);
+		}
 	}
 
 	tmc2130_init_axis_current(0, 0, 0);
@@ -359,7 +362,7 @@ void unload_filament_withSensor()
 
 			switch (buttonClicked())
 			{
-			case 4:
+			case Btn::left:
 				// just move filament little bit
 				park_idler(true);
 				set_pulley_dir_pull();
@@ -371,13 +374,13 @@ void unload_filament_withSensor()
 				}
 				park_idler(false);
 				break;
-			case 2:
+			case Btn::middle:
 				// check if everything is ok
 				park_idler(true);
 				_isOk = checkOk();
 				park_idler(false);
 				break;
-			case 1:
+			case Btn::right:
 				// continue with unloading
 				park_idler(true);
 				_isOk = checkOk();

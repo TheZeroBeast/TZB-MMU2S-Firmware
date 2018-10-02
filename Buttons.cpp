@@ -7,10 +7,36 @@
 #include "tmc2130.h"
 #include "mmctl.h"
 #include "motion.h"
+#include "permanent_storage.h"
+#include "main.h"
 
 const int ButtonPin = A2;
 
 void settings_bowden_length();
+
+void settings_select_filament()
+{
+	while (1)
+	{
+		manual_extruder_selector();
+
+		if(Btn::middle == buttonClicked())
+		{
+			shr16_set_led(2 << 2 * (4 - active_extruder));
+			delay(500);
+			if (Btn::middle == buttonClicked())
+			{
+				if (active_extruder < 5) settings_bowden_length();
+				else
+				{
+					select_extruder(4);
+					select_extruder(0);
+					return;
+				}
+			}
+		}
+	}
+}
 
 void setupMenu()
 {
@@ -37,15 +63,16 @@ void setupMenu()
 
 		switch (buttonClicked())
 		{
-		case 1:
+		case Btn::right:
 			if (_menu > 0) { _menu--; delay(800); }
 			break;
-		case 2:
+		case Btn::middle:
 				
 			switch (_menu)
 			{
 				case 1:
-					settings_bowden_length();
+					settings_select_filament();
+					_exit = true;
 					break;
 
 				case 4: // exit menu
@@ -53,7 +80,7 @@ void setupMenu()
 					break;
 			}
 			break;
-		case 4:
+		case Btn::left:
 			if (_menu < 4) { _menu++; delay(800); }
 			break;
 		}
@@ -78,8 +105,7 @@ void settings_bowden_length()
 	// load filament above Bondtech gears to check correct length of bowden tube
 	if (!isFilamentLoaded)
 	{
-		int _prev_correction = lengthCorrection;
-
+		BowdenLength bowdenLength;
 		load_filament_withSensor();
 
 		tmc2130_init_axis_current(0, 1, 30);
@@ -88,20 +114,18 @@ void settings_bowden_length()
 
 			switch (buttonClicked())
 			{
-			case 1:
-				if (lengthCorrection > 0)
+			case Btn::right:
+				if (bowdenLength.decrease())
 				{
-					lengthCorrection = lengthCorrection - 1;
-					move(0, 0, -10);
+					move(0, 0, -bowdenLength.stepSize);
 					delay(400);
 				}
 				break;
 
-			case 4:
-				if (lengthCorrection < 200)
+			case Btn::left:
+				if (bowdenLength.increase())
 				{
-					lengthCorrection = lengthCorrection + 1;
-					move(0, 0, 10);
+					move(0, 0, bowdenLength.stepSize);
 					delay(400);
 				}
 				break;
@@ -115,27 +139,23 @@ void settings_bowden_length()
 			delay(50);
 
 
-		} while (buttonClicked() != 2);
+		} while (buttonClicked() != Btn::middle);
 
-		if (_prev_correction != lengthCorrection)
-		{
-			eeprom_update_byte((uint8_t*)0, lengthCorrection);
-		}
 		unload_filament_withSensor();
 	}
 }
 
-
-int buttonClicked()
+//! @brief Is button pushed?
+//!
+//! @return button pushed
+Btn buttonClicked()
 {
 	int raw = analogRead(ButtonPin);
-	int _return = 0;
 
-	 
-	if (raw < 50) _return = 1;
-	if (raw > 80 && raw < 100) _return = 2;
-	if (raw > 160 && raw < 180) _return = 4;
+	if (raw < 50) return Btn::right;
+	if (raw > 80 && raw < 100) return Btn::middle;
+	if (raw > 160 && raw < 180) return Btn::left;
 
-	return(_return);
+	return Btn::none;
 }
 

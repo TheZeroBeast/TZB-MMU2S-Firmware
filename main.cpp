@@ -16,6 +16,7 @@
 #include "Buttons.h"
 #include "EEPROM.h"
 #include <avr/wdt.h>
+#include "permanent_storage.h"
 
 
 int8_t sys_state = 0;
@@ -85,27 +86,14 @@ void setup()
 			delay(300);
 			shr16_set_led(0x000);
 			delay(300);
-		} while (buttonClicked() == 0);
+		} while (buttonClicked() == Btn::none);
 	}
 	
 	home();
 	tmc2130_init(0); // trinamic
-
-
-
-	
-	// read correction to bowden tube
-	if (eeprom_read_byte((uint8_t*)0) != 0 && eeprom_read_byte((uint8_t*)0) < 200)
-	{
-		lengthCorrection = eeprom_read_byte((uint8_t*)0);
-	}
-	else
-	{
-		lengthCorrection = 100;
-	}
 	
 	// check if to goto the settings menu
-	if (buttonClicked() == 2)
+	if (buttonClicked() == Btn::middle)
 	{
 		setupMenu();
 	}
@@ -113,59 +101,62 @@ void setup()
 	
 }
 
+
+
+
+void manual_extruder_selector()
+{
+	shr16_set_led(1 << 2 * (4 - active_extruder));
+
+	if ((Btn::left|Btn::right) & buttonClicked())
+	{
+		delay(500);
+
+		switch (buttonClicked())
+		{
+		case Btn::right:
+			if (active_extruder < 5)
+			{
+				select_extruder(active_extruder + 1);
+			}
+			break;
+		case Btn::left:
+			if (active_extruder > 0) select_extruder(active_extruder - 1);
+			break;
+
+		default:
+			break;
+		}
+		delay(500);
+	}
+
+	if (active_extruder == 5)
+	{
+		shr16_set_led(2 << 2 * 0);
+		delay(50);
+		shr16_set_led(1 << 2 * 0);
+		delay(50);
+	}
+}
+
 //main loop
 void loop()
 {
-	
 	process_commands(uart_com);
 
 	if (!isPrinting)
 	{
-		
-		if (buttonClicked() != 0)
-		{ 
-			delay(500); 
-
-			switch (buttonClicked())
-			{
-				case 1:
-					if (active_extruder < 5)
-					{
-							select_extruder(active_extruder + 1);
-					}
-					break;
-				case 2:
-					if (active_extruder < 5)
-					{
-						shr16_set_led(2 << 2 * (4 - active_extruder));
-						delay(500);
-						if (buttonClicked() == 2)
-						{
-							feed_filament();
-						}
-					}
-					break;
-				case 4:
-					if (active_extruder > 0) select_extruder(active_extruder - 1);
-					break;
-
-				default:
-					break;
-			}
-			shr16_set_led(1 << 2 * (4 - active_extruder));
-			delay(500);
-		}
-
-		if (active_extruder == 5)
+		manual_extruder_selector();
+		if(Btn::middle == buttonClicked() && active_extruder < 5)
 		{
-			shr16_set_led(2 << 2 * 0);
-			delay(50);
-			shr16_set_led(1 << 2 * 0);
-			delay(50);
+			shr16_set_led(2 << 2 * (4 - active_extruder));
+			delay(500);
+			if (Btn::middle == buttonClicked())
+			{
+				feed_filament();
+			}
 		}
 	}
-
-	 
 }
 
 

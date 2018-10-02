@@ -4,28 +4,28 @@
 #include "Arduino.h"
 
 
-FILE _uart0io = {0};
+FILE _uart0io;
 
-FILE _uart1io = {0};
+FILE _uart1io;
 
 
-int uart0_putchar(char c, FILE *stream)
+int uart0_putchar(char c, FILE *)
 {
 	Serial.write(c);
 	return 0;
 }
-int uart0_getchar(FILE *stream)
+int uart0_getchar(FILE *)
 {
 //	return 'A';
 	return Serial.read();
 }
 
-int uart1_putchar(char c, FILE *stream)
+int uart1_putchar(char c, FILE *)
 {
 	Serial1.write(c);
 	return 0;
 }
-int uart1_getchar(FILE *stream)
+int uart1_getchar(FILE *)
 {
 	return Serial1.read();
 }

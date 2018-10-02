@@ -14,7 +14,7 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "Buttons.h"
-#include "EEPROM.h"
+//#include "EEPROM.h"
 #include <avr/wdt.h>
 #include "permanent_storage.h"
 

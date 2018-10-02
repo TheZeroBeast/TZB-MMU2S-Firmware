@@ -512,7 +512,7 @@ bool home_idler()
 		{
 			move(1, 0,0);
 			delayMicroseconds(100);
-			uint16_t sg = tmc2130_read_sg(0);
+			tmc2130_read_sg(0);
 
 			_c++;
 			if (i == 1000) { _l++; }
@@ -549,7 +549,7 @@ bool home_selector()
 	return true;
 }
 
-bool home()
+void home()
 {
 	move(-10, -100,0); // move a bit in opposite direction
 	

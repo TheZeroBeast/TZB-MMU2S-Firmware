@@ -86,3 +86,11 @@ BowdenLength::~BowdenLength()
 {
 	if (validFilament(m_filament))eeprom_update_word(&(eepromBase->eepromBowdenLen[m_filament]), m_length);
 }
+
+void BowdenLength::eraseAll()
+{
+	for (uint16_t i = 0; i < 1024; i++)
+	{
+		eeprom_update_byte((uint8_t*)i, static_cast<uint8_t>(eepromEmpty));
+	}
+}

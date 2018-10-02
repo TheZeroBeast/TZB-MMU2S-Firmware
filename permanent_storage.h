@@ -15,6 +15,7 @@ public:
 	~BowdenLength();
 	static uint16_t get();
 	static const uint8_t stepSize = 10u;
+	static void eraseAll();
 private:
 	uint8_t m_filament;
 	uint16_t m_length;

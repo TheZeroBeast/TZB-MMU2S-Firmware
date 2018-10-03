@@ -1,4 +1,4 @@
-//main.cpp
+//! @file
 
 #include "main.h"
 #include <Arduino.h>
@@ -14,7 +14,6 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "Buttons.h"
-//#include "EEPROM.h"
 #include <avr/wdt.h>
 #include "permanent_storage.h"
 
@@ -34,7 +33,10 @@ extern "C" {
 void process_commands(FILE* inout);
 }
 
-//initialization after reset
+//! @brief Initialization after reset
+//!
+//! Holding of middle button after power up or reset enters setup menu.
+//!
 void setup()
 {
 
@@ -103,7 +105,31 @@ void setup()
 
 
 
-
+//! @brief Select filament menu
+//!
+//! Select filament by pushing left and right button, park position can be also selected.
+//!
+//! button | action
+//! ------ | ------
+//! left   | select previous filament
+//! right  | select next filament
+//!
+//! LED indication of states
+//!
+//! RG | RG | RG | RG | RG | meaning
+//! -- | -- | -- | -- | -- | ------------------------
+//! 01 | 00 | 00 | 00 | 00 | filament 1
+//! 00 | 01 | 00 | 00 | 00 | filament 2
+//! 00 | 00 | 01 | 00 | 00 | filament 3
+//! 00 | 00 | 00 | 01 | 00 | filament 4
+//! 00 | 00 | 00 | 00 | 01 | filament 5
+//! 00 | 00 | 00 | 00 | bb | park position
+//!
+//! @n R - Red LED
+//! @n G - Green LED
+//! @n 1 - active
+//! @n 0 - inactive
+//! @n b - blinking
 void manual_extruder_selector()
 {
 	shr16_set_led(1 << 2 * (4 - active_extruder));
@@ -139,7 +165,15 @@ void manual_extruder_selector()
 	}
 }
 
-//main loop
+//! @brief main loop
+//!
+//! It is possible to manually select filament and feed it when not printing.
+//!
+//! button | action
+//! ------ | ------
+//! middle | feed filament
+//!
+//! @copydoc manual_extruder_selector()
 void loop()
 {
 	process_commands(uart_com);
@@ -283,4 +317,4 @@ void process_commands(FILE* inout)
 
 
 
-}
+} // extern "C"

@@ -49,6 +49,7 @@ void setupMenu()
 
 	int _menu = 0;
 	bool _exit = false;
+	bool eraseLocked = true;
 
 		
 
@@ -74,7 +75,16 @@ void setupMenu()
 					settings_select_filament();
 					_exit = true;
 					break;
-
+				case 2:
+					if (!eraseLocked)
+					{
+						BowdenLength::eraseAll();
+						_exit = true;
+					}
+					break;
+				case 3: //unlock erase
+					eraseLocked = false;
+					break;
 				case 4: // exit menu
 					_exit = true;
 					break;

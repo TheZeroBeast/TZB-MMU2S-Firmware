@@ -1,6 +1,4 @@
-// 
-// 
-// 
+//! @file
 
 #include "Buttons.h"
 #include "shr16.h"
@@ -14,6 +12,13 @@ const int ButtonPin = A2;
 
 void settings_bowden_length();
 
+
+//!	@brief Select filament for bowden length calibration
+//!
+//! Filaments are selected by left and right buttons, calibration is activated by middle button.
+//! Park position (one behind last filament) can be also selected.
+//! Activating calibration in park position exits selector.
+//!
 void settings_select_filament()
 {
 	while (1)
@@ -38,6 +43,25 @@ void settings_select_filament()
 	}
 }
 
+//!	@brief Show setup menu
+//!
+//! Items are selected by left and right buttons, activated by middle button.
+//!
+//! LED indication of states
+//!
+//! RG | RG | RG | RG | RG | meaning
+//! -- | -- | -- | -- | -- | ------------------------
+//! 11 | 00 | 00 | 00 | 01 | initial state, no action
+//! 11 | 00 | 00 | 01 | 00 | setup bowden length
+//! 11 | 00 | 01 | 00 | 00 | erase EEPROM if unlocked
+//! 11 | 01 | 00 | 00 | 00 | unlock EEPROM erase
+//! 11 | 00 | 00 | 00 | 00 | exit setup menu
+//!
+//! @n R - Red LED
+//! @n G - Green LED
+//! @n 1 - active
+//! @n 0 - inactive
+//!
 void setupMenu()
 {
 	shr16_set_led(0x000);
@@ -111,7 +135,26 @@ void setupMenu()
 	shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
-
+//! @brief Set bowden length
+//!
+//! button | action
+//! ------ | ------
+//! left   | increase bowden length / feed more filament
+//! right  | decrease bowden length / feed less filament
+//! middle | store bowden length to EEPROM and exit
+//!
+//! This state is indicated by following LED pattern:
+//!
+//! RG | RG | RG | RG | RG
+//! -- | -- | -- | -- | --
+//! bb | 00 | 00 | 0b | 00
+//!
+//! @n R - Red LED
+//! @n G - Green LED
+//! @n 1 - active
+//! @n 0 - inactive
+//! @n b - blinking
+//!
 void settings_bowden_length()
 {
 	// load filament above Bondtech gears to check correct length of bowden tube

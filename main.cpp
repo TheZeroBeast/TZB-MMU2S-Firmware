@@ -35,8 +35,28 @@ void process_commands(FILE* inout);
 
 //! @brief Initialization after reset
 //!
-//! Holding of middle button after power up or reset enters setup menu.
+//! button | action
+//! ------ | ------
+//! middle | enter setup
+//! right  | continue after error
 //!
+//! LED indication of states
+//!
+//! RG | RG | RG | RG | RG | meaning
+//! -- | -- | -- | -- | -- | ------------------------
+//! 00 | 00 | 00 | 00 | 0b | Shift register initialized
+//! 00 | 00 | 00 | 0b | 00 | uart initialized
+//! 00 | 00 | 0b | 00 | 00 | spi initialized
+//! 00 | 0b | 00 | 00 | 00 | tmc2130 initialized
+//! 0b | 00 | 00 | 00 | 00 | A/D converter initialized
+//! b0 | b0 | b0 | b0 | b0 | Error, filament detected, still present
+//! 0b | 0b | 0b | 0b | 0b | Error, filament detected, no longer present, continue by right button click
+//!
+//! @n R - Red LED
+//! @n G - Green LED
+//! @n 1 - active
+//! @n 0 - inactive
+//! @n b - blinking
 void setup()
 {
 
@@ -72,10 +92,10 @@ void setup()
 	init_Pulley();
 
 
-	// if FINDA is sensing filament do not home and try to unload 
-	if (digitalRead(A1) == 1)
+	// if FINDA is sensing filament do not home
+	while (digitalRead(A1) == 1)
 	{
-		do
+		while (Btn::right != buttonClicked())
 		{
 			if (digitalRead(A1) == 1)
 			{
@@ -88,7 +108,7 @@ void setup()
 			delay(300);
 			shr16_set_led(0x000);
 			delay(300);
-		} while (buttonClicked() == Btn::none);
+		}
 	}
 	
 	home();

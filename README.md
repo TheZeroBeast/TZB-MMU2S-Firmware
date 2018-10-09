@@ -16,8 +16,8 @@ Original Prusa i3 MK3 Multi Material 2.0
 Select board Original Prusa i3 MK3 Multi Material 2.0
 #### Build
 click verify to build
-#### Build with PlatformIO
-PlatformIO is not supported by Prusa Research, please report any PlatformIO related issues at https://github.com/awigen/MM-control-01/issues
+### PlatformIO
+PlatformIO build is not supported by Prusa Research, please report any PlatformIO related issues at https://github.com/awigen/MM-control-01/issues
 
 ## Flashing
 ### Windows

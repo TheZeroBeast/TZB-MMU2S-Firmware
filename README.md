@@ -14,6 +14,8 @@ which contains only one board:
 Original Prusa i3 MK3 Multi Material 2.0
 
 Select board Original Prusa i3 MK3 Multi Material 2.0
+
+Bootloader binary is shipped with the board, source is located at https://github.com/prusa3d/caterina
 #### Build
 click verify to build
 ### PlatformIO

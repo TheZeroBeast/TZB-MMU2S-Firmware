@@ -145,6 +145,7 @@ inline int8_t __sg_thr(uint8_t axis)
 	return TMC2130_SG_THR;
 }
 
+//! holding current
 inline int8_t __curh(uint8_t axis)
 {
 	switch (axis)
@@ -168,7 +169,7 @@ inline int8_t __curr(uint8_t axis)
 	return 16;
 }
 
-//! holding current
+//! running current
 inline int8_t __currh(uint8_t axis)
 {
 	switch (axis)

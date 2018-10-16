@@ -71,7 +71,7 @@ void eject_filament(int extruder)
 	if (isFilamentLoaded)  unload_filament_withSensor();
 	
 	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-	tmc2130_init_axis_current(0, 1, 30);
+	tmc2130_init_axis_current(0, 1, current_running_pulley);
 		
 	//if we are want to eject fil 0-2, move seelctor to position 4 (right), if we want to eject filament 3 - 4, move selector to position 0 (left)
 	//maybe we can also move selector to service position in the future?
@@ -106,7 +106,7 @@ void recover_after_eject()
 {
 	//restore state before eject filament
 	//if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-	tmc2130_init_axis_current(0, 1, 30);
+	tmc2130_init_axis_current(0, current_holding_pulley, current_running_pulley);
 	move_proportional(-idler_steps_for_eject, -selector_steps_for_eject);
 	tmc2130_init_axis_current(0, 0, 0);
 	//unpark idler
@@ -116,7 +116,7 @@ void recover_after_eject()
 void load_filament_withSensor()
 {
 	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
-	tmc2130_init_axis_current(0, 1, 30);
+	tmc2130_init_axis_current(0, current_holding_pulley, current_running_pulley);
 
 	set_pulley_dir_push();
 
@@ -267,7 +267,7 @@ void load_filament_withSensor()
 void unload_filament_withSensor()
 {
 	// unloads filament from extruder - filament is above Bondtech gears
-	tmc2130_init_axis_current(0, 1, 30);
+	tmc2130_init_axis_current(0, current_holding_pulley, current_running_pulley);
 
 
 	if (isIdlerParked) park_idler(true); // if idler is in parked position un-park him get in contact with filament
@@ -428,16 +428,16 @@ void load_filament_inPrinter()
 	set_pulley_dir_push();
 
 	//PLA
-	tmc2130_init_axis_current(0, 1, 15);   
+	tmc2130_init_axis_current(0, 1, current_running_pulley);
 	for (int i = 0; i <= 320; i++)
 	{
-		if (i == 150) { tmc2130_init_axis_current(0, 1, 10); };
+		if (i == 150) { tmc2130_init_axis_current(0, 1, current_running_pulley - (current_running_pulley / 4) ); };
 		do_pulley_step();
 		delayMicroseconds(2600);
 	}
 
 	//PLA
-	tmc2130_init_axis_current(0, 1, 3);    
+	tmc2130_init_axis_current(0, 1, current_running_pulley/4);
 	for (int i = 0; i <= 450; i++)
 	{
 		do_pulley_step();
@@ -541,7 +541,7 @@ bool home_selector()
 		{
 			move(0, 1,0);
 			uint16_t sg = tmc2130_read_sg(1);
-			if ((i > 16) && (sg < 10))	break;
+			if ((i > 16) && (sg < 6))	break;
 
 			_c++;
 			if (i == 3000) { _l++; }
@@ -562,7 +562,6 @@ void home()
 	home_selector();
 	
 	shr16_set_led(0x155);
-
 	move(idler_steps_after_homing, selector_steps_after_homing,0); // move to initial position
 
 	active_extruder = 0;

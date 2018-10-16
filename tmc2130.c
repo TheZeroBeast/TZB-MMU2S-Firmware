@@ -145,38 +145,41 @@ inline int8_t __sg_thr(uint8_t axis)
 	return TMC2130_SG_THR;
 }
 
-//! holding current
+// aku
+// holding current
 inline int8_t __curh(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 1;
-	case 1: return 20;
-	case 2: return 24;
+	case 0: return current_holding_pulley;
+	case 1: return current_holding_selector;
+	case 2: return current_holding_idler;
 	}
 	return 16;
 }
-
+// aku
 //! running current
 inline int8_t __curr(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 30;   
-	case 1: return 35;   
-	case 2: return 35;   
+	case 0: return current_running_pulley;
+	case 1: return current_running_selector;
+	case 2: return current_running_idler;
 	}
 	return 16;
 }
 
-//! running current
+
+// aku
+//! homing current
 inline int8_t __currh(uint8_t axis)
 {
 	switch (axis)
 	{
-	case 0: return 1;   
-	case 1: return 20;  
-	case 2: return 30;   
+	case 0: return current_homing_pulley;
+	case 1: return current_homing_selector;
+	case 2: return current_homing_idler;
 	}
 	return 16;
 }
@@ -207,24 +210,29 @@ uint8_t tmc2130_usteps2mres(uint16_t usteps)
 //byte 3 
 int8_t tmc2130_init_axis(uint8_t axis, uint8_t homing)
 {
-/* //silent mode
-	tmc2130_setup_chopper(axis, 7, 16, 16);
-	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
-	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));
-	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
-	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00000004);
-	tmc2130_wr_PWMCONF(axis, 150, 2, 2, 1, 0, 0);
-	tmc2130_wr_TPWMTHRS(axis, 0);
-*/
-	//uint8_t mres = 7;
-	//uint16_t tcoolthrs = 450;
+
+	//aku
+	if (!homing)
+	{
+		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__currh(axis))) return -1;
+		tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
+		tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));
+		tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
+		tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00000004);
+		tmc2130_wr_PWMCONF(axis, 4 * __currh(axis), 2, 2, 1, 0, 0);
+		tmc2130_wr_TPWMTHRS(axis, 0);
+		return 0;
+	}
+		
 	if (homing)
 	{
-		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__curr(axis))) return -1;
+		//aku
+		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__currh(axis))) return -1;
 	}
 	else
 	{
-		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__currh(axis))) return -1;
+		//aku
+		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__curr(axis))) return -1;
 	}
 
 	
@@ -241,10 +249,17 @@ int8_t tmc2130_init_axis_current(uint8_t axis, uint8_t current_h, uint8_t curren
 	if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), current_h, current_r)) return -1;
 
 	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
+	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));
+	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
+	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00000004);
+	tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 0);
+	tmc2130_wr_TPWMTHRS(axis, 0);
+	/*
+	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
 	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
 	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
-	return 0;
+	*/
 }
 
 #ifdef _DIAG

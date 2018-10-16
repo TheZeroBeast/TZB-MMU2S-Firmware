@@ -1,7 +1,7 @@
 //config.h - main configuration file
 
 #define FW_VERSION 101 //example: 103 means version 1.0.3
-#define FW_BUILDNR 126 //number of commits in 'master'
+#define FW_BUILDNR 121 //number of commits in 'master'
 
 //timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -67,12 +67,16 @@
 #define TMC2130_TCOOLTHRS_1    450
 #define TMC2130_TCOOLTHRS_2    450
 
-#define AX_IDL 2
-#define AX_SEL 1
-#define AX_PUL 0
-//0 - IDLER
+
+//AKU
+//0 - PULLEY
 //1 - SELECTOR
-//2 - PULLEY
+//2 - IDLER
+#define AX_PUL 0
+#define AX_SEL 1
+#define AX_IDL 2
+
+
 
 //ADC configuration
 #define ADC_CHAN_MSK      0b0000000000100000 //used AD channels bit mask (ADC5)
@@ -115,3 +119,32 @@
 
 //diagnostic functions
 //#define _DIAG
+
+
+// AKU
+// currents
+#define current_holding_pulley 1
+#define current_holding_selector 7  //10
+#define current_holding_idler 16  //22
+
+#define current_running_pulley 35  //30
+#define current_running_selector 35
+#define current_running_idler 35
+
+#define current_homing_pulley 1
+#define current_homing_selector 35
+#define current_homing_idler 30
+
+/*
+#define current_holding_pulley 1
+#define current_holding_selector 1
+#define current_holding_idler 1
+
+#define current_running_pulley 30
+#define current_running_selector 35
+#define current_running_idler 35
+
+#define current_homing_pulley 1
+#define current_homing_selector 30
+#define current_homing_idler 30
+*/

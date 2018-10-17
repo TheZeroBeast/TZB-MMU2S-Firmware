@@ -67,8 +67,6 @@
 #define TMC2130_TCOOLTHRS_1    450
 #define TMC2130_TCOOLTHRS_2    450
 
-
-//AKU
 //0 - PULLEY
 //1 - SELECTOR
 //2 - IDLER
@@ -76,7 +74,17 @@
 #define AX_SEL 1
 #define AX_IDL 2
 
+// currents
+#define CURRENT_HOLDING_STEALTH {1, 7, 16}
+#define CURRENT_HOLDING_NORMAL {1, 10, 22}
+#define CURRENT_RUNNING_STEALTH {35, 35, 35}
+#define CURRENT_RUNNING_NORMAL {30, 35, 35}
+#define CURRENT_HOMING {1, 35, 30}
 
+//mode
+#define HOMING_MODE 0
+#define NORMAL_MODE 1
+#define STEALTH_MODE 2
 
 //ADC configuration
 #define ADC_CHAN_MSK      0b0000000000100000 //used AD channels bit mask (ADC5)
@@ -119,32 +127,3 @@
 
 //diagnostic functions
 //#define _DIAG
-
-
-// AKU
-// currents
-#define current_holding_pulley 1
-#define current_holding_selector 7  //10
-#define current_holding_idler 16  //22
-
-#define current_running_pulley 35  //30
-#define current_running_selector 35
-#define current_running_idler 35
-
-#define current_homing_pulley 1
-#define current_homing_selector 35
-#define current_homing_idler 30
-
-/*
-#define current_holding_pulley 1
-#define current_holding_selector 1
-#define current_holding_idler 1
-
-#define current_running_pulley 30
-#define current_running_selector 35
-#define current_running_idler 35
-
-#define current_homing_pulley 1
-#define current_homing_selector 30
-#define current_homing_idler 30
-*/

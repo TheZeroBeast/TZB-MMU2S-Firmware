@@ -22,6 +22,7 @@ int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 int _loop = 0;
 int _c = 0;
+uint8_t tmc2130_mode = NORMAL_MODE;
 
 #if (UART_COM == 0)
 FILE* uart_com = uart0io;
@@ -80,7 +81,7 @@ void setup()
 	spi_init();
 	led_blink(2);
 
-	tmc2130_init(1); // trinamic
+	tmc2130_init(HOMING_MODE); // trinamic, homing
 	led_blink(3);
 
 	adc_init(); // ADC
@@ -112,7 +113,8 @@ void setup()
 	}
 	
 	home();
-	tmc2130_init(0); // trinamic
+	//add reading previously stored mode (stealth/normal) from eeprom
+	tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 	
 	// check if to goto the settings menu
 	if (buttonClicked() == Btn::middle)
@@ -267,6 +269,19 @@ void process_commands(FILE* inout)
 				fprintf_P(inout, PSTR("ok\n"));
 
 			}
+		}
+		else if (sscanf_P(line, PSTR("M%d"), &value) > 0)
+		{
+			// M0: set to normal mode; M1: set to stealth mode
+			switch (value) {
+				case 0: tmc2130_mode = NORMAL_MODE; break;
+				case 1: tmc2130_mode = STEALTH_MODE; break;
+				default: return;
+			}
+
+			//init all axes
+			tmc2130_init(tmc2130_mode);
+			fprintf_P(inout, PSTR("ok\n"));
 		}
 		else if (sscanf_P(line, PSTR("U%d"), &value) > 0)
 		{

@@ -163,7 +163,7 @@ void settings_bowden_length()
 		BowdenLength bowdenLength;
 		load_filament_withSensor();
 
-		tmc2130_init_axis_current(0, 1, 30);
+		tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
 		do
 		{
 

@@ -30,7 +30,10 @@ bool feed_filament()
 	park_idler(true);
 
 	set_pulley_dir_push();
-	tmc2130_init_axis_current(0, 1, 15);
+	if(tmc2130_mode == NORMAL_MODE)	
+		tmc2130_init_axis_current_normal(AX_PUL, 1, 15);
+	else
+		tmc2130_init_axis_current_stealth(AX_PUL, 1, 15); //probably needs tuning of currents
 
 	do
 	{
@@ -58,7 +61,7 @@ bool feed_filament()
 
 
 
-	tmc2130_init_axis_current(0, 0, 0);
+	tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 	park_idler(false);
 	shr16_set_led(1 << 2 * (4 - active_extruder));
 	return true;

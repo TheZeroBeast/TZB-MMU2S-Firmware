@@ -190,7 +190,7 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
 	return ret;
 }
 
-int8_t tmc2130_disable_axis(uint8_t axis, uint8_t mode)
+void tmc2130_disable_axis(uint8_t axis, uint8_t mode)
 {
 	//temporary solution, use enable pin instead
 	if (mode == STEALTH_MODE) tmc2130_init_axis_current_stealth(axis, 0, 0);

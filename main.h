@@ -13,6 +13,8 @@ extern int8_t sys_state;
 // signals from interrupt to main loop
 extern uint8_t sys_signals;
 
+extern uint8_t tmc2130_mode;
+
 // get state of signal (main loop or interrupt)
 #define SIG_GET(id) (sys_signals & (1 << id))
 // set state of signal (interrupt only)

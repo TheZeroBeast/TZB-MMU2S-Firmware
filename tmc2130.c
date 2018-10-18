@@ -145,42 +145,6 @@ inline int8_t __sg_thr(uint8_t axis)
 	return TMC2130_SG_THR;
 }
 
-//! holding current
-inline int8_t __curh(uint8_t axis)
-{
-	switch (axis)
-	{
-	case 0: return 1;
-	case 1: return 20;
-	case 2: return 24;
-	}
-	return 16;
-}
-
-//! running current
-inline int8_t __curr(uint8_t axis)
-{
-	switch (axis)
-	{
-	case 0: return 30;   
-	case 1: return 35;   
-	case 2: return 35;   
-	}
-	return 16;
-}
-
-//! running current
-inline int8_t __currh(uint8_t axis)
-{
-	switch (axis)
-	{
-	case 0: return 1;   
-	case 1: return 20;  
-	case 2: return 30;   
-	}
-	return 16;
-}
-
 inline int8_t __res(uint8_t axis)
 {
 	switch (axis)
@@ -205,41 +169,51 @@ uint8_t tmc2130_usteps2mres(uint16_t usteps)
 //byte 1 bit 0..5 - curh
 //byte 2 bit 0..5 - curr
 //byte 3 
-int8_t tmc2130_init_axis(uint8_t axis, uint8_t homing)
+int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
 {
-/* //silent mode
-	tmc2130_setup_chopper(axis, 7, 16, 16);
+	int8_t ret = 0;
+
+	//sets default currents for chosen axis and mode
+	uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+	uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
+	uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+	uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
+	uint8_t current_homing[3] = CURRENT_HOMING;
+
+	switch (mode) {
+		case HOMING_MODE: ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis], current_homing[axis]); break; //drivers in normal mode, homing currents
+		case NORMAL_MODE: ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis], current_running_normal[axis]); break; //drivers in normal mode
+		case STEALTH_MODE: ret = tmc2130_init_axis_current_stealth(axis, current_holding_stealth[axis], current_running_stealth[axis]); break; //drivers in stealth mode
+		default: break;
+	}
+
+	return ret;
+}
+
+void tmc2130_disable_axis(uint8_t axis, uint8_t mode)
+{
+	//temporary solution, use enable pin instead
+	if (mode == STEALTH_MODE) tmc2130_init_axis_current_stealth(axis, 0, 0);
+	else tmc2130_init_axis_current_normal(axis, 0, 0);
+}
+
+int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r)
+{
+	//stealth mode
+	if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), current_h, current_r)) return -1;
 	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)TMC2130_SG_THR) << 16));
 	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
 	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00000004);
-	tmc2130_wr_PWMCONF(axis, 150, 2, 2, 1, 0, 0);
+	tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 0);
 	tmc2130_wr_TPWMTHRS(axis, 0);
-*/
-	//uint8_t mres = 7;
-	//uint16_t tcoolthrs = 450;
-	if (homing)
-	{
-		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__curr(axis))) return -1;
-	}
-	else
-	{
-		if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), (uint32_t)__curh(axis), (uint32_t)__currh(axis))) return -1;
-	}
-
-	
-	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
-	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
-	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
-	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
 	return 0;
 }
 
-int8_t tmc2130_init_axis_current(uint8_t axis, uint8_t current_h, uint8_t current_r )
+int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r)
 {
-
+	//normal mode
 	if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), current_h, current_r)) return -1;
-
 	tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
 	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
@@ -256,28 +230,30 @@ uint8_t tmc2130_check_axis(uint8_t axis)
 
 
 
-int8_t tmc2130_init(uint8_t homing)
+int8_t tmc2130_init(uint8_t mode)
 {
+	//initialize and power on all axes
 	DDRC |= 0x40;
 	DDRD |= 0x80;
 	DDRB |= 0x80;
 
 
-	PORTC |= 0x40;
-	PORTD |= 0x80;
-	PORTB |= 0x80;   
+	PORTC |= 0x40; //PC6 CSN U5
+	PORTD |= 0x80; //PD7 CSN U6
+	PORTB |= 0x80; //PB7 ???
 
 	DDRD |= 0x10;
 	DDRB |= 0x10;
 	DDRD |= 0x40;
-	PORTD &= ~0x10;
-	PORTB &= ~0x10;
-	PORTD &= ~0x40;
+	PORTD &= ~0x10;	//PD4
+	PORTB &= ~0x10; //PB4
+	PORTD &= ~0x40; //PD6
 
 	int8_t ret = 0;
-	ret += tmc2130_init_axis(0, homing)?-1:0;
-	ret += tmc2130_init_axis(1,homing)?-2:0;
-	ret += tmc2130_init_axis(2,homing)?-4:0;
+	
+	ret += tmc2130_init_axis(AX_PUL,mode)?-1:0;
+	ret += tmc2130_init_axis(AX_SEL,mode)?-2:0;
+	ret += tmc2130_init_axis(AX_IDL,mode)?-4:0;
 
 	return ret;
 }

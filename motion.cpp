@@ -480,7 +480,7 @@ void init_Pulley()
 		delayMicroseconds(_speed);
 		shr16_set_led(1 << 2 * (4-(int)(i / 50)));
 	}
-
+  tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 }
 
 void do_pulley_step()
@@ -544,8 +544,10 @@ bool home_selector()
 	 
 	int _c = 0;
 	int _l = 2;
-
-  move(0,-10,0); // Get moving before SG homing
+  
+  for (int c = 2; c > 0; c--)   // not really functional, let's do it rather more times to be sure
+  {
+    move(0,-10,0); // Get moving before SG homing
     for (int i = 0; i < 200; i++)
     {
       move(0,-1,0);   // (AX_PUL, AX_SEL, AX_IDL)

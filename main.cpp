@@ -113,16 +113,17 @@ void setup()
 		}
 	}
 	
-	home();
 	//add reading previously stored mode (stealth/normal) from eeprom
 	tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 	
 	// check if to goto the settings menu
 	if (buttonClicked() == Btn::middle)
 	{
+    home();
 		setupMenu();
+	} else{
+	  home();
 	}
-	
 	
 }
 
@@ -159,7 +160,7 @@ void manual_extruder_selector()
 
 	if ((Btn::left|Btn::right) & buttonClicked())
 	{
-		delay(500);
+		// delay(500);
 
 		switch (buttonClicked())
 		{
@@ -176,7 +177,7 @@ void manual_extruder_selector()
 		default:
 			break;
 		}
-		delay(500);
+		// delay(500);
 	}
 
 	if (active_extruder == 5)
@@ -207,7 +208,7 @@ void loop()
 		if(Btn::middle == buttonClicked() && active_extruder < 5)
 		{
 			shr16_set_led(2 << 2 * (4 - active_extruder));
-			delay(500);
+			// delay(500);
 			if (Btn::middle == buttonClicked())
 			{
 				feed_filament();

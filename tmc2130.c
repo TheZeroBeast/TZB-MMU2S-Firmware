@@ -90,7 +90,8 @@ void tmc2130_wr_PWMCONF(uint8_t axis, uint8_t pwm_ampl, uint8_t pwm_grad, uint8_
 	val |= (uint32_t)(pwm_freq & 3) << 16;
 	val |= (uint32_t)(pwm_auto & 1) << 18;
 	val |= (uint32_t)(pwm_symm & 1) << 19;
-	val |= (uint32_t)(freewheel & 3) << 20;
+  if (axis == AX_PUL) val |= (uint32_t)(1 & 3) << 20;
+  else val |= (uint32_t)(freewheel & 3) << 20;
 	tmc2130_wr(axis, TMC2130_REG_PWMCONF, val);
 }
 
@@ -103,11 +104,11 @@ void tmc2130_wr_TPWMTHRS(uint8_t axis, uint32_t val32)
 int8_t tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_t current_r)
 {
 	uint8_t intpol = 1;
-	uint8_t toff = 3; // toff = 3 (fchop = 27.778kHz)
+	uint8_t toff = 1; // toff = 1
 	uint8_t hstrt = 5; //initial 4, modified to 5
 	uint8_t hend = 1;
 	uint8_t fd3 = 0;
-	uint8_t rndtf = 0; //random off time
+	uint8_t rndtf = 1; //random off time
 	uint8_t chm = 0; //spreadCycle
 	uint8_t tbl = 2; //blanking time
 	if (current_r <= 31)
@@ -218,6 +219,7 @@ int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t
 	tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
 	tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
 	tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
+  tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 0);
 	return 0;
 }
 

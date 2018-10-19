@@ -60,7 +60,7 @@
 //params:
 // SG_THR stallguard treshold (sensitivity), range -128..127, real 0-3
 #define TMC2130_SG_THR_0       5
-#define TMC2130_SG_THR_1       6
+#define TMC2130_SG_THR_1       5  // Changed to allow proper selector homing in combination with homing function and homing current changes
 #define TMC2130_SG_THR_2       1
 // TCOOLTHRS coolstep treshold, usable range 400-600
 #define TMC2130_TCOOLTHRS_0    450
@@ -74,12 +74,12 @@
 #define AX_SEL 1
 #define AX_IDL 2
 
-// currents
+// currents    (AX_PUL, AX_SEL, AX_IDL)
 #define CURRENT_HOLDING_STEALTH {1, 7, 16}
 #define CURRENT_HOLDING_NORMAL {1, 10, 22}
 #define CURRENT_RUNNING_STEALTH {35, 35, 35}
 #define CURRENT_RUNNING_NORMAL {30, 35, 35}
-#define CURRENT_HOMING {1, 35, 30}
+#define CURRENT_HOMING {1, 55, 30}          // Changed to allow proper homing of selector in combination with SG_THR and homing function changes
 
 //mode
 #define HOMING_MODE 0

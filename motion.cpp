@@ -492,7 +492,7 @@ void do_pulley_step()
 }
 
 void do_idler_step()
-{
+{ 
 	PORTD |= 0x40;
 	asm("nop");
 	PORTD &= ~0x40;
@@ -545,21 +545,27 @@ bool home_selector()
 	int _c = 0;
 	int _l = 2;
 
-	for (int c = 5; c > 0; c--)   // not really functional, let's do it rather more times to be sure
-	{
-		move(0, (c*20) * -1,0);
-		delay(50);
-		for (int i = 0; i < 4000; i++)
-		{
-			move(0, 1,0);
-			uint16_t sg = tmc2130_read_sg(1);
-			if ((i > 16) && (sg < 6))	break;
+  move(0,-10,0); // Get moving before SG homing
+    for (int i = 0; i < 200; i++)
+    {
+      move(0,-1,0);   // (AX_PUL, AX_SEL, AX_IDL)
+      uint16_t sg = tmc2130_read_sg(1);
+      if (sg < 10) break;
+    }
+    delay(40);
+    move(0,10,0); // Get moving before SG homing
+    for (int i = 0; i < 4000; i++)
+    {
+      move(0, 1,0);   // (AX_PUL, AX_SEL, AX_IDL)
+      uint16_t sg = tmc2130_read_sg(1);
+      if (sg == 0) break;
 
-			_c++;
-			if (i == 3000) { _l++; }
-			if (_c > 100) { shr16_set_led(1 << 2 * _l); };
-			if (_c > 200) { shr16_set_led(0x000); _c = 0; };
-		}
+      _c++;
+      if (i == 3000) { _l++; }
+      if (_c > 100) { shr16_set_led(1 << 2 * _l); };
+      if (_c > 200) { shr16_set_led(0x000); _c = 0; };
+    }
+    delay(100);
 	}
 	
 	return true;
@@ -567,21 +573,19 @@ bool home_selector()
 
 void home()
 {
-	move(-10, -100,0); // move a bit in opposite direction
-	
 	// home both idler and selector
 	home_idler();
 	home_selector();
 	
 	shr16_set_led(0x155);
-	move(idler_steps_after_homing, selector_steps_after_homing,0); // move to initial position
+	move(idler_steps_after_homing, selector_steps_after_homing,0); // move to initial position (AX_PUL, AX_SEL, AX_IDL)
 
 	active_extruder = 0;
 
 	park_idler(false);
 	shr16_set_led(0x000);
 	
-	isFilamentLoaded = false; 
+	isFilamentLoaded = false;
 	shr16_set_led(1 << 2 * (4-active_extruder));
 
   isHomed = true;
@@ -635,10 +639,10 @@ void move_proportional(int _idler, int _selector)
 
 void move(int _idler, int _selector, int _pulley)
 {
-	int _acc = 50;
+	int _acc = 25;   // why not move with some speed ;-D
 
 	// gets steps to be done and set direction
-	_idler = set_idler_direction(_idler); 
+	_idler = set_idler_direction(_idler);
 	_selector = set_selector_direction(_selector);
 	_pulley = set_pulley_direction(_pulley);
 	

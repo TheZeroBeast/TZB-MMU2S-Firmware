@@ -60,7 +60,8 @@ void process_commands(FILE* inout);
 //! @n b - blinking
 void setup()
 {
-
+  delay(2000);  // this is key to syncing to the MK3 controller - currently 2 seconds
+  
 	shr16_init(); // shift register
 	led_blink(0);
 

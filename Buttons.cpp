@@ -28,7 +28,7 @@ void settings_select_filament()
 		if(Btn::middle == buttonClicked())
 		{
 			shr16_set_led(2 << 2 * (4 - active_extruder));
-			delay(500);
+			// delay(500);
 			if (Btn::middle == buttonClicked())
 			{
 				if (active_extruder < 5) settings_bowden_length();

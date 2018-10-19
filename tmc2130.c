@@ -8,7 +8,7 @@
 
 #define TMC2130_CS_0 //signal d5  - PC6
 #define TMC2130_CS_1 //signal d6  - PD7
-#define TMC2130_CS_2 //signal d7  - PE6
+#define TMC2130_CS_2 //signal d7  - PE6  So wrong as per schematic d11  -  PB7
 
 #define TMC2130_ST_0 //signal d4  - PD4
 #define TMC2130_ST_1 //signal d8  - PB4
@@ -104,11 +104,11 @@ void tmc2130_wr_TPWMTHRS(uint8_t axis, uint32_t val32)
 int8_t tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_t current_r)
 {
 	uint8_t intpol = 1;
-	uint8_t toff = 1; // toff = 1
+	uint8_t toff = 3; // toff = 1
 	uint8_t hstrt = 5; //initial 4, modified to 5
 	uint8_t hend = 1;
 	uint8_t fd3 = 0;
-	uint8_t rndtf = 1; //random off time
+	uint8_t rndtf = 0; //random off time
 	uint8_t chm = 0; //spreadCycle
 	uint8_t tbl = 2; //blanking time
 	if (current_r <= 31)
@@ -242,7 +242,7 @@ int8_t tmc2130_init(uint8_t mode)
 
 	PORTC |= 0x40; //PC6 CSN U5
 	PORTD |= 0x80; //PD7 CSN U6
-	PORTB |= 0x80; //PB7 ???
+	PORTB |= 0x80; //PB7 CSN U7  //Updated RMM
 
 	DDRD |= 0x10;
 	DDRB |= 0x10;
@@ -275,7 +275,7 @@ inline void tmc2130_cs_low(uint8_t axis)
 	{
 	case 0: PORTC &= ~0x40; break;
 	case 1: PORTD &= ~0x80; break;
-	case 2: PORTB &= ~0x80; break; //// black board
+	case 2: PORTB &= ~0x80; break;
 	}
 }
 
@@ -285,7 +285,7 @@ inline void tmc2130_cs_high(uint8_t axis)
 	{
 	case 0: PORTC |= 0x40; break;
 	case 1: PORTD |= 0x80; break;
-	case 2: PORTB |= 0x80; break; //// black board
+	case 2: PORTB |= 0x80; break;
 	}
 }
 

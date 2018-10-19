@@ -485,18 +485,18 @@ void init_Pulley()
 
 void do_pulley_step()
 {
+  asm("nop");
 	PORTB |= 0x10;
 	asm("nop");
 	PORTB &= ~0x10;
-	asm("nop");
 }
 
 void do_idler_step()
-{ 
+{
+  asm("nop");
 	PORTD |= 0x40;
 	asm("nop");
 	PORTD &= ~0x40;
-	asm("nop");
 }
 
 void park_idler(bool _unpark)
@@ -520,21 +520,21 @@ bool home_idler()
 	int _c = 0;
 	int _l = 0;
 
-	for (int c = 1; c > 0; c--)  // not really functional, let's do it rather more times to be sure
+	for (int c = 2; c > 0; c--)  // not really functional, let's do it rather more times to be sure
 	{
-		move(0, (c * 5) * -1,0);
-		delay(50);
+		move(-200, 0, 0);  // (AX_IDL, AX_SEL, AX_PUL)
 		for (int i = 0; i < 2000; i++)
 		{
-			move(1, 0,0);
-			delayMicroseconds(100);
-			tmc2130_read_sg(0);
-
+			move(1, 0,0);  // (AX_IDL, AX_SEL, AX_PUL)
+      uint16_t sg = tmc2130_read_sg(AX_IDL);
+      if ((i > 150) && (sg == 0)) break;
+      
 			_c++;
 			if (i == 1000) { _l++; }
 			if (_c > 100) { shr16_set_led(1 << 2 * _l); };
 			if (_c > 200) { shr16_set_led(0x000); _c = 0; };
 		}
+    delay(20);
 	}
 	return true;
 }
@@ -547,27 +547,24 @@ bool home_selector()
   
   for (int c = 2; c > 0; c--)   // not really functional, let's do it rather more times to be sure
   {
-    move(0,-10,0); // Get moving before SG homing
     for (int i = 0; i < 200; i++)
     {
-      move(0,-1,0);   // (AX_PUL, AX_SEL, AX_IDL)
-      uint16_t sg = tmc2130_read_sg(1);
-      if (sg < 10) break;
+      move(0,-1,0);   // (AX_IDL, AX_SEL, AX_PUL)
+      uint16_t sg = tmc2130_read_sg(AX_SEL);
+      if ((i > 10) && (sg == 0)) break;
     }
-    delay(40);
-    move(0,10,0); // Get moving before SG homing
     for (int i = 0; i < 4000; i++)
     {
-      move(0, 1,0);   // (AX_PUL, AX_SEL, AX_IDL)
-      uint16_t sg = tmc2130_read_sg(1);
-      if (sg == 0) break;
+      move(0, 1,0);   // (AX_IDL, AX_SEL, AX_PUL)
+      uint16_t sg = tmc2130_read_sg(AX_SEL);
+      if ((i > 10) && (sg == 0)) break;
 
       _c++;
       if (i == 3000) { _l++; }
       if (_c > 100) { shr16_set_led(1 << 2 * _l); };
       if (_c > 200) { shr16_set_led(0x000); _c = 0; };
     }
-    delay(100);
+    delay(20);
 	}
 	
 	return true;
@@ -580,7 +577,8 @@ void home()
 	home_selector();
 	
 	shr16_set_led(0x155);
-	move(idler_steps_after_homing, selector_steps_after_homing,0); // move to initial position (AX_PUL, AX_SEL, AX_IDL)
+	//move(0, selector_steps_after_homing,0); // move to initial position (AX_IDL, AX_SEL, AX_PUL)
+	move(idler_steps_after_homing, selector_steps_after_homing,0); // move to initial position (AX_IDL, AX_SEL, AX_PUL)
 
 	active_extruder = 0;
 
@@ -641,7 +639,7 @@ void move_proportional(int _idler, int _selector)
 
 void move(int _idler, int _selector, int _pulley)
 {
-	int _acc = 25;   // why not move with some speed ;-D
+	int _acc = 50;
 
 	// gets steps to be done and set direction
 	_idler = set_idler_direction(_idler);
@@ -651,14 +649,15 @@ void move(int _idler, int _selector, int _pulley)
 
 	do
 	{
-		if (_idler > 0) { PORTD |= 0x40; }
-		if (_selector > 0) { PORTD |= 0x10;}
-		if (_pulley > 0) { PORTB |= 0x10; }
+    asm("nop");
+		if (_idler > 0) { delayMicroseconds(800); PORTD |= 0x40; }
+		if (_selector > 0) { delayMicroseconds(800); PORTD |= 0x10;}
+		if (_pulley > 0) { delayMicroseconds(700); PORTB |= 0x10; }
 		asm("nop");
-		if (_idler > 0) { PORTD &= ~0x40; _idler--; delayMicroseconds(1000); }
-		if (_selector > 0) { PORTD &= ~0x10; _selector--;  delayMicroseconds(800); }
-		if (_pulley > 0) { PORTB &= ~0x10; _pulley--;  delayMicroseconds(700); }
-		asm("nop");
+		if (_idler > 0) { PORTD &= ~0x40; _idler--; } //delayMicroseconds(800); }  // 1000
+		if (_selector > 0) { PORTD &= ~0x10; _selector--; } // delayMicroseconds(800); }
+		if (_pulley > 0) { PORTB &= ~0x10; _pulley--; } // delayMicroseconds(700); }
+		//asm("nop");
 
 		if (_acc > 0) { delayMicroseconds(_acc*10); _acc = _acc - 1; }; // super pseudo acceleration control
 
@@ -669,12 +668,10 @@ void move(int _idler, int _selector, int _pulley)
 void set_idler_dir_down()
 {
 	shr16_set_dir(shr16_get_dir() & ~4);
-	//shr16_set_dir(shr16_get_dir() | 4);
 }
 void set_idler_dir_up()
 {
 	shr16_set_dir(shr16_get_dir() | 4);
-	//shr16_set_dir(shr16_get_dir() & ~4);
 }
 
 

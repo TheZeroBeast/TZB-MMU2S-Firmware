@@ -527,7 +527,7 @@ bool home_idler()
 		{
 			move(1, 0,0);  // (AX_IDL, AX_SEL, AX_PUL)
       uint16_t sg = tmc2130_read_sg(AX_IDL);
-      if ((i > 150) && (sg == 0)) break;
+      if ((i > 200) && (sg == 0)) break;
       
 			_c++;
 			if (i == 1000) { _l++; }

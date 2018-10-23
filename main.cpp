@@ -18,21 +18,27 @@
 #include "permanent_storage.h"
 
 
+// public variables:
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
-int _loop = 0;
-int _c = 0;
-uint8_t tmc2130_mode = NORMAL_MODE;
+uint8_t tmc2130_mode = STEALTH_MODE; //NORMAL_MODE;
+
 
 #if (UART_COM == 0)
-FILE* uart_com = uart0io;
+FILE *uart_com = uart0io;
 #elif (UART_COM == 1)
-FILE* uart_com = uart1io;
+FILE *uart_com = uart1io;
 #endif //(UART_COM == 0)
 
 extern "C" {
-void process_commands(FILE* inout);
+    void process_commands(FILE *inout);
 }
+
+#ifdef TESTING
+void testing_setup();
+void testing_loop();
+#endif
+
 
 //! @brief Initialization after reset
 //!
@@ -60,74 +66,72 @@ void process_commands(FILE* inout);
 //! @n b - blinking
 void setup()
 {
-  delay(2000);  // this is key to syncing to the MK3 controller - currently 2 seconds
-  
-	shr16_init(); // shift register
-	led_blink(0);
 
-	uart0_init(); //uart0
-	uart1_init(); //uart1
-	led_blink(1);
+    shr16_init(); // shift register
+    led_blink(0);
+    delay(2000);  // wait for boot ok printer
+
+    uart0_init(); //uart0
+    uart1_init(); //uart1
+    led_blink(1);
+
 
 #if (UART_STD == 0)
-	stdin = uart0io; // stdin = uart0
-	stdout = uart0io; // stdout = uart0
-#elif (UART_STD == 1)
-	stdin = uart1io; // stdin = uart1
-	stdout = uart1io; // stdout = uart1
+    stdin = uart0io;  // stdin = uart0
+    stdout = uart0io; // stdout = uart0
+#elif(UART_STD == 1)
+    stdin = uart1io;  // stdin = uart1
+    stdout = uart1io; // stdout = uart1
 #endif //(UART_STD == 1)
 
-	fprintf_P(uart_com, PSTR("start\n")); //startup message
 
-	spi_init();
-	led_blink(2);
+    bool requestMenu = false;
+    fprintf_P(uart_com, PSTR("start\n")); //startup message
 
-	tmc2130_init(HOMING_MODE); // trinamic, homing
-	led_blink(3);
+    spi_init();
+    led_blink(2);
 
-	adc_init(); // ADC
-	led_blink(4);
-
-	shr16_set_ena(7);
-	shr16_set_led(0x000);
-
-	init_Pulley();
+    tmc2130_mode = HOMING_MODE;
+    tmc2130_init(HOMING_MODE); // trinamic, homing
+    led_blink(3);
 
 
-	// if FINDA is sensing filament do not home
-	while (digitalRead(A1) == 1)
-	{
-		while (Btn::right != buttonClicked())
-		{
-			if (digitalRead(A1) == 1)
-			{
-				shr16_set_led(0x2aa);
-			}
-			else
-			{
-				shr16_set_led(0x155);
-			}
-			delay(300);
-			shr16_set_led(0x000);
-			delay(300);
-		}
-	}
-	
-	//add reading previously stored mode (stealth/normal) from eeprom
-	tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
-	
-	// check if to goto the settings menu
-	if (buttonClicked() == Btn::middle)
-	{
+    adc_init(); // ADC
+    led_blink(4);
+
+    init_Pulley();
+
+
+    if (buttonClicked() == Btn::middle) {
+        requestMenu = true;
+    }
+
+    // if FINDA is sensing filament do not home
+    while (digitalRead(A1) == 1) {
+        while (Btn::right != buttonClicked()) {
+            if (digitalRead(A1) == 1) {
+                shr16_set_led(0x2aa);
+            } else {
+                shr16_set_led(0x155);
+            }
+            delay(300);
+            shr16_set_led(0x000);
+            delay(300);
+        }
+    }
+
     home();
-		setupMenu();
-	} else{
-	  home();
-	}
-	
+    // TODO 2: add reading previously stored mode (stealth/normal) from eeprom
+
+    tmc2130_mode = NORMAL_MODE;
+    tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
+
+
+    // check if to goto the settings menu
+    if (requestMenu) {
+        setupMenu();
+    }
 }
-
-
 
 //! @brief Select filament menu
 //!
@@ -156,38 +160,69 @@ void setup()
 //! @n b - blinking
 void manual_extruder_selector()
 {
-	shr16_set_led(1 << 2 * (4 - active_extruder));
+    shr16_set_led(1 << 2 * (4 - active_extruder));
 
-	if ((Btn::left|Btn::right) & buttonClicked())
-	{
-		// delay(500);
+#ifdef TESTING_STEALTH
+    if (buttonClicked() != Btn::none) {
+        switch (buttonClicked()) {
+        case Btn::right:
+            if (active_extruder < EXTRUDERS) {
+                select_extruder(active_extruder + 1);
+            }
+            break;
+        case Btn::left:
+            if (active_extruder > 0) {
+                select_extruder(active_extruder - 1);
+            }
+            break;
+        case Btn::middle:
+            if (tmc2130_mode == STEALTH_MODE) {
+                tmc2130_mode = NORMAL_MODE;
+            } else if (tmc2130_mode == NORMAL_MODE) {
+                tmc2130_mode = STEALTH_MODE;
+            }
+            if (tmc2130_init_axis(AX_IDL, tmc2130_mode)) {
+                fault_handler(FAULT_IDLER_INIT_2);
+            }
+            if (tmc2130_init_axis(AX_SEL, tmc2130_mode)) {
+                fault_handler(FAULT_SELECTOR_INIT_2);
+            }
+            if (tmc2130_init_axis(AX_PUL, tmc2130_mode)) {
+                fault_handler(FAULT_PULLEY_INIT_2);
+            }
+            delay(200);
+            break;
+        default:
+            break;
+        }
+    }
+#else
+    if ((Btn::left | Btn::right) & buttonClicked()) {
+        switch (buttonClicked()) {
+        case Btn::right:
+            if (active_extruder < EXTRUDERS) {
+                select_extruder(active_extruder + 1);
+            }
+            break;
+        case Btn::left:
+            if (active_extruder > 0) {
+                select_extruder(active_extruder - 1);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+#endif
 
-		switch (buttonClicked())
-		{
-		case Btn::right:
-			if (active_extruder < 5)
-			{
-				select_extruder(active_extruder + 1);
-			}
-			break;
-		case Btn::left:
-			if (active_extruder > 0) select_extruder(active_extruder - 1);
-			break;
-
-		default:
-			break;
-		}
-		// delay(500);
-	}
-
-	if (active_extruder == 5)
-	{
-		shr16_set_led(2 << 2 * 0);
-		delay(50);
-		shr16_set_led(1 << 2 * 0);
-		delay(50);
-	}
+    if (active_extruder == 5) {
+        shr16_set_led(2 << 2 * 0);
+        delay(50);
+        shr16_set_led(1 << 2 * 0);
+        delay(50);
+    }
 }
+
 
 //! @brief main loop
 //!
@@ -200,158 +235,191 @@ void manual_extruder_selector()
 //! @copydoc manual_extruder_selector()
 void loop()
 {
-	process_commands(uart_com);
 
-	if (!isPrinting)
-	{
-		manual_extruder_selector();
-		if(Btn::middle == buttonClicked() && active_extruder < 5)
-		{
-			shr16_set_led(2 << 2 * (4 - active_extruder));
-			// delay(500);
-			if (Btn::middle == buttonClicked())
-			{
-				feed_filament();
-			}
-		}
-	}
+#ifdef TESTING_L
+    testing_loop();
+#else
+    process_commands(uart_com);
+
+
+    if (!isPrinting) {
+        manual_extruder_selector();
+#ifndef TESTING_STEALTH
+        if (Btn::middle == buttonClicked() && active_extruder < 5) {
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+            if (Btn::middle == buttonClicked()) {
+                feed_filament();
+            }
+        }
+#endif
+    }
+#endif
 }
-
 
 extern "C" {
+    void process_commands(FILE *inout)
+    {
+        static char line[32];
+        static int count = 0;
+        int c = -1;
+        if (count < 32) {
+            if ((c = getc(inout)) >= 0) {
+                if (c == '\r') {
+                    c = 0;
+                }
+                if (c == '\n') {
+                    c = 0;
+                }
+                line[count++] = c;
+            }
+        } else {
+            count = 0;
+            //overflow
+        }
+        int value = 0;
+        int value0 = 0;
 
-void process_commands(FILE* inout)
+        if ((count > 0) && (c == 0)) {
+            //line received
+            //printf_P(PSTR("line received: '%s' %d\n"), line, count);
+            count = 0;
+            if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
+                //T-code scanned
+                if ((value >= 0) && (value < EXTRUDERS)) {
+                    switch_extruder_withSensor(value);
+
+                    delay(200);
+                    fprintf_P(inout, PSTR("ok\n"));
+                }
+            } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
+                // Load filament
+                if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded) {
+
+                    select_extruder(value);
+                    feed_filament();
+
+                    delay(200);
+                    fprintf_P(inout, PSTR("ok\n"));
+                }
+            } else if (sscanf_P(line, PSTR("M%d"), &value) > 0) {
+                // M0: set to normal mode; M1: set to stealth mode
+                switch (value) {
+                case 0:
+                    tmc2130_mode = NORMAL_MODE;
+                    break;
+                case 1:
+                    tmc2130_mode = STEALTH_MODE;
+                    break;
+                default:
+                    return;
+                }
+                //init all axes
+                tmc2130_init(tmc2130_mode);
+                fprintf_P(inout, PSTR("ok\n"));
+            } else if (sscanf_P(line, PSTR("U%d"), &value) > 0) {
+                // Unload filament
+                unload_filament_withSensor();
+                delay(200);
+                fprintf_P(inout, PSTR("ok\n"));
+                isPrinting = false;
+            } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
+                if (value == 0) { // MMU reset
+                    wdt_enable(WDTO_15MS);
+                }
+            } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
+                if (value == 0) { // Read finda
+                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
+                }
+            } else if (sscanf_P(line, PSTR("S%d"), &value) > 0) {
+                if (value == 0) { // return ok
+                    fprintf_P(inout, PSTR("ok\n"));
+                } else if (value == 1) { // Read version
+                    fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
+                } else if (value == 2) { // Read build nr
+                    fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
+                }
+            } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
+                if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
+                    filament_type[value] = value0;
+                    fprintf_P(inout, PSTR("ok\n"));
+                }
+            } else if (sscanf_P(line, PSTR("C%d"), &value) > 0) {
+                if (value ==
+                        0) // C0 continue loading current filament (used after T-code), maybe add different code for
+                    // each extruder (the same way as T-codes) in the future?
+                {
+                    load_filament_into_extruder();
+                    fprintf_P(inout, PSTR("ok\n"));
+                }
+            } else if (sscanf_P(line, PSTR("E%d"), &value) > 0) {
+                if ((value >= 0) && (value < EXTRUDERS)) { // Ex: eject filament
+                    eject_filament(value);
+                    fprintf_P(inout, PSTR("ok\n"));
+                }
+            } else if (sscanf_P(line, PSTR("R%d"), &value) > 0) {
+                if (value == 0) { // R0: recover after eject filament
+                    recover_after_eject();
+                    fprintf_P(inout, PSTR("ok\n"));
+                }
+            } else {
+                // nothing received
+            }
+        }
+    }
+} // extern C
+
+void process_signals()
 {
-	static char line[32];
-	static int count = 0;
-	int c = -1;
-	if (count < 32)
-	{
-		if ((c = getc(inout)) >= 0)
-		{
-			if (c == '\r') c = 0;
-			if (c == '\n') c = 0;
-			line[count++] = c;
-		}
-	}
-	else
-	{
-		count = 0;
-		//overflow
-	}
-	int value = 0;
-	int value0 = 0;
-
-	if ((count > 0) && (c == 0))
-	{
-		//line received
-		//printf_P(PSTR("line received: '%s' %d\n"), line, count);
-		count = 0;
-		if (sscanf_P(line, PSTR("T%d"), &value) > 0)
-		{
-			//T-code scanned
-			if ((value >= 0) && (value < EXTRUDERS))
-			{
-				switch_extruder_withSensor(value);
-
-				delay(200);
-				fprintf_P(inout, PSTR("ok\n"));
-			}
-		}
-		else if (sscanf_P(line, PSTR("L%d"), &value) > 0)
-		{
-			// Load filament
-			if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded)
-			{
-
-				select_extruder(value);
-				feed_filament();
-
-				delay(200);
-				fprintf_P(inout, PSTR("ok\n"));
-
-			}
-		}
-		else if (sscanf_P(line, PSTR("M%d"), &value) > 0)
-		{
-			// M0: set to normal mode; M1: set to stealth mode
-			switch (value) {
-				case 0: tmc2130_mode = NORMAL_MODE; break;
-				case 1: tmc2130_mode = STEALTH_MODE; break;
-				default: return;
-			}
-
-			//init all axes
-			tmc2130_init(tmc2130_mode);
-			fprintf_P(inout, PSTR("ok\n"));
-		}
-		else if (sscanf_P(line, PSTR("U%d"), &value) > 0)
-		{
-			// Unload filament
-			unload_filament_withSensor();
-			delay(200);
-			fprintf_P(inout, PSTR("ok\n"));
-
-			isPrinting = false;
-		}
-		else if (sscanf_P(line, PSTR("X%d"), &value) > 0)
-		{
-			if (value == 0) // MMU reset
-				wdt_enable(WDTO_15MS);
-		}
-		else if (sscanf_P(line, PSTR("P%d"), &value) > 0)
-		{
-			if (value == 0) // Read finda
-				fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
-		}
-		else if (sscanf_P(line, PSTR("S%d"), &value) > 0)
-		{
-			if (value == 0) // return ok
-				fprintf_P(inout, PSTR("ok\n"));
-			else if (value == 1) // Read version
-				fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
-			else if (value == 2) // Read build nr
-				fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
-		}
-		else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0)
-		{
-			if (((value >= 0) && (value < EXTRUDERS)) &&
-				((value0 >= 0) && (value0 <= 2)))
-			{
-				filament_type[value] = value0;
-				fprintf_P(inout, PSTR("ok\n"));
-			}
-		}
-		else if (sscanf_P(line, PSTR("C%d"), &value) > 0)
-		{
-			if (value == 0) //C0 continue loading current filament (used after T-code), maybe add different code for each extruder (the same way as T-codes) in the future?
-			{
-				load_filament_inPrinter();
-				fprintf_P(inout, PSTR("ok\n"));
-			}
-		}
-		else if (sscanf_P(line, PSTR("E%d"), &value) > 0)
-		{
-			if ((value >= 0) && (value < EXTRUDERS)) //Ex: eject filament
-			{
-				eject_filament(value);
-				fprintf_P(inout, PSTR("ok\n"));
-			}
-		}
-		else if (sscanf_P(line, PSTR("R%d"), &value) > 0)
-		{
-			if (value == 0) //R0: recover after eject filament
-			{
-				recover_after_eject();
-				fprintf_P(inout, PSTR("ok\n"));
-			}
-		}
-	}
-	else
-	{ //nothing received
-	}
+    // what to do here?
 }
 
+#ifdef TESTING
+void testing_setup()
+{
+    homeSelectorSmooth();
+}
 
+void testing_loop()
+{
+    int steps = 0;
+    static int speed = 0;
+    static const int speed0 = 5000;
+    //static const int DeltaPos = 300;
 
-} // extern "C"
+    static bool leftPressed = false;
+    if (leftPressed == false && buttonClicked() == Btn::left) {
+        leftPressed = true;
+        speed = speed0;
+    } else if (leftPressed == true && buttonClicked() == Btn::left) {
+        speed++;
+    } else if (leftPressed == true && buttonClicked() != Btn::left) {
+        leftPressed = false;
+        //steps = -DeltaPos;            /////////
+        select_extruder(active_extruder + 1);
+    }
+
+    static bool rightPressed = false;
+    if (rightPressed == false && buttonClicked() == Btn::right) {
+        rightPressed = true;
+        speed = speed0;
+    } else if (rightPressed == true && buttonClicked() == Btn::right) {
+        speed++;
+    } else if (rightPressed == true && buttonClicked() != Btn::right) {
+        rightPressed = false;
+        //steps = DeltaPos;            //////////
+        select_extruder(active_extruder - 1);
+    }
+
+    delay(10); // delay for counting up the speed and switch debouncing    
+}
+#endif
+
+void fault_handler(Fault id)
+{
+    while (1) {
+        shr16_set_led(id + 1);
+        delay(1000);
+        shr16_set_led(0);
+        delay(2000);
+    }
+}

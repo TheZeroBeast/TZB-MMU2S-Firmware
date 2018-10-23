@@ -1,8 +1,9 @@
-//tmc2130.h - Trinamic stepper driver
+// tmc2130.h - Trinamic stepper driver
 #ifndef _TMC2130_H
 #define _TMC2130_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include "config.h"
 
 #define TMC2130_SG_THR         4       // SG_THR default
@@ -19,22 +20,23 @@
 
 #if defined(__cplusplus)
 extern "C" {
-#endif //defined(__cplusplus)
+#endif // defined(__cplusplus)
+
+int8_t tmc2130_init(uint8_t mode);
+
+int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode);
+int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r);
+int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r);
+void tmc2130_disable_axis(uint8_t axis, uint8_t mode);
 
 
-extern int8_t tmc2130_init(uint8_t mode);
+#ifdef _DIAG
+uint8_t tmc2130_check_axis(uint8_t axis);
+#endif
 
-extern int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode);
-extern int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r);
-extern int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r);
-extern void tmc2130_disable_axis(uint8_t axis, uint8_t mode);
-
-extern uint8_t tmc2130_check_axis(uint8_t axis);
-
-extern uint16_t tmc2130_read_sg(uint8_t axis);
-
+uint16_t tmc2130_read_sg(uint8_t axis);
 
 #if defined(__cplusplus)
 }
-#endif //defined(__cplusplus)
+#endif // defined(__cplusplus)
 #endif //_TMC2130_H

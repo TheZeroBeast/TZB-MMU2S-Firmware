@@ -8,12 +8,12 @@
 #include "permanent_storage.h"
 #include "main.h"
 
-const int ButtonPin = A2;
+const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 
 void settings_bowden_length();
 
 
-//!	@brief Select filament for bowden length calibration
+//! @brief Select filament for bowden length calibration
 //!
 //! Filaments are selected by left and right buttons, calibration is activated by middle button.
 //! Park position (one behind last filament) can be also selected.
@@ -21,29 +21,26 @@ void settings_bowden_length();
 //!
 void settings_select_filament()
 {
-	while (1)
-	{
-		manual_extruder_selector();
+    while (1) {
+        manual_extruder_selector();
 
-		if(Btn::middle == buttonClicked())
-		{
-			shr16_set_led(2 << 2 * (4 - active_extruder));
-			// delay(500);
-			if (Btn::middle == buttonClicked())
-			{
-				if (active_extruder < 5) settings_bowden_length();
-				else
-				{
-					select_extruder(4);
-					select_extruder(0);
-					return;
-				}
-			}
-		}
-	}
+        if (Btn::middle == buttonClicked()) {
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+            delay(500);
+            if (Btn::middle == buttonClicked()) {
+                if (active_extruder < 5) {
+                    settings_bowden_length();
+                } else {
+                    select_extruder(4);
+                    select_extruder(0);
+                    return;
+                }
+            }
+        }
+    }
 }
 
-//!	@brief Show setup menu
+//! @brief Show setup menu
 //!
 //! Items are selected by left and right buttons, activated by middle button.
 //!
@@ -64,75 +61,77 @@ void settings_select_filament()
 //!
 void setupMenu()
 {
-	shr16_set_led(0x000);
-	delay(200);
-	shr16_set_led(0x2aa);
-	delay(1200);
-	shr16_set_led(0x000);
-	delay(600);
+    shr16_set_led(0x000);
+    delay(200);
+    shr16_set_led(0x2aa);
+    delay(1200);
+    shr16_set_led(0x000);
+    delay(600);
 
-	int _menu = 0;
-	bool _exit = false;
-	bool eraseLocked = true;
-
-		
-
-	do
-	{
-		shr16_set_led(1 << 2 * 4);
-		delay(1);
-		shr16_set_led(2 << 2 * 4);
-		delay(1);
-		shr16_set_led(2 << 2 * _menu);
-		delay(1);
-
-		switch (buttonClicked())
-		{
-		case Btn::right:
-			if (_menu > 0) { _menu--; delay(800); }
-			break;
-		case Btn::middle:
-				
-			switch (_menu)
-			{
-				case 1:
-					settings_select_filament();
-					_exit = true;
-					break;
-				case 2:
-					if (!eraseLocked)
-					{
-						BowdenLength::eraseAll();
-						_exit = true;
-					}
-					break;
-				case 3: //unlock erase
-					eraseLocked = false;
-					break;
-				case 4: // exit menu
-					_exit = true;
-					break;
-			}
-			break;
-		case Btn::left:
-			if (_menu < 4) { _menu++; delay(800); }
-			break;
-		default:
-			break;
-		}
-		
-	} while (!_exit);
+    int _menu = 0;
+    bool _exit = false;
+    bool eraseLocked = true;
 
 
-	shr16_set_led(0x000);
-	delay(400);
-	shr16_set_led(0x2aa);
-	delay(400);
-	shr16_set_led(0x000);
-	delay(400);
 
-	shr16_set_led(0x000);
-	shr16_set_led(1 << 2 * (4 - active_extruder));
+    do {
+        shr16_set_led(1 << 2 * 4);
+        delay(1);
+        shr16_set_led(2 << 2 * 4);
+        delay(1);
+        shr16_set_led(2 << 2 * _menu);
+        delay(1);
+
+        switch (buttonClicked()) {
+        case Btn::right:
+            if (_menu > 0) {
+                _menu--;
+                delay(800);
+            }
+            break;
+        case Btn::middle:
+
+            switch (_menu) {
+            case 1:
+                settings_select_filament();
+                _exit = true;
+                break;
+            case 2:
+                if (!eraseLocked) {
+                    BowdenLength::eraseAll();
+                    _exit = true;
+                }
+                break;
+            case 3: //unlock erase
+                eraseLocked = false;
+                break;
+            case 4: // exit menu
+                _exit = true;
+                break;
+            }
+            break;
+        case Btn::left:
+            if (_menu < 4) {
+                _menu++;
+                delay(800);
+            }
+            break;
+        default:
+            break;
+        }
+
+    } while (!_exit);
+
+
+    shr16_set_led(0x000);
+    delay(400);
+    shr16_set_led(0x2aa);
+    delay(400);
+    shr16_set_led(0x000);
+    delay(400);
+
+    shr16_set_led(0x000);
+    shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
 //! @brief Set bowden length
@@ -157,62 +156,65 @@ void setupMenu()
 //!
 void settings_bowden_length()
 {
-	// load filament above Bondtech gears to check correct length of bowden tube
-	if (!isFilamentLoaded)
-	{
-		BowdenLength bowdenLength;
-		load_filament_withSensor();
+    // load filament above Bondtech gears to check correct length of bowden tube
+    if (!isFilamentLoaded) {
+        BowdenLength bowdenLength;
+        load_filament_withSensor();
 
-		tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
-		do
-		{
+        tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
+        do {
 
-			switch (buttonClicked())
-			{
-			case Btn::right:
-				if (bowdenLength.decrease())
-				{
-					move(0, 0, -bowdenLength.stepSize);
-					delay(400);
-				}
-				break;
+            switch (buttonClicked()) {
+            case Btn::right:
+                if (bowdenLength.decrease()) {
+                    move(0, 0, -bowdenLength.stepSize);
+                    delay(400);
+                }
+                break;
 
-			case Btn::left:
-				if (bowdenLength.increase())
-				{
-					move(0, 0, bowdenLength.stepSize);
-					delay(400);
-				}
-				break;
-			default:
-				break;
-			}
+            case Btn::left:
+                if (bowdenLength.increase()) {
+                    move(0, 0, bowdenLength.stepSize);
+                    delay(400);
+                }
+                break;
+            default:
+                break;
+            }
 
-			shr16_set_led(1 << 2 * 4);
-			delay(10);
-			shr16_set_led(2 << 2 * 4);
-			delay(10);
-			shr16_set_led(2 << 2 * 1);
-			delay(50);
+            shr16_set_led(1 << 2 * 4);
+            delay(10);
+            shr16_set_led(2 << 2 * 4);
+            delay(10);
+            shr16_set_led(2 << 2 * 1);
+            delay(50);
 
+        } while (buttonClicked() != Btn::middle);
 
-		} while (buttonClicked() != Btn::middle);
-
-		unload_filament_withSensor();
-	}
+        unload_filament_withSensor();
+    }
 }
 
 //! @brief Is button pushed?
 //!
 //! @return button pushed
+
 Btn buttonClicked()
 {
-	int raw = analogRead(ButtonPin);
+    // TODO 1: is something like a minimum hold time needed? could be that a
+    // rising edge falls temporarily into a wrong class
+    int raw = analogRead(ButtonPin);
 
-	if (raw < 50) return Btn::right;
-	if (raw > 80 && raw < 100) return Btn::middle;
-	if (raw > 160 && raw < 180) return Btn::left;
+    if (raw < 50) {
+        return Btn::right;
+    }
+    if (raw > 80 && raw < 100) {
+        return Btn::middle;
+    }
+    if (raw > 160 && raw < 180) {
+        return Btn::left;
+    }
 
-	return Btn::none;
+    return Btn::none;
 }
 

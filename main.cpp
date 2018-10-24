@@ -23,7 +23,6 @@ int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 uint8_t tmc2130_mode = STEALTH_MODE; //NORMAL_MODE;
 
-
 #if (UART_COM == 0)
 FILE *uart_com = uart0io;
 #elif (UART_COM == 1)
@@ -33,12 +32,6 @@ FILE *uart_com = uart1io;
 extern "C" {
     void process_commands(FILE *inout);
 }
-
-#ifdef TESTING
-void testing_setup();
-void testing_loop();
-#endif
-
 
 //! @brief Initialization after reset
 //!
@@ -91,7 +84,6 @@ void setup()
     spi_init();
     led_blink(2);
 
-    tmc2130_mode = HOMING_MODE;
     tmc2130_init(HOMING_MODE); // trinamic, homing
     led_blink(3);
 
@@ -123,7 +115,6 @@ void setup()
     home();
     // TODO 2: add reading previously stored mode (stealth/normal) from eeprom
 
-    tmc2130_mode = NORMAL_MODE;
     tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 
 
@@ -235,13 +226,8 @@ void manual_extruder_selector()
 //! @copydoc manual_extruder_selector()
 void loop()
 {
-
-#ifdef TESTING_L
-    testing_loop();
-#else
     process_commands(uart_com);
-
-
+    
     if (!isPrinting) {
         manual_extruder_selector();
 #ifndef TESTING_STEALTH
@@ -251,7 +237,6 @@ void loop()
                 feed_filament();
             }
         }
-#endif
     }
 #endif
 }
@@ -372,47 +357,6 @@ void process_signals()
 {
     // what to do here?
 }
-
-#ifdef TESTING
-void testing_setup()
-{
-    homeSelectorSmooth();
-}
-
-void testing_loop()
-{
-    int steps = 0;
-    static int speed = 0;
-    static const int speed0 = 5000;
-    //static const int DeltaPos = 300;
-
-    static bool leftPressed = false;
-    if (leftPressed == false && buttonClicked() == Btn::left) {
-        leftPressed = true;
-        speed = speed0;
-    } else if (leftPressed == true && buttonClicked() == Btn::left) {
-        speed++;
-    } else if (leftPressed == true && buttonClicked() != Btn::left) {
-        leftPressed = false;
-        //steps = -DeltaPos;            /////////
-        select_extruder(active_extruder + 1);
-    }
-
-    static bool rightPressed = false;
-    if (rightPressed == false && buttonClicked() == Btn::right) {
-        rightPressed = true;
-        speed = speed0;
-    } else if (rightPressed == true && buttonClicked() == Btn::right) {
-        speed++;
-    } else if (rightPressed == true && buttonClicked() != Btn::right) {
-        rightPressed = false;
-        //steps = DeltaPos;            //////////
-        select_extruder(active_extruder - 1);
-    }
-
-    delay(10); // delay for counting up the speed and switch debouncing    
-}
-#endif
 
 void fault_handler(Fault id)
 {

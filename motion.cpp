@@ -17,7 +17,7 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
-static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
+static const int SELECTOR_STEPS_AFTER_HOMING = -3650;  // reduced a tad to make better alignment
 static const int IDLER_STEPS_AFTER_HOMING = -130;
 
 static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
@@ -43,7 +43,6 @@ static int idler_steps_for_eject = 0;
 static int set_idler_direction(int steps);
 static int set_selector_direction(int steps);
 static int set_pulley_direction(int steps);
-static void do_idler_step();
 
 bool checkOk();
 
@@ -60,7 +59,7 @@ void set_positions(int _current_extruder, int _next_extruder)
 
 void reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_pos)
 {
-    // steps to move axis to new position of idler and selector    
+    // steps to move axis to new position of idler and selector independantly
     int steps = 0;
     switch(axis) {
       case AX_SEL:
@@ -69,9 +68,7 @@ void reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
         break;
       case AX_IDL:
         steps = ((_current_extruder_pos - _new_extruder_pos) * IDLER_STEPS);
-        if (isIdlerParked) { // get idler in contact with filament
-          steps -= IDLER_PARKING_STEPS;
-        } else steps += IDLER_PARKING_STEPS;
+        // we need to move to last idler position, engaged/not-engaged as well as location
         moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, false);
         break;
     }
@@ -153,7 +150,6 @@ void load_filament_withSensor()
         true); // if idler is in parked position un-park him get in contact with filament
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
-
     set_pulley_dir_push();
 
     int _loadSteps = 0;
@@ -162,7 +158,7 @@ void load_filament_withSensor()
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
     // we can expect something like 570 steps to get in sensor
     do {
-        do_pulley_step();
+        moveSmooth(AX_PUL, 1, 0, false);
         _loadSteps++;
         delayMicroseconds(5500);
     } while (isFilamentInFinda() == false && _loadSteps < 1500);
@@ -174,14 +170,14 @@ void load_filament_withSensor()
                 // attempt to correct
                 set_pulley_dir_pull();
                 for (int i = 200; i >= 0; i--) {
-                    do_pulley_step();
+                    moveSmooth(AX_PUL, 1, 0, false);
                     delayMicroseconds(1500);
                 }
 
                 set_pulley_dir_push();
                 _loadSteps = 0;
                 do {
-                    do_pulley_step();
+                    moveSmooth(AX_PUL, 1, 0, false);
                     _loadSteps++;
                     delayMicroseconds(4000);
                     if (isFilamentInFinda()) {
@@ -218,7 +214,7 @@ void load_filament_withSensor()
                 set_pulley_dir_push();
 
                 for (int i = 0; i < 200; i++) {
-                    do_pulley_step();
+                    moveSmooth(AX_PUL, 1, 0, false);
                     delayMicroseconds(5500);
                 }
                 engage_filament_pulley(false);
@@ -249,38 +245,23 @@ void load_filament_withSensor()
         // TODO: do not repeat same code, try to do it until succesfull load
         _loadSteps = 0;
         do {
-            do_pulley_step();
+            moveSmooth(AX_PUL, 1, 0, false);
             _loadSteps++;
             delayMicroseconds(5500);
         } while (isFilamentInFinda() == false && _loadSteps < 1500);
-        // ?
-    } else {
-        // nothing
     }
 
-    {
-        float _speed = 4500;
-        const uint16_t steps = BowdenLength::get();
+    // RMM:TODO, changed to do acc in moveSmooth instead of moveSmooth(AX_PUL, 1, 0, false)
+    const uint16_t steps = BowdenLength::get();
 
-        for (uint16_t i = 0; i < steps; i++) {
-            do_pulley_step();
-
-            if (i > 10 && i < 4000 && _speed > 650) {
-                _speed = _speed - 4;
-            }
-            if (i > 100 && i < 4000 && _speed > 650) {
-                _speed = _speed - 1;
-            }
-            if (i > 8000 && _speed < 3000) {
-                _speed = _speed + 2;
-            }
-            delayMicroseconds(_speed);
-        }
+    switch (moveSmooth(AX_PUL, steps, MAX_SPEED_PUL, false)) {
+      case MR_Success:
+        tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+        isFilamentLoaded = true; // filament loaded
+      case MR_Failed:
+        tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+        // RMM:TODO2 Probably retract and try loading again once end seen
     }
-
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-
-    isFilamentLoaded = true; // filament loaded
 }
 
 /**
@@ -290,8 +271,6 @@ void load_filament_withSensor()
 void unload_filament_withSensor()
 {
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-
-
 
     engage_filament_pulley(
         true); // if idler is in parked position un-park him get in contact with filament
@@ -306,7 +285,7 @@ void unload_filament_withSensor()
     // unload until FINDA senses end of the filament
     int _unloadSteps = 10000;
     do {
-        do_pulley_step();
+        moveSmooth(AX_PUL, 1, 0, false);
         _unloadSteps--;
 
         if (_unloadSteps < 1400 && _speed < 6000) {
@@ -324,11 +303,11 @@ void unload_filament_withSensor()
             _endstop_hit++;
         }
 
-    } while (_endstop_hit < 100 && _unloadSteps > 0);
+    } while (_endstop_hit < 50 && _unloadSteps > 0);  // RMM:TODO3 Reduced endstop hits from 100 step
 
     // move a little bit so it is not a grinded hole in filament
     for (int i = 100; i > 0; i--) {
-        do_pulley_step();
+        moveSmooth(AX_PUL, 1, 0, false);
         delayMicroseconds(5000);
     }
 
@@ -338,7 +317,7 @@ void unload_filament_withSensor()
             if (isFilamentInFinda()) {
                 set_pulley_dir_push();
                 for (int i = 150; i > 0; i--) {
-                    do_pulley_step();
+                    moveSmooth(AX_PUL, 1, 0, false);
                     delayMicroseconds(4000);
                 }
 
@@ -346,7 +325,7 @@ void unload_filament_withSensor()
                 int _steps = 4000;
                 _endstop_hit = 0;
                 do {
-                    do_pulley_step();
+                    moveSmooth(AX_PUL, 1, 0, false);
                     _steps--;
                     delayMicroseconds(3000);
                     if (isFilamentInFinda() == false) {
@@ -384,7 +363,7 @@ void unload_filament_withSensor()
                 set_pulley_dir_pull();
 
                 for (int i = 0; i < 200; i++) {
-                    do_pulley_step();
+                    moveSmooth(AX_PUL, 1, 0, false);
                     delayMicroseconds(5500);
                 }
                 engage_filament_pulley(false);
@@ -418,7 +397,7 @@ void unload_filament_withSensor()
         // unload to PTFE tube
         set_pulley_dir_pull();
         for (int i = 450; i > 0; i--) { // 570
-            do_pulley_step();
+            moveSmooth(AX_PUL, 1, 0, false);
             delayMicroseconds(_speed);
         }
     }
@@ -449,10 +428,7 @@ void load_filament_into_extruder()
         true); // if idler is in parked position un-park him get in contact with filament
     set_pulley_dir_push();
 
-
-#ifdef TESTING
-    // PLA
-
+    // #### PLA ####
     // set current to 100%
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(151, 385);
@@ -476,44 +452,10 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(451, 455);
-#else
-    //PLA
-    // 321 µSteps @ 385 µSteps/s
-    tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    for (int i = 0; i <= 320; i++) {
-        if (i == 150) {
-            if (tmc2130_mode == NORMAL_MODE) {
-                tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                                 current_running_normal[AX_PUL] - (current_running_normal[AX_PUL] / 4) );
-            } else {
-                tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                                  current_running_stealth[AX_PUL] - (current_running_stealth[AX_PUL] / 4) );
-            }
-        }
-        do_pulley_step();
-        delayMicroseconds(2600);
-    }
-
-    //PLA
-    if (tmc2130_mode == NORMAL_MODE) {
-        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] / 4);
-    } else {
-        tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] / 4);
-    }
-
-    // 450 steps with 454 µSteps/s
-    for (int i = 0; i <= 450; i++) {
-        do_pulley_step();
-        delayMicroseconds(2200);
-    }
-#endif
+    move_pulley(451, 455);   // RMM:TODO4 May be able to sync with printer longer here
 
     engage_filament_pulley(false);
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-
 }
 
 void init_Pulley()
@@ -524,27 +466,18 @@ void init_Pulley()
 
     set_pulley_dir_push();
     for (int i = 50; i > 0; i--) {
-        do_pulley_step();
+        moveSmooth(AX_PUL, 1, 0, false);
         delayMicroseconds(_speed);
         shr16_set_led(1 << 2 * (int)(i / 50)); // TODO 2: What the heck?
     }
 
     set_pulley_dir_pull();
     for (int i = 50; i > 0; i--) {
-        do_pulley_step();
+        moveSmooth(AX_PUL, 1, 0, false);
         delayMicroseconds(_speed);
         shr16_set_led(1 << 2 * (4 - (int)(i / 50))); // TODO 2: What the heck?
     }
 }
-
-void do_pulley_step()
-{
-    PIN_STP_PUL_HIGH;
-    asm("nop");
-    PIN_STP_PUL_LOW;
-    asm("nop");
-}
-
 
 /**
  * @brief engage_filament_pulley
@@ -564,88 +497,11 @@ void engage_filament_pulley(bool engage)
     }
 }
 
-bool home_idler()
-{
-    int _c = 0;
-    int _l = 0;
-
-    move_idler(-10); // move a bit in opposite direction
-
-    for (int c = 1; c > 0; c--) { // not really functional, let's do it rather more times to be sure
-        move_selector((c * 5) *
-                      -1); // TODO 1: seems to be a bug, why move selecotr in home idler?, see issue #53
-        delay(50);
-        for (int i = 0; i < 2000; i++) {
-            move_idler(1);
-            delayMicroseconds(100);
-            tmc2130_read_sg(AX_IDL);
-
-            _c++;
-            if (i == 1000) {
-                _l++;
-            }
-            if (_c > 100) {
-                shr16_set_led(1 << 2 * _l);
-            };
-            if (_c > 200) {
-                shr16_set_led(0x000);
-                _c = 0;
-            };
-        }
-    }
-    return true;
-}
-
-bool home_selector()
-{
-    int _c = 0;
-    int _l = 2;
-
-    move_selector(-100); // move a bit in opposite direction
-
-    for (int c = 5; c > 0; c--) { // not really functional, let's do it rather more times to be sure
-        move_selector((c * 20) * -1);
-        delay(50);
-        for (int i = 0; i < 4000; i++) {
-            move_selector(1);
-            uint16_t sg = tmc2130_read_sg(AX_SEL);
-            if ((i > 16) && (sg < 10)) {
-                break;
-            }
-
-            _c++;
-            if (i == 3000) {
-                _l++;
-            }
-            if (_c > 100) {
-                shr16_set_led(1 << 2 * _l);
-            };
-            if (_c > 200) {
-                shr16_set_led(0x000);
-                _c = 0;
-            };
-        }
-    }
-
-    return true;
-}
-
 void home()
 {
-#ifdef TESTING
     homeIdlerSmooth();
     homeSelectorSmooth();
     shr16_set_led(0x155);
-#else
-    // home both idler and selector
-    home_idler();
-    home_selector();
-
-    shr16_set_led(0x155);
-
-    move_idler(IDLER_STEPS_AFTER_HOMING);
-    move_selector(SELECTOR_STEPS_AFTER_HOMING); // move to initial position
-#endif
 
     active_extruder = 0;
 
@@ -658,61 +514,6 @@ void home()
     isHomed = true;
 }
 
-void move_proportional(int _idler, int _selector)
-{
-    // gets steps to be done and set direction
-    _idler = set_idler_direction(_idler);
-    _selector = set_selector_direction(_selector);
-
-    float _idler_step = (float)_idler / (float)_selector;
-    float _idler_pos = 0;
-    int _speed = 2500;
-    int _start = _selector - 250;
-    int _end = 250;
-
-    do {
-        if (_idler_pos >= 1) {
-            if (_idler > 0) {
-                PIN_STP_IDL_HIGH;
-            }
-        }
-        if (_selector > 0) {
-            PIN_STP_SEL_HIGH;
-        }
-
-        asm("nop");
-
-        if (_idler_pos >= 1) {
-            if (_idler > 0) {
-                PIN_STP_IDL_LOW;
-                _idler--;
-            }
-        }
-
-        if (_selector > 0) {
-            PIN_STP_SEL_LOW;
-            _selector--;
-        }
-        asm("nop");
-
-        if (_idler_pos >= 1) {
-            _idler_pos = _idler_pos - 1;
-        }
-
-        _idler_pos = _idler_pos + _idler_step;
-
-        delayMicroseconds(_speed);
-        if (_speed > 900 && _selector > _start) {
-            _speed = _speed - 10;
-        }
-        if (_speed < 2500 && _selector < _end) {
-            _speed = _speed + 10;
-        }
-
-    } while (_selector != 0 || _idler != 0);
-}
-
-#ifdef TESTING
 void move_idler(int steps, uint16_t speed)
 {
     if (speed > MAX_SPEED_IDL) {
@@ -744,69 +545,6 @@ void move_selector(int steps, uint16_t speed)
 void move_pulley(int steps, uint16_t speed)
 {
     moveSmooth(AX_PUL, steps, speed, false, true);
-}
-
-
-#else
-void move_idler(int steps, uint16_t speed)
-{
-    move(steps, 0, 0);
-}
-
-void move_selector(int steps, uint16_t dummy)
-{
-    move(0, steps, 0);
-}
-
-void move_pulley(int steps, uint16_t dummy)
-{
-    move(0, 0, steps);
-}
-#endif
-
-void move(int _idler, int _selector, int _pulley)
-{
-    int _acc = 50;
-
-    // gets steps to be done and set direction
-    _idler = set_idler_direction(_idler);
-    _selector = set_selector_direction(_selector);
-    _pulley = set_pulley_direction(_pulley);
-
-    do {
-        if (_idler > 0) {
-            PIN_STP_IDL_HIGH;
-        }
-        if (_selector > 0) {
-            PIN_STP_SEL_HIGH;
-        }
-        if (_pulley > 0) {
-            PIN_STP_PUL_HIGH;
-        }
-        asm("nop");
-        if (_idler > 0) {
-            PIN_STP_IDL_LOW;
-            _idler--;
-            delayMicroseconds(1000);
-        }
-        if (_selector > 0) {
-            PIN_STP_SEL_LOW;
-            _selector--;
-            delayMicroseconds(800);
-        }
-        if (_pulley > 0) {
-            PIN_STP_PUL_LOW;
-            _pulley--;
-            delayMicroseconds(700);
-        }
-        asm("nop");
-
-        if (_acc > 0) {
-            delayMicroseconds(_acc * 10);
-            _acc = _acc - 1;
-        }; // super pseudo acceleration control
-
-    } while (_selector != 0 || _idler != 0 || _pulley != 0);
 }
 
 /**
@@ -881,7 +619,7 @@ bool checkOk()
         _steps = 3000;
         _endstop_hit = 0;
         do {
-            do_pulley_step();
+            moveSmooth(AX_PUL, 1, 0, false);
             delayMicroseconds(3000);
             if (isFilamentInFinda() == false) {
                 _endstop_hit++;
@@ -897,7 +635,7 @@ bool checkOk()
         _steps = 3000;
         _endstop_hit = 0;
         do {
-            do_pulley_step();
+            moveSmooth(AX_PUL, 1, 0, false);
             delayMicroseconds(3000);
             if (isFilamentInFinda()) {
                 _endstop_hit++;
@@ -913,7 +651,7 @@ bool checkOk()
             // unload to PTFE tube
             set_pulley_dir_pull();
             for (int i = 600; i > 0; i--) { // 570
-                do_pulley_step();
+                moveSmooth(AX_PUL, 1, 0, false);
                 delayMicroseconds(3000);
             }
             _ret = true;
@@ -927,15 +665,13 @@ bool checkOk()
     return _ret;
 }
 
-#ifdef TESTING
-
 MotReturn homeSelectorSmooth()
 {
-    for (int c = 2; c > 0; c--) { // touch end 3 times
+    for (int c = 2; c > 0; c--) { // touch end 2 times
         moveSmooth(AX_SEL, 4000, 2000,
                    false); // 3000 is too fast, 2500 works, decreased to 2000 for production
         if (c > 1) {
-            moveSmooth(AX_SEL, -200, 2000, false); // move a bit back
+            moveSmooth(AX_SEL, -200, 2000, false);
         }
     }
 
@@ -947,7 +683,7 @@ MotReturn homeIdlerSmooth()
     for (int c = 2; c > 0; c--) { // touch end 2 times
         moveSmooth(AX_IDL, 2000, 3000, false);
         if (c > 1) {
-            moveSmooth(AX_IDL, -300, 5000, false); // move a bit back
+            moveSmooth(AX_IDL, -300, 5000, false); // move a bit back  #### I think this isn't in line with coordanance in FW
         }
     }
 
@@ -1099,8 +835,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed,
 
     return ret;
 }
-
-#endif
 
 bool isFilamentInFinda()
 {

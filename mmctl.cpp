@@ -39,7 +39,7 @@ bool feed_filament()
     }
 
     do {
-        do_pulley_step();
+        moveSmooth(AX_PUL, 1, 0, false);
 
         _c++;
         if (_c > 50) {
@@ -68,7 +68,7 @@ bool feed_filament()
         // unload to PTFE tube
         set_pulley_dir_pull();
         for (int i = 600; i > 0; i--) { // 570
-            do_pulley_step();
+            moveSmooth(AX_PUL, 1, 0, false);
             delayMicroseconds(3000);
         }
     }
@@ -137,16 +137,15 @@ bool switch_extruder_withSensor(int new_extruder)
 //! @return
 bool select_extruder(int new_extruder)
 {
-
+    int previous_extruder = active_extruder;
+    active_extruder = new_extruder;
+    
     bool _return = false;
     if (!isHomed) {
         home();
     }
 
     shr16_set_led(2 << 2 * (4 - active_extruder));
-
-    int previous_extruder = active_extruder;
-    active_extruder = new_extruder;
 
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
@@ -159,9 +158,6 @@ bool select_extruder(int new_extruder)
             if (previous_extruder == EXTRUDERS) {
                 move_selector(-700); // move back from service position
             } else {
-                //engage_filament_pulley(true); // TODO 3: remove deprecated
-                // why should we engage the filament here?
-                // the idler is moved "synchronously" with the selector anyway!
                 set_positions(previous_extruder,
                               active_extruder); // move idler and selector to new filament position
                 //engage_filament_pulley(false); // TODO 3: remove deprecated

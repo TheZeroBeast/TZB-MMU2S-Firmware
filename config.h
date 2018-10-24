@@ -75,9 +75,9 @@
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
-#define TMC2130_TCOOLTHRS_0 450 // 450 = 33.8us which is equal to a speed of 115 full steps/s
-#define TMC2130_TCOOLTHRS_1 450
-#define TMC2130_TCOOLTHRS_2 450 // 4100 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
+#define TMC2130_TCOOLTHRS_AX_PUL 450 // 450 = 33.8us which is equal to a speed of 115 full steps/s
+#define TMC2130_TCOOLTHRS_AX_SEL 450
+#define TMC2130_TCOOLTHRS_AX_IDL 450 // 4100 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
 
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH     { 1,  7, 16}
@@ -155,5 +155,4 @@
 #define _DIAG
 
 // testing motion controller
-#define TESTING
 //#define TESTING_STEALTH

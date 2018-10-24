@@ -167,14 +167,14 @@ void settings_bowden_length()
             switch (buttonClicked()) {
             case Btn::right:
                 if (bowdenLength.decrease()) {
-                    move(0, 0, -bowdenLength.stepSize);
+                    moveSmooth(AX_PUL, -bowdenLength.stepSize, MAX_SPEED_PUL);
                     delay(400);
                 }
                 break;
 
             case Btn::left:
                 if (bowdenLength.increase()) {
-                    move(0, 0, bowdenLength.stepSize);
+                    moveSmooth(AX_PUL, bowdenLength.stepSize, MAX_SPEED_PUL);
                     delay(400);
                 }
                 break;

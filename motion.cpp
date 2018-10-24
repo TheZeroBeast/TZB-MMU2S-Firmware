@@ -68,8 +68,12 @@ void reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
         break;
       case AX_IDL:
         steps = ((_current_extruder_pos - _new_extruder_pos) * IDLER_STEPS);
-        // we need to move to last idler position, engaged/not-engaged as well as location
-        moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, false);
+
+        if (isIdlerParked) {
+            steps - IDLER_PARKING_STEPS;
+        }
+
+        moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, false);  // RMM:TODO handle failure!!!
         break;
     }
 }
@@ -519,7 +523,7 @@ void move_idler(int steps, uint16_t speed)
     if (speed > MAX_SPEED_IDL) {
         speed = MAX_SPEED_IDL;
     }
-    moveSmooth(AX_IDL, steps, 2000);
+    moveSmooth(AX_IDL, steps, MAX_SPEED_IDL);
 }
 
 /**

@@ -70,7 +70,7 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 12 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 4 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_IDL 5 // optimized value: 4 (8 and 6 didn't work)
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -87,12 +87,14 @@
 #define CURRENT_HOMING              { 1, 35, 30}
 
 // speeds and accelerations
-#define MAX_SPEED_PUL 2000 // micro steps
+#define MAX_SPEED_PUL 3000 // micro steps
 #define MAX_SPEED_SEL 5000 // micro steps
-#define MAX_SPEED_STEALTH_SEL 2000 // micro steps
+#define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 2150 // micro steps
 #define ACC_NORMAL 50000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
+#define ACC_FEED_NORMAL 3000 // micro steps / s²
+#define ACC_FEED_STEALTH 1000 // micro steps / s²
 
 
 //mode

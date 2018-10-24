@@ -31,15 +31,23 @@ bool feed_filament()
     int _delay = 0;
     engage_filament_pulley(true);
 
-    set_pulley_dir_push();
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, 1, 15);
     } else {
         tmc2130_init_axis_current_stealth(AX_PUL, 1, 15);    //probably needs tuning of currents
     }
-
-    do {
-        moveSmooth(AX_PUL, 1, 0, false);
+    if (moveSmooth(AX_PUL, 1500, 1000, false, true, ACC_FEED_NORMAL, true) == MR_SuccesstoFinda) {
+        delayMicroseconds(1000);
+        moveSmooth(AX_PUL, -600, 1000, false, true, ACC_FEED_NORMAL);
+        tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+        engage_filament_pulley(false);
+        shr16_set_led(1 << 2 * (4 - active_extruder));
+        return true;
+    }
+    return false;
+    
+    /*do {
+        moveSmooth(AX_PUL, 3, MAX_SPEED_PUL, false);
 
         _c++;
         if (_c > 50) {
@@ -66,9 +74,8 @@ bool feed_filament()
 
     if (_loaded) {
         // unload to PTFE tube
-        set_pulley_dir_pull();
-        for (int i = 600; i > 0; i--) { // 570
-            moveSmooth(AX_PUL, 1, 0, false);
+        for (int i = 300; i > 0; i--) { // 570
+            moveSmooth(AX_PUL, -3, MAX_SPEED_PUL, false);
             delayMicroseconds(3000);
         }
     }
@@ -76,7 +83,7 @@ bool feed_filament()
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
     shr16_set_led(1 << 2 * (4 - active_extruder));
-    return true;
+    return true; */
 }
 
 bool switch_extruder_withSensor(int new_extruder)

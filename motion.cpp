@@ -17,7 +17,7 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
-static const int SELECTOR_STEPS_AFTER_HOMING = -3650;  // reduced a tad to make better alignment
+static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
 static const int IDLER_STEPS_AFTER_HOMING = -130;
 
 static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
@@ -64,13 +64,13 @@ void reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     switch(axis) {
       case AX_SEL:
         steps = ((_current_extruder_pos - _new_extruder_pos) * SELECTOR_STEPS) * -1;
-        moveSmooth(AX_SEL, steps * -1, MAX_SPEED_SEL, false);        
+        moveSmooth(AX_SEL, steps, MAX_SPEED_SEL, false);        
         break;
       case AX_IDL:
         steps = ((_current_extruder_pos - _new_extruder_pos) * IDLER_STEPS);
 
         if (isIdlerParked) {
-            steps - IDLER_PARKING_STEPS;
+            steps -= IDLER_PARKING_STEPS;
         }
 
         moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, false);  // RMM:TODO handle failure!!!
@@ -154,118 +154,24 @@ void load_filament_withSensor()
         true); // if idler is in parked position un-park him get in contact with filament
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
-    set_pulley_dir_push();
-
-    int _loadSteps = 0;
-    int _endstop_hit = 0;
+    bool continueLoad = false;
+    const uint16_t stepsToExtruder = BowdenLength::get();
 
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
     // we can expect something like 570 steps to get in sensor
+
     do {
-        moveSmooth(AX_PUL, 1, 0, false);
-        _loadSteps++;
-        delayMicroseconds(5500);
-    } while (isFilamentInFinda() == false && _loadSteps < 1500);
-
-    // filament did not arrived at FINDA, let's try to correct that
-    if (isFilamentInFinda() == false) {
-        for (int i = 6; i > 0; i--) {
-            if (isFilamentInFinda() == false) {
-                // attempt to correct
-                set_pulley_dir_pull();
-                for (int i = 200; i >= 0; i--) {
-                    moveSmooth(AX_PUL, 1, 0, false);
-                    delayMicroseconds(1500);
-                }
-
-                set_pulley_dir_push();
-                _loadSteps = 0;
-                do {
-                    moveSmooth(AX_PUL, 1, 0, false);
-                    _loadSteps++;
-                    delayMicroseconds(4000);
-                    if (isFilamentInFinda()) {
-                        _endstop_hit++;
-                    }
-                } while (_endstop_hit < 100 && _loadSteps < 500);
-            }
+    // RMM:TODO Handle different modes
+        switch (moveSmooth(AX_PUL, 4000, MAX_SPEED_PUL, false, true, ACC_FEED_NORMAL, true)) {
+          case MR_SuccesstoFinda:
+            moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, true, ACC_FEED_NORMAL);
+            continueLoad = true;
+            tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+            isFilamentLoaded = true;  // filament loaded
+          case MR_Failed:
+            break;
         }
-    }
-
-    // still not at FINDA, error on loading, let's wait for user input
-    if (isFilamentInFinda() == false) {
-        bool _continue = false;
-        bool _isOk = false;
-
-        engage_filament_pulley(false);
-        do {
-            shr16_set_led(0x000);
-            delay(800);
-            if (!_isOk) {
-                shr16_set_led(2 << 2 * (4 - active_extruder));
-            } else {
-                shr16_set_led(1 << 2 * (4 - active_extruder));
-                delay(100);
-                shr16_set_led(2 << 2 * (4 - active_extruder));
-                delay(100);
-            }
-            delay(800);
-
-            switch (buttonClicked()) {
-            case Btn::left:
-                // just move filament little bit
-                engage_filament_pulley(true);
-                set_pulley_dir_push();
-
-                for (int i = 0; i < 200; i++) {
-                    moveSmooth(AX_PUL, 1, 0, false);
-                    delayMicroseconds(5500);
-                }
-                engage_filament_pulley(false);
-                break;
-            case Btn::middle:
-                // check if everything is ok
-                engage_filament_pulley(true);
-                _isOk = checkOk();
-                engage_filament_pulley(false);
-                break;
-            case Btn::right:
-                // continue with loading
-                engage_filament_pulley(true);
-                _isOk = checkOk();
-                engage_filament_pulley(false);
-
-                if (_isOk) { // there is no filament in finda any more, great!
-                    _continue = true;
-                }
-                break;
-            default:
-                break;
-            }
-
-        } while (!_continue);
-
-        engage_filament_pulley(true);
-        // TODO: do not repeat same code, try to do it until succesfull load
-        _loadSteps = 0;
-        do {
-            moveSmooth(AX_PUL, 1, 0, false);
-            _loadSteps++;
-            delayMicroseconds(5500);
-        } while (isFilamentInFinda() == false && _loadSteps < 1500);
-    }
-
-    // RMM:TODO, changed to do acc in moveSmooth instead of moveSmooth(AX_PUL, 1, 0, false)
-    const uint16_t steps = BowdenLength::get();
-
-    switch (moveSmooth(AX_PUL, steps, MAX_SPEED_PUL, false)) {
-      case MR_Success:
-        tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-        isFilamentLoaded = true; // filament loaded
-      case MR_Failed:
-        tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-        // RMM:TODO2 Probably retract and try loading again once end seen
-    }
+    } while (!continueLoad);
 }
 
 /**
@@ -279,136 +185,25 @@ void unload_filament_withSensor()
     engage_filament_pulley(
         true); // if idler is in parked position un-park him get in contact with filament
 
-    set_pulley_dir_pull();
-
     float _speed = 2000;
     float _first_point = 1800;
     float _second_point = 8700;
     int _endstop_hit = 0;
 
-    // unload until FINDA senses end of the filament
-    int _unloadSteps = 10000;
+    bool continueUnload = false;
+    
     do {
-        moveSmooth(AX_PUL, 1, 0, false);
-        _unloadSteps--;
-
-        if (_unloadSteps < 1400 && _speed < 6000) {
-            _speed = _speed + 3;
+        switch (moveSmooth(AX_PUL, -10000, MAX_SPEED_PUL, false, true, ACC_FEED_NORMAL, true)) {
+          case MR_SuccesstoFinda:
+              moveSmooth(AX_PUL, -600, 1000, false, true, ACC_FEED_NORMAL);
+              tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+              engage_filament_pulley(false);
+              isFilamentLoaded = false; // filament unloaded
+              continueUnload = true;
+          case MR_Failed:
+            break;
         }
-        if (_unloadSteps < _first_point && _speed < 2500) {
-            _speed = _speed + 2;
-        }
-        if (_unloadSteps < _second_point && _unloadSteps > 5000 && _speed > 550) {
-            _speed = _speed - 2;
-        }
-
-        delayMicroseconds(_speed);
-        if (isFilamentInFinda() == false && _unloadSteps < 2500) {
-            _endstop_hit++;
-        }
-
-    } while (_endstop_hit < 50 && _unloadSteps > 0);  // RMM:TODO3 Reduced endstop hits from 100 step
-
-    // move a little bit so it is not a grinded hole in filament
-    for (int i = 100; i > 0; i--) {
-        moveSmooth(AX_PUL, 1, 0, false);
-        delayMicroseconds(5000);
-    }
-
-    // FINDA is still sensing filament, let's try to unload it once again
-    if (isFilamentInFinda()) {
-        for (int i = 6; i > 0; i--) {
-            if (isFilamentInFinda()) {
-                set_pulley_dir_push();
-                for (int i = 150; i > 0; i--) {
-                    moveSmooth(AX_PUL, 1, 0, false);
-                    delayMicroseconds(4000);
-                }
-
-                set_pulley_dir_pull();
-                int _steps = 4000;
-                _endstop_hit = 0;
-                do {
-                    moveSmooth(AX_PUL, 1, 0, false);
-                    _steps--;
-                    delayMicroseconds(3000);
-                    if (isFilamentInFinda() == false) {
-                        _endstop_hit++;
-                    }
-                } while (_endstop_hit < 100 && _steps > 0);
-            }
-            delay(100);
-        }
-    }
-
-    // error, wait for user input
-    if (isFilamentInFinda()) {
-        bool _continue = false;
-        bool _isOk = false;
-
-        engage_filament_pulley(false);
-        do {
-            shr16_set_led(0x000);
-            delay(100);
-            if (!_isOk) {
-                shr16_set_led(2 << 2 * (4 - active_extruder));
-            } else {
-                shr16_set_led(1 << 2 * (4 - active_extruder));
-                delay(100);
-                shr16_set_led(2 << 2 * (4 - active_extruder));
-                delay(100);
-            }
-            delay(100);
-
-            switch (buttonClicked()) {
-            case Btn::left:
-                // just move filament little bit
-                engage_filament_pulley(true);
-                set_pulley_dir_pull();
-
-                for (int i = 0; i < 200; i++) {
-                    moveSmooth(AX_PUL, 1, 0, false);
-                    delayMicroseconds(5500);
-                }
-                engage_filament_pulley(false);
-                break;
-            case Btn::middle:
-                // check if everything is ok
-                engage_filament_pulley(true);
-                _isOk = checkOk();
-                engage_filament_pulley(false);
-                break;
-            case Btn::right:
-                // continue with unloading
-                engage_filament_pulley(true);
-                _isOk = checkOk();
-                engage_filament_pulley(false);
-
-                if (_isOk) {
-                    _continue = true;
-                }
-                break;
-            default:
-                break;
-            }
-
-        } while (!_continue);
-
-        shr16_set_led(1 << 2 * (4 - previous_extruder));
-    } else {
-        // correct unloading
-        _speed = 5000;
-        // unload to PTFE tube
-        set_pulley_dir_pull();
-        for (int i = 450; i > 0; i--) { // 570
-            moveSmooth(AX_PUL, 1, 0, false);
-            delayMicroseconds(_speed);
-        }
-    }
-    engage_filament_pulley(false);
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-
-    isFilamentLoaded = false; // filament unloaded
+    } while (!continueUnload);
 }
 
 /**
@@ -507,6 +302,8 @@ void home()
     homeSelectorSmooth();
     shr16_set_led(0x155);
 
+    isHomed = true;
+
     active_extruder = 0;
 
     engage_filament_pulley(false);
@@ -514,8 +311,6 @@ void home()
 
     isFilamentLoaded = false;
     shr16_set_led(1 << 2 * (4 - active_extruder));
-
-    isHomed = true;
 }
 
 void move_idler(int steps, uint16_t speed)
@@ -684,7 +479,7 @@ MotReturn homeSelectorSmooth()
 
 MotReturn homeIdlerSmooth()
 {
-    for (int c = 2; c > 0; c--) { // touch end 2 times
+    for (int c = 3; c > 0; c--) { // touch end 3 times
         moveSmooth(AX_IDL, 2000, 3000, false);
         if (c > 1) {
             moveSmooth(AX_IDL, -300, 5000, false); // move a bit back  #### I think this isn't in line with coordanance in FW
@@ -707,7 +502,7 @@ MotReturn homeIdlerSmooth()
 // TODO 3: add callback or another parameter, which can stop the motion
 // (e.g. for testing FINDA, timeout, soft stall guard limits, push buttons...)
 MotReturn moveSmooth(uint8_t axis, int steps, int speed,
-                     bool rehomeOnFail, bool withStallDetection)
+                     bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
     MotReturn ret = MR_Success;
 
@@ -718,10 +513,10 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed,
     shr16_set_led(0);
 
     float vMax = speed;
-    float acc = ACC_NORMAL; // Note: tested selector successfully with 100k
-    if (tmc2130_mode == STEALTH_MODE) {
-        acc = ACC_STEALTH;
-    }
+    //float acc = ACC_NORMAL; // Note: tested selector successfully with 100k
+    //if (tmc2130_mode == STEALTH_MODE) {
+    //    acc = ACC_STEALTH;
+    //}
     float v0 = 200; // steps/s, minimum speed
     float v = v0; // current speed
     int accSteps = 0; // number of steps for acceleration
@@ -749,8 +544,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed,
     State st = Accelerate;
     shr16_set_led(1 << 0);
 
-    v = v0;
-
     while (stepsLeft) {
         switch (axis) {
         case AX_PUL:
@@ -760,6 +553,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed,
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
+            if (withFindaDetection && steps > 0 && digitalRead(A1) == 1) return MR_SuccesstoFinda;
+            if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_SuccesstoFinda;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;

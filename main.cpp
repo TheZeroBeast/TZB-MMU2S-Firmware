@@ -21,7 +21,7 @@
 // public variables:
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
-uint8_t tmc2130_mode = STEALTH_MODE; //NORMAL_MODE;
+uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
 #if (UART_COM == 0)
 FILE *uart_com = uart0io;

@@ -14,8 +14,6 @@ extern bool isFilamentLoaded;
 extern bool isIdlerParked;
 
 // functions:
-bool home_idler();
-bool home_selector();
 bool switch_extruder_withSensor(int new_extruder);
 bool select_extruder(int new_extruder);
 bool service_position();

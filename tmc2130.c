@@ -148,12 +148,12 @@ int8_t tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint
 inline uint16_t __tcoolthrs(uint8_t axis)
 {
     switch (axis) {
-    case 0:
-        return TMC2130_TCOOLTHRS_0;
-    case 1:
-        return TMC2130_TCOOLTHRS_1;
-    case 2:
-        return TMC2130_TCOOLTHRS_2;
+    case AX_PUL:
+        return TMC2130_TCOOLTHRS_AX_PUL;
+    case AX_SEL:
+        return TMC2130_TCOOLTHRS_AX_SEL;
+    case AX_IDL:
+        return TMC2130_TCOOLTHRS_AX_IDL;
     }
     return TMC2130_TCOOLTHRS;
 }
@@ -161,11 +161,11 @@ inline uint16_t __tcoolthrs(uint8_t axis)
 inline int8_t __sg_thr(uint8_t axis)
 {
     switch (axis) {
-    case 0:
+    case AX_PUL:
         return TMC2130_SG_THR_PUL;
-    case 1:
+    case AX_SEL:
         return TMC2130_SG_THR_SEL;
-    case 2:
+    case AX_IDL:
         return TMC2130_SG_THR_IDL;
     }
     return TMC2130_SG_THR;

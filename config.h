@@ -70,14 +70,14 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 12 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 4 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
-#define TMC2130_TCOOLTHRS_0 450 // 450 = 33.8us which is equal to a speed of 115 full steps/s
-#define TMC2130_TCOOLTHRS_1 450
-#define TMC2130_TCOOLTHRS_2 450 // 4100 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
+#define TMC2130_TCOOLTHRS_AX_PUL 450 // 450 = 33.8us which is equal to a speed of 115 full steps/s
+#define TMC2130_TCOOLTHRS_AX_SEL 450
+#define TMC2130_TCOOLTHRS_AX_IDL 450 // 4100 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
 
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH     { 1,  7, 16}
@@ -86,13 +86,18 @@
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
 #define CURRENT_HOMING              { 1, 35, 30}
 
+#define CURRENT_LOADING_NORMAL      { 10, 35, 35}
+#define CURRENT_LOADING_STEALTH     { 10, 35, 35}
+
 // speeds and accelerations
-#define MAX_SPEED_PUL 2000 // micro steps
+#define MAX_SPEED_PUL 3000 // micro steps
 #define MAX_SPEED_SEL 5000 // micro steps
-#define MAX_SPEED_STEALTH_SEL 2000 // micro steps
+#define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 2150 // micro steps
 #define ACC_NORMAL 50000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
+#define ACC_FEED_NORMAL 2900 // micro steps / s²
+#define ACC_FEED_STEALTH 1000 // micro steps / s²
 
 
 //mode
@@ -155,5 +160,4 @@
 #define _DIAG
 
 // testing motion controller
-#define TESTING
 //#define TESTING_STEALTH

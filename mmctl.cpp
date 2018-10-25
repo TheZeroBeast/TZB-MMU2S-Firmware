@@ -24,66 +24,48 @@ static int toolChanges = 0;
 
 bool feed_filament()
 {
-    bool _feed = true;
     bool _loaded = false;
+
+    uint8_t current_loading_normal[3] = CURRENT_LOADING_NORMAL;
+    uint8_t current_loading_stealth[3] = CURRENT_LOADING_STEALTH;
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
+    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
+    
 
     int _c = 0;
     int _delay = 0;
     engage_filament_pulley(true);
-
-    if (tmc2130_mode == NORMAL_MODE) {
-        tmc2130_init_axis_current_normal(AX_PUL, 1, 15);
-    } else {
-        tmc2130_init_axis_current_stealth(AX_PUL, 1, 15);    //probably needs tuning of currents
-    }
-    if (moveSmooth(AX_PUL, 1500, 1000, false, true, ACC_FEED_NORMAL, true) == MR_SuccesstoFinda) {
-        delayMicroseconds(1000);
-        moveSmooth(AX_PUL, -600, 1000, false, true, ACC_FEED_NORMAL);
-        tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-        engage_filament_pulley(false);
-        shr16_set_led(1 << 2 * (4 - active_extruder));
-        return true;
-    }
-    return false;
+    for (int c = 2; c > 0; c--) {
+        if (tmc2130_mode == NORMAL_MODE) {
+            tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                             current_loading_normal[AX_PUL]);
+        } else {
+            tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                             current_loading_stealth[AX_PUL]);
+        }
     
-    /*do {
-        moveSmooth(AX_PUL, 3, MAX_SPEED_PUL, false);
-
-        _c++;
-        if (_c > 50) {
-            shr16_set_led(2 << 2 * (4 - active_extruder));
-        };
-        if (_c > 100) {
-            shr16_set_led(0x000);
-            _c = 0;
-            _delay++;
-        };
-
-
-        if (digitalRead(A1) == 1) {
-            _loaded = true;
-            _feed = false;
-        };
-        if (buttonClicked() != Btn::none && _delay > 10) {
-            _loaded = false;
-            _feed = false;
-        }
-        delayMicroseconds(4000);
-    } while (_feed);
-
-
-    if (_loaded) {
-        // unload to PTFE tube
-        for (int i = 300; i > 0; i--) { // 570
-            moveSmooth(AX_PUL, -3, MAX_SPEED_PUL, false);
-            delayMicroseconds(3000);
-        }
+            if (moveSmooth(AX_PUL, 1000, 1000, false, false, ACC_FEED_NORMAL, true) == MR_SuccesstoFinda) {  // lower current = disable sg
+                delayMicroseconds(1000);
+                if (tmc2130_mode == NORMAL_MODE) {
+                    tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                                     current_running_normal[AX_PUL]);
+                } else {
+                    tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                                     current_running_stealth[AX_PUL]);
+                }
+                moveSmooth(AX_PUL, -600, 1000, false, false, MAX_SPEED_PUL);
+                shr16_set_led(1 << 2 * (4 - active_extruder));
+                _loaded = true;
+                break;
+            } else {
+                cutOffTip();
+            }
     }
-
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
-    shr16_set_led(1 << 2 * (4 - active_extruder));
-    return true; */
+    return _loaded;
 }
 
 bool switch_extruder_withSensor(int new_extruder)
@@ -98,7 +80,7 @@ bool switch_extruder_withSensor(int new_extruder)
 
     if (active_extruder == 5) {
         active_extruder = 4;
-        move_selector(-700);
+        move_selector(-700); // service position
     }
 
 

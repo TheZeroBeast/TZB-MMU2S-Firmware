@@ -26,7 +26,7 @@ static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 
 static const int SELECTOR_STEPS = 2790 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-static const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 40
+static const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 750
 
 static const int BOWDEN_LENGTH = 1000;
 // endstop to tube  - 30 mm, 550 steps
@@ -45,6 +45,7 @@ static int set_selector_direction(int steps);
 static int set_pulley_direction(int steps);
 
 bool checkOk();
+bool cutOffTip();
 
 void set_positions(int _current_extruder, int _next_extruder)
 {
@@ -57,25 +58,110 @@ void set_positions(int _current_extruder, int _next_extruder)
     move_selector(_selector_steps);
 }
 
-void reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_pos)
+bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_pos)
 {
     // steps to move axis to new position of idler and selector independantly
     int steps = 0;
-    switch(axis) {
-      case AX_SEL:
-        steps = ((_current_extruder_pos - _new_extruder_pos) * SELECTOR_STEPS) * -1;
-        moveSmooth(AX_SEL, steps, MAX_SPEED_SEL, false);        
-        break;
-      case AX_IDL:
-        steps = ((_current_extruder_pos - _new_extruder_pos) * IDLER_STEPS);
+    bool continueResetPos = false;
 
-        if (isIdlerParked) {
-            steps -= IDLER_PARKING_STEPS;
+    do {
+        switch(axis) {
+          case AX_SEL:
+            if (_new_extruder_pos == EXTRUDERS) {
+                _new_extruder_pos = EXTRUDERS - 1;
+                steps = (((_current_extruder_pos - _new_extruder_pos) * SELECTOR_STEPS) * -1) + 900; // amount to service position
+            } else {
+                if (_current_extruder_pos == EXTRUDERS) {
+                    _current_extruder_pos = EXTRUDERS - 1;
+                    steps = (((_current_extruder_pos - _new_extruder_pos) * SELECTOR_STEPS) * -1)-900; // Return from service position
+                } else {
+                    steps = ((_current_extruder_pos - _new_extruder_pos) * SELECTOR_STEPS) * -1;
+                }
+            }
+            if (moveSmooth(AX_SEL, steps, MAX_SPEED_SEL, false, true, ACC_NORMAL) == MR_Success) {
+                continueResetPos = true;
+            }
+            break;
+          case AX_IDL:
+            if (_new_extruder_pos == EXTRUDERS) _new_extruder_pos = EXTRUDERS - 1;
+            
+            steps = ((_current_extruder_pos - _new_extruder_pos) * IDLER_STEPS);
+    
+            if (isIdlerParked) {
+                steps = steps + (IDLER_PARKING_STEPS * - 1);
+            }
+    
+            if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, false) == MR_Success) {
+                continueResetPos = true;
+            } else {
+                homeIdlerSmooth();
+            }
+            break;
         }
+    } while (!continueResetPos);
+    return continueResetPos;
+}
 
-        moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, false);  // RMM:TODO handle failure!!!
-        break;
+/**
+ * @Cut off a tip that isn't loading correctly
+ * move selector sideways and push filament forward a little bit, move selector to cut tip with SG to home if loss of step,
+ * pull filament back a bit. parent method would then attempt to gently feed filament again
+ */ 
+bool cutOffTip()
+{
+    /**
+     * Used global variables
+     * active_extruder
+     * EXTRUDERS
+     * MAX_SPEED_SEL
+     */
+    bool cutSuccess = false;
+    int cutExtruderPosition;
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
+    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
+    
+    engage_filament_pulley(true);
+    if (active_extruder > 3) {
+        cutExtruderPosition = 5;
+    } else cutExtruderPosition = active_extruder + 2;
+
+    if (tmc2130_mode == NORMAL_MODE) {
+        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                         current_running_normal[AX_PUL]);
+        tmc2130_init_axis_current_normal(AX_SEL, current_holding_normal[AX_SEL],
+                                         current_running_normal[AX_SEL] * 3);
+    } else {
+        tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                         current_running_stealth[AX_PUL]);
+        tmc2130_init_axis_current_normal(AX_SEL, current_holding_stealth[AX_SEL],
+                                         current_running_stealth[AX_SEL] * 3);
     }
+
+    moveSmooth(AX_PUL, -200, 1000, false, false, 0);
+    if (moveSmooth(AX_PUL, 800, 1000, false, false, 0, true) == MR_SuccesstoFinda) {     // Slow, full current to finda
+        moveSmooth(AX_PUL, -600, 1000, false, true, 0);                                 // Return to park filament
+        reset_positions(AX_SEL, active_extruder, cutExtruderPosition);                  // Move selector to right
+        moveSmooth(AX_PUL, 300, 1000, false, true, 0);                                  // Set filament for the chop :)
+        if (reset_positions(AX_SEL, cutExtruderPosition, active_extruder)) {            // The chop
+            delay(10);
+            reset_positions(AX_SEL, active_extruder, cutExtruderPosition);
+            moveSmooth(AX_PUL, -100, 1000, false, true, 0);                              // Pull back a bit to park chopped filament
+            reset_positions(AX_SEL, cutExtruderPosition, active_extruder);
+            cutSuccess = true;
+        }
+    }  else {
+      moveSmooth(AX_PUL, -400, 1000, false, false, 0, true);  // do error correction if can't get to pinda at all.
+    }
+    if (tmc2130_mode == NORMAL_MODE) {
+        tmc2130_init_axis_current_normal(AX_SEL, current_holding_normal[AX_SEL],
+                                         current_running_normal[AX_SEL]);
+    } else {
+        tmc2130_init_axis_current_normal(AX_SEL, current_holding_stealth[AX_SEL],
+                                         current_running_stealth[AX_SEL]);
+    }
+    return cutSuccess;
 }
 
 /**
@@ -83,7 +169,7 @@ void reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
  * move selector sideways and push filament forward little bit, so user can catch it,
  * unpark idler at the end to user can pull filament out
  * @param extruder: extruder channel (0..4)
- */
+ */ 
 void eject_filament(int extruder)
 {
     int selector_position = 0;
@@ -153,23 +239,42 @@ void load_filament_withSensor()
     engage_filament_pulley(
         true); // if idler is in parked position un-park him get in contact with filament
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-
+    uint8_t current_loading_normal[3] = CURRENT_LOADING_NORMAL;
+    uint8_t current_loading_stealth[3] = CURRENT_LOADING_STEALTH;
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
+    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH; 
     bool continueLoad = false;
     const uint16_t stepsToExtruder = BowdenLength::get();
 
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
     // we can expect something like 570 steps to get in sensor
 
-    do {
-    // RMM:TODO Handle different modes
-        switch (moveSmooth(AX_PUL, 4000, MAX_SPEED_PUL, false, true, ACC_FEED_NORMAL, true)) {
-          case MR_SuccesstoFinda:
+    do {       
+        if (tmc2130_mode == NORMAL_MODE) {
+            tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                             current_loading_normal[AX_PUL]);
+        } else {
+            tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                             current_loading_stealth[AX_PUL]);
+        }
+        // RMM:TODO Handle different modes
+        if (moveSmooth(AX_PUL, 1000, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL, true) == MR_SuccesstoFinda) {
+            if (tmc2130_mode == NORMAL_MODE) {
+                tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                                 current_running_normal[AX_PUL]);
+            } else {
+                tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                                 current_running_stealth[AX_PUL]);
+            }
             moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, true, ACC_FEED_NORMAL);
-            continueLoad = true;
-            tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+            engage_filament_pulley(
+                false);
             isFilamentLoaded = true;  // filament loaded
-          case MR_Failed:
-            break;
+            continueLoad = true;
+        } else {
+            cutOffTip();
         }
     } while (!continueLoad);
 }
@@ -225,13 +330,11 @@ void load_filament_into_extruder()
 
     engage_filament_pulley(
         true); // if idler is in parked position un-park him get in contact with filament
-    set_pulley_dir_push();
 
     // #### PLA ####
     // set current to 100%
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(151, 385);
-
 
     // set current to 75%
     if (tmc2130_mode == NORMAL_MODE) {
@@ -243,16 +346,25 @@ void load_filament_into_extruder()
     }
     move_pulley(170, 385);
 
-    // set current to 25%
+    // set current to 25%  RMM:TODO reduce to 20% current
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] / 4);
+                                         current_running_normal[AX_PUL] / 5);
     } else {
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] / 4);
+                                          current_running_stealth[AX_PUL] / 5);
     }
     move_pulley(451, 455);   // RMM:TODO4 May be able to sync with printer longer here
 
+
+    // reset currents
+    if (tmc2130_mode == NORMAL_MODE) {
+        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                         current_running_normal[AX_PUL]);
+    } else {
+        tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
+                                          current_running_stealth[AX_PUL]);
+    }
     engage_filament_pulley(false);
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 }
@@ -263,16 +375,14 @@ void init_Pulley()
 
     // TODO 1: replace with move-commands
 
-    set_pulley_dir_push();
     for (int i = 50; i > 0; i--) {
         moveSmooth(AX_PUL, 1, 0, false);
         delayMicroseconds(_speed);
         shr16_set_led(1 << 2 * (int)(i / 50)); // TODO 2: What the heck?
     }
 
-    set_pulley_dir_pull();
     for (int i = 50; i > 0; i--) {
-        moveSmooth(AX_PUL, 1, 0, false);
+        moveSmooth(AX_PUL, -1, 0, false);
         delayMicroseconds(_speed);
         shr16_set_led(1 << 2 * (4 - (int)(i / 50))); // TODO 2: What the heck?
     }
@@ -390,20 +500,11 @@ int set_pulley_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;
-        set_pulley_dir_pull();
+        shr16_set_dir(shr16_get_dir() | 1);
     } else {
-        set_pulley_dir_push();
+        shr16_set_dir(shr16_get_dir() & ~1);
     }
     return steps;
-}
-
-void set_pulley_dir_push()
-{
-    shr16_set_dir(shr16_get_dir() & ~1);
-}
-void set_pulley_dir_pull()
-{
-    shr16_set_dir(shr16_get_dir() | 1);
 }
 
 bool checkOk()
@@ -413,12 +514,11 @@ bool checkOk()
     int _endstop_hit = 0;
 
     // filament in FINDA, let's try to unload it
-    set_pulley_dir_pull();
     if (isFilamentInFinda()) {
         _steps = 3000;
         _endstop_hit = 0;
         do {
-            moveSmooth(AX_PUL, 1, 0, false);
+            moveSmooth(AX_PUL, -1, 0, false);
             delayMicroseconds(3000);
             if (isFilamentInFinda() == false) {
                 _endstop_hit++;
@@ -429,8 +529,6 @@ bool checkOk()
 
     if (isFilamentInFinda() == false) {
         // looks ok, load filament to FINDA
-        set_pulley_dir_push();
-
         _steps = 3000;
         _endstop_hit = 0;
         do {
@@ -448,9 +546,8 @@ bool checkOk()
         } else {
             // looks ok !
             // unload to PTFE tube
-            set_pulley_dir_pull();
             for (int i = 600; i > 0; i--) { // 570
-                moveSmooth(AX_PUL, 1, 0, false);
+                moveSmooth(AX_PUL, -1, 0, false);
                 delayMicroseconds(3000);
             }
             _ret = true;
@@ -470,7 +567,7 @@ MotReturn homeSelectorSmooth()
         moveSmooth(AX_SEL, 4000, 2000,
                    false); // 3000 is too fast, 2500 works, decreased to 2000 for production
         if (c > 1) {
-            moveSmooth(AX_SEL, -200, 2000, false);
+            moveSmooth(AX_SEL, -300, 2000, false);
         }
     }
 
@@ -482,11 +579,11 @@ MotReturn homeIdlerSmooth()
     for (int c = 3; c > 0; c--) { // touch end 3 times
         moveSmooth(AX_IDL, 2000, 3000, false);
         if (c > 1) {
-            moveSmooth(AX_IDL, -300, 5000, false); // move a bit back  #### I think this isn't in line with coordanance in FW
+            moveSmooth(AX_IDL, -300, 3000, false);
         }
     }
 
-    return moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false, false);
+    return moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
 }
 
 /**
@@ -513,10 +610,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed,
     shr16_set_led(0);
 
     float vMax = speed;
-    //float acc = ACC_NORMAL; // Note: tested selector successfully with 100k
-    //if (tmc2130_mode == STEALTH_MODE) {
-    //    acc = ACC_STEALTH;
-    //}
     float v0 = 200; // steps/s, minimum speed
     float v = v0; // current speed
     int accSteps = 0; // number of steps for acceleration

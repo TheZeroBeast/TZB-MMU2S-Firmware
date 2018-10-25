@@ -166,23 +166,6 @@ void manual_extruder_selector()
                 select_extruder(active_extruder - 1);
             }
             break;
-        case Btn::middle:
-            if (tmc2130_mode == STEALTH_MODE) {
-                tmc2130_mode = NORMAL_MODE;
-            } else if (tmc2130_mode == NORMAL_MODE) {
-                tmc2130_mode = STEALTH_MODE;
-            }
-            if (tmc2130_init_axis(AX_IDL, tmc2130_mode)) {
-                fault_handler(FAULT_IDLER_INIT_2);
-            }
-            if (tmc2130_init_axis(AX_SEL, tmc2130_mode)) {
-                fault_handler(FAULT_SELECTOR_INIT_2);
-            }
-            if (tmc2130_init_axis(AX_PUL, tmc2130_mode)) {
-                fault_handler(FAULT_PULLEY_INIT_2);
-            }
-            delay(200);
-            break;
         default:
             break;
         }
@@ -281,6 +264,7 @@ extern "C" {
                 if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded) {
 
                     select_extruder(value);
+                    delay(10);
                     feed_filament();
 
                     delay(200);

@@ -21,11 +21,9 @@ void load_filament_into_extruder();
 
 void unload_filament_withSensor();
 void set_positions(int _current_extruder, int _next_extruder);
-void reset_positions(uint8_t axis, int _current_extruder, int _next_extruder);
+bool reset_positions(uint8_t axis, int _current_extruder, int _next_extruder);
+bool cutOffTip();
 void init_Pulley();
-
-void set_pulley_dir_pull();
-void set_pulley_dir_push();
 
 void move_idler(int steps, uint16_t speed = MAX_SPEED_IDL);
 void move_selector(int steps, uint16_t speed = MAX_SPEED_SEL);

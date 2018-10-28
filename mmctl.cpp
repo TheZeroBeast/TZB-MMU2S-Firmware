@@ -46,8 +46,7 @@ bool feed_filament()
                                              current_loading_stealth[AX_PUL]);
         }
     
-            if (moveSmooth(AX_PUL, 1000, 1000, false, false, ACC_FEED_NORMAL, true) == MR_SuccesstoFinda) {  // lower current = disable sg
-                delayMicroseconds(1000);
+            if (moveSmooth(AX_PUL, 2000, 750, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {
                 if (tmc2130_mode == NORMAL_MODE) {
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                                      current_running_normal[AX_PUL]);
@@ -55,12 +54,12 @@ bool feed_filament()
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                                      current_running_stealth[AX_PUL]);
                 }
-                moveSmooth(AX_PUL, -600, 1000, false, false, MAX_SPEED_PUL);
+                moveSmooth(AX_PUL, -600, 750, false, false, ACC_NORMAL);
                 shr16_set_led(1 << 2 * (4 - active_extruder));
                 _loaded = true;
                 break;
             } else {
-                cutOffTip();
+                if (!cutOffTip()) break;
             }
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
@@ -95,20 +94,20 @@ bool switch_extruder_withSensor(int new_extruder)
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
             shr16_set_led(2 << 2 * (4 - active_extruder));
-            load_filament_withSensor(); // just load filament if not loaded
+            if (!load_filament_withSensor()) return false; // just load filament if not loaded
             _return = true;
         } else {
             _return = false; // nothing really happened
         }
     } else {
         if (isFilamentLoaded) {
-            unload_filament_withSensor(); // unload filament first
+            if (!unload_filament_withSensor()) return false; //failed unload. unload filament first
         }
         set_positions(previous_extruder,
                       active_extruder); // move idler and selector to new filament position
 
         shr16_set_led(2 << 2 * (4 - active_extruder));
-        load_filament_withSensor(); // load new filament
+        if (!load_filament_withSensor()) return false; // load new filament
         _return = true;
     }
 

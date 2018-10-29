@@ -336,8 +336,10 @@ extern "C" {
                 }
             } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
                 if (value == 0) { // FS0: MK3 fsensor triggered
+                    fprintf_P(inout, PSTR("ok\n"));
+                } else if (value == 1) {
                     fsensor_triggered = true;
-                    move_pulley(-400, 550);
+                    move_pulley(-600, 550);
                     fprintf_P(inout, PSTR("ok\n"));
                 }
             } else {

@@ -692,7 +692,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_SuccesstoFinda;
             if (withMK3FSensorDetection && fsensor_triggered) { 
               fsensor_triggered = false;
-              move_pulley(150,350);
+              //move_pulley(150,350);
               return MR_Success;
             }
             break;

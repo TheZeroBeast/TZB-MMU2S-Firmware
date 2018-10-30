@@ -63,7 +63,7 @@ void setup()
 
     shr16_init(); // shift register
     led_blink(0);
-    delay(2000);  // wait for boot ok printer
+    delay(1000);  // wait for boot ok printer
 
     uart0_init(); //uart0
     uart1_init(); //uart1
@@ -255,9 +255,8 @@ extern "C" {
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
-                    if (switch_extruder_withSensor(value)) {
-                        fprintf_P(inout, PSTR("ok\n"));
-                    } fprintf_P(inout, PSTR("not_ok\n"));
+                    fprintf_P(inout, PSTR("ok\n"));
+                    switch_extruder_withSensor(value);
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
                 // Load filament
@@ -335,11 +334,10 @@ extern "C" {
                     fprintf_P(inout, PSTR("ok\n"));
                 }
             } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
-                if (value == 0) { // FS0: MK3 fsensor triggered
+                if (value == 0) { // FS1: MK3 fsensor triggered
                     fprintf_P(inout, PSTR("ok\n"));
                 } else if (value == 1) {
                     fsensor_triggered = true;
-                    move_pulley(-600, 550);
                     fprintf_P(inout, PSTR("ok\n"));
                 }
             } else {

@@ -24,7 +24,7 @@ static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const int SELECTOR_STEPS = 2790 / (EXTRUDERS - 1);
+static const int SELECTOR_STEPS = 2750 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 static const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 750
 
@@ -156,7 +156,7 @@ bool cutOffTip()
     } else {
         moveSmooth(AX_PUL, -200, 300, false, false, ACC_NORMAL);
         if (moveSmooth(AX_PUL, 800, 300, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {     // Slow, full current to finda
-            moveSmooth(AX_PUL, -600, 750, false, false, ACC_NORMAL);                                 // Return to park filament
+            moveSmooth(AX_PUL, -580, 750, false, false, ACC_NORMAL);                                 // Return to park filament
             reset_positions(AX_SEL, active_extruder, cutExtruderPosition);                  // Move selector to right
             moveSmooth(AX_PUL, 330, 750, false, false, ACC_NORMAL);                                  // Set filament for the chop :)
             if (reset_positions(AX_SEL, cutExtruderPosition, active_extruder, ACC_NORMAL*1.5)) {            // The chop
@@ -262,7 +262,6 @@ bool load_filament_withSensor()
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH; 
-    bool continueLoad = false;
     const uint16_t stepsToExtruder = BowdenLength::get();
 
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
@@ -284,7 +283,7 @@ bool load_filament_withSensor()
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                              current_running_stealth[AX_PUL]);
         }
-        moveSmooth(AX_PUL, stepsToExtruder+200, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL, false, true);
+        moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL, false);
         engage_filament_pulley(false);
         isFilamentLoaded = true;  // filament loaded
         return true;
@@ -299,13 +298,16 @@ bool load_filament_withSensor()
 bool unload_filament_withSensor()
 {
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
+    const uint16_t stepsToExtruder = BowdenLength::get();
 
     engage_filament_pulley(
     true); // if idler is in parked position un-park him get in contact with filament
 
-    switch (moveSmooth(AX_PUL, -10000, MAX_SPEED_PUL - MAX_SPEED_PUL/4, false, false, ACC_FEED_NORMAL, true)) {
+    switch (moveSmooth(AX_PUL, -10990, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
       case MR_SuccesstoFinda:
-          moveSmooth(AX_PUL, -600, 750, false, false, ACC_NORMAL);
+          moveSmooth(AX_PUL, -50, 750, false, false, ACC_NORMAL);
+          moveSmooth(AX_PUL, 600, 750 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
+          moveSmooth(AX_PUL, -580, 750, false, false, ACC_NORMAL);
           tmc2130_disable_axis(AX_PUL, tmc2130_mode);
           engage_filament_pulley(false);
           isFilamentLoaded = false; // filament unloaded
@@ -336,45 +338,6 @@ void load_filament_into_extruder()
 
     engage_filament_pulley(
         true); // if idler is in parked position un-park him get in contact with filament
-/*
-    // #### PLA ####
-    // set current to 100%
-    tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    move_pulley(350, 385); // 151
-
-     set current to 75%
-    if (tmc2130_mode == NORMAL_MODE) {
-        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] - (current_running_normal[AX_PUL] / 4) );
-    } else {
-        tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] - (current_running_stealth[AX_PUL] / 4) );
-    }
-    move_pulley(170, 385);
-
-    // set current to 25%  RMM:TODO increased to 50% current
-    if (tmc2130_mode == NORMAL_MODE) {
-        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] / 2);
-    } else {
-        tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] / 2);
-    }
-    move_pulley(481, 455);   // RMM:TODO4 May be able to sync with printer longer here
-
-
-    // reset currents
-    if (tmc2130_mode == NORMAL_MODE) {
-        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL]);
-    } else {
-        tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL]);
-    }
-    engage_filament_pulley(false);
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-
-*/
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(151, 385);
@@ -392,12 +355,12 @@ void load_filament_into_extruder()
     // set current to 25%  RMM:TODO reduce to 20% current
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] / 5);
+                                         current_running_normal[AX_PUL] / 4);
     } else {
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] / 5);
+                                          current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(452, 455);   // RMM:TODO4 May be able to sync with printer longer here
+    move_pulley(460, 455);   // RMM:TODO4 May be able to sync with printer longer here
 
 
     // reset currents
@@ -692,7 +655,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_SuccesstoFinda;
             if (withMK3FSensorDetection && fsensor_triggered) { 
               fsensor_triggered = false;
-              //move_pulley(150,350);
               return MR_Success;
             }
             break;

@@ -46,7 +46,7 @@ bool feed_filament()
                                              current_loading_stealth[AX_PUL]);
         }
     
-            if (moveSmooth(AX_PUL, 2000, 750, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {
+            if (moveSmooth(AX_PUL, 2000, 750, false, true, ACC_NORMAL, true) == MR_SuccesstoFinda) {
                 if (tmc2130_mode == NORMAL_MODE) {
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                                      current_running_normal[AX_PUL]);
@@ -54,7 +54,7 @@ bool feed_filament()
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                                      current_running_stealth[AX_PUL]);
                 }
-                moveSmooth(AX_PUL, -600, 750, false, false, ACC_NORMAL);
+                moveSmooth(AX_PUL, -580, 750, false, false, ACC_NORMAL);
                 shr16_set_led(1 << 2 * (4 - active_extruder));
                 _loaded = true;
                 break;
@@ -94,20 +94,20 @@ bool switch_extruder_withSensor(int new_extruder)
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
             shr16_set_led(2 << 2 * (4 - active_extruder));
-            if (!load_filament_withSensor()) return false; // just load filament if not loaded
+            load_filament_withSensor(); // just load filament if not loaded
             _return = true;
         } else {
             _return = false; // nothing really happened
         }
     } else {
         if (isFilamentLoaded) {
-            if (!unload_filament_withSensor()) return false; //failed unload. unload filament first
+            unload_filament_withSensor(); //failed unload. unload filament first
         }
         set_positions(previous_extruder,
                       active_extruder); // move idler and selector to new filament position
 
         shr16_set_led(2 << 2 * (4 - active_extruder));
-        if (!load_filament_withSensor()) return false; // load new filament
+        load_filament_withSensor();
         _return = true;
     }
 
@@ -127,6 +127,7 @@ bool select_extruder(int new_extruder)
 {
     int previous_extruder = active_extruder;
     active_extruder = new_extruder;
+    if (digitalRead(A1) == 1) return false;
     
     bool _return = false;
     if (!isHomed) {

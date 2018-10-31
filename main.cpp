@@ -30,9 +30,7 @@ FILE *uart_com = uart0io;
 FILE *uart_com = uart1io;
 #endif //(UART_COM == 0)
 
-extern "C" {
-    void process_commands(FILE *inout);
-}
+extern "C" void process_commands(FILE *inout);
 
 //! @brief Initialization after reset
 //!
@@ -289,7 +287,7 @@ extern "C" {
                 delay(200);
                 fprintf_P(inout, PSTR("ok\n"));
                 isPrinting = false;
-                trackToolChanges = false;
+                trackToolChanges = 0;
             } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
                 if (value == 0) { // MMU reset
                     wdt_enable(WDTO_15MS);
@@ -319,10 +317,8 @@ extern "C" {
                     fprintf_P(inout, PSTR("ok\n"));
                 }
                 if (value == 1) {  // used if finda doesn't see filament, attempt to cut and advise print to try again
-                    if (cutOffTip()) {
-                        load_filament_withSensor();
-                        fprintf_P(inout, PSTR("ok\n"));
-                    } fprintf_P(inout, PSTR("not_ok\n"));
+                    //fprintf_P(inout, PSTR("ok\n"));
+                    fprintf_P(inout, PSTR("not_ok\n"));
                 }
             } else if (sscanf_P(line, PSTR("E%d"), &value) > 0) {
                 if ((value >= 0) && (value < EXTRUDERS)) { // Ex: eject filament
@@ -361,4 +357,103 @@ void fault_handler(Fault id)
         shr16_set_led(0);
         delay(2000);
     }
+}
+
+//****************************************************************************************************
+//* this routine is the common routine called for fixing the filament issues (loading or unloading)
+//****************************************************************************************************
+void fixTheProblem(void) {
+
+  engage_filament_pulley(false);                     // park the idler stepper motor
+  tmc2130_disable_axis(AX_SEL, tmc2130_mode);
+  tmc2130_disable_axis(AX_IDL, tmc2130_mode);
+
+  while (1) {
+      //  wait until key is entered to proceed  (this is to allow for operator intervention)
+      if (Btn::middle == buttonClicked()) {
+          break;
+      }
+      shr16_set_led(2 << 2 * (4 - active_extruder));
+      delay(100);
+      shr16_set_led(0x000);
+      delay(10);
+      process_commands(uart_com);
+  }
+
+  tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
+  tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
+
+  while (homeSelectorSmooth());
+  reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
+  while (homeIdlerSmooth());
+  delay(50);  
+  reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
+  isFilamentLoaded = false;
+  delay(1);                                          // wait for 1 millisecond
+}
+
+bool load_filament_withSensor()
+{
+
+    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    tmc2130_init_axis(AX_PUL, tmc2130_mode);
+    uint8_t current_loading_normal[3] = CURRENT_LOADING_NORMAL;
+    uint8_t current_loading_stealth[3] = CURRENT_LOADING_STEALTH;
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
+    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH; 
+    const uint16_t stepsToExtruder = 8150; // BowdenLength::get();
+    unsigned long startTime, currentTime;
+    int flag;
+
+    // load filament until FINDA senses end of the filament, means correctly loaded into the selector
+    // we can expect something like 570 steps to get in sensor
+ 
+    if (tmc2130_mode == NORMAL_MODE) {
+        tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                         current_loading_normal[AX_PUL]);
+    } else {
+        tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                         current_loading_stealth[AX_PUL]);
+    }
+    // RMM:TODO Handle different modes
+    if (moveSmooth(AX_PUL, 2000, 650, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {
+        if (tmc2130_mode == NORMAL_MODE) {
+            tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                             current_running_normal[AX_PUL]);
+        } else {
+            tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                             current_running_stealth[AX_PUL]);
+        }
+        moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
+
+        process_commands(uart_com);
+
+        startTime = millis();
+        flag = 0;
+        
+        while (flag == 0) {
+            currentTime = millis();
+            if ((currentTime - startTime) > 8000) {
+              fixTheProblem();
+              load_filament_withSensor();
+              startTime = millis();
+            }
+
+            move_pulley(1,MAX_SPEED_PUL);
+            process_commands(uart_com);
+            if (fsensor_triggered) {
+              flag = 1;
+              fsensor_triggered = false;
+            }
+            delayMicroseconds(800);
+        }
+
+        moveSmooth(AX_PUL, 350, 350,false);
+        isFilamentLoaded = true;  // filament loaded
+        return true;
+    } fixTheProblem();
+    load_filament_withSensor();
+    return false;
 }

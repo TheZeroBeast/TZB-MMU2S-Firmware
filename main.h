@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include "config.h"
+#include "uart.h"
 
 void manual_extruder_selector();
 
@@ -12,6 +13,8 @@ extern int8_t sys_state;
 // signals from interrupt to main loop
 extern uint8_t sys_signals;
 void process_signals();
+bool load_filament_withSensor();
+void fixTheProblem();
 
 extern uint8_t tmc2130_mode;
 extern bool fsensor_triggered;

@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION ZB.1.0.0 // example: 103 means version 1.0.3
-#define FW_BUILDNR 148 // number of commits in 'master'
+#define FW_VERSION 201 // example: 103 means version 1.0.3
+#define FW_BUILDNR 150 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -70,7 +70,7 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 12 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_IDL 5 // optimized value: 4 (8 and 6 didn't work)
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -81,22 +81,22 @@
 
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH     { 1,  7, 16}
-#define CURRENT_HOLDING_NORMAL      { 1, 10, 22}
-#define CURRENT_RUNNING_STEALTH     {35, 35, 35}
-#define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 30}
+#define CURRENT_HOLDING_NORMAL      { 1, 10, 24}  // 22}
+#define CURRENT_RUNNING_STEALTH     {30, 35, 35}
+#define CURRENT_RUNNING_NORMAL      {30, 35, 40}  // 35}
+#define CURRENT_HOMING              { 1, 35, 40}  // 35}
 
-#define CURRENT_LOADING_NORMAL      { 10, 35, 35}
-#define CURRENT_LOADING_STEALTH     { 10, 35, 35}
+#define CURRENT_LOADING_NORMAL      { 30, 35, 35}
+#define CURRENT_LOADING_STEALTH     { 30, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_PUL 3000 // micro steps
+#define MAX_SPEED_PUL 3069 // micro steps
 #define MAX_SPEED_SEL 5000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
-#define MAX_SPEED_IDL 2150 // micro steps
+#define MAX_SPEED_IDL 2500 // micro steps
 #define ACC_NORMAL 50000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_FEED_NORMAL 2900 // micro steps / s²
+#define ACC_FEED_NORMAL 1950 // micro steps / s²
 #define ACC_FEED_STEALTH 1000 // micro steps / s²
 
 
@@ -122,6 +122,9 @@
 #define PIN_STP_SEL_LOW (PORTD &= ~0x10)
 #define PIN_STP_PUL_HIGH (PORTB |= 0x10)
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
+
+#define TOOLSYNC 20                         // number of tool change (T) commands before a selector resync is performed
+
 
 // signals (from interrupts to main loop)
 #define SIG_ID_BTN 1 // any button changed

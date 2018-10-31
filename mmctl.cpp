@@ -21,6 +21,7 @@ bool isHomed = false;
 
 // private variables:
 static int toolChanges = 0;
+int trackToolChanges = 0;
 
 bool feed_filament()
 {
@@ -35,9 +36,8 @@ bool feed_filament()
     
 
     int _c = 0;
-    int _delay = 0;
     engage_filament_pulley(true);
-    for (int c = 2; c > 0; c--) {
+    while (!_loaded) {
         if (tmc2130_mode == NORMAL_MODE) {
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                              current_loading_normal[AX_PUL]);
@@ -46,8 +46,7 @@ bool feed_filament()
                                              current_loading_stealth[AX_PUL]);
         }
     
-            if (moveSmooth(AX_PUL, 1000, 1000, false, false, ACC_FEED_NORMAL, true) == MR_SuccesstoFinda) {  // lower current = disable sg
-                delayMicroseconds(1000);
+            if (moveSmooth(AX_PUL, 2000, 650, false, true, ACC_NORMAL, true) == MR_SuccesstoFinda) {
                 if (tmc2130_mode == NORMAL_MODE) {
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                                      current_running_normal[AX_PUL]);
@@ -55,12 +54,14 @@ bool feed_filament()
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                                      current_running_stealth[AX_PUL]);
                 }
-                moveSmooth(AX_PUL, -600, 1000, false, false, MAX_SPEED_PUL);
+                moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
                 shr16_set_led(1 << 2 * (4 - active_extruder));
                 _loaded = true;
                 break;
             } else {
-                cutOffTip();
+                if (_c < 2) fixTheProblem();
+                break;
+                _c++;
             }
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
@@ -68,24 +69,20 @@ bool feed_filament()
     return _loaded;
 }
 
-bool switch_extruder_withSensor(int new_extruder)
+bool toolChange(int new_extruder)
 {
-
-    isPrinting = true;
     bool _return = false;
-    if (!isHomed) {
-        home();
-    }
-
-
-    if (active_extruder == 5) {
-        active_extruder = 4;
-        move_selector(-700); // service position
-    }
-
-
+    isPrinting = true;
 
     toolChanges++;
+    trackToolChanges ++;
+
+    /*if (active_extruder == 5) {
+      
+        active_extruder = 4;
+        move_selector(-700); // service position
+        
+    }*/
 
     shr16_set_led(2 << 2 * (4 - active_extruder));
 
@@ -98,18 +95,18 @@ bool switch_extruder_withSensor(int new_extruder)
             load_filament_withSensor(); // just load filament if not loaded
             _return = true;
         } else {
-            _return = false; // nothing really happened
+            _return = true; // nothing really happened
         }
     } else {
         if (isFilamentLoaded) {
-            unload_filament_withSensor(); // unload filament first
+            unload_filament_withSensor(); //failed unload. unload filament first
         }
-        set_positions(previous_extruder,
-                      active_extruder); // move idler and selector to new filament position
-
-        shr16_set_led(2 << 2 * (4 - active_extruder));
-        load_filament_withSensor(); // load new filament
-        _return = true;
+        if (!isFilamentLoaded) {
+            set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+            load_filament_withSensor();
+            _return = true;
+        }
     }
 
     shr16_set_led(0x000);
@@ -126,6 +123,8 @@ bool switch_extruder_withSensor(int new_extruder)
 //! @return
 bool select_extruder(int new_extruder)
 {
+    if (digitalRead(A1) == 1) return false;
+  
     int previous_extruder = active_extruder;
     active_extruder = new_extruder;
     
@@ -149,7 +148,7 @@ bool select_extruder(int new_extruder)
             } else {
                 set_positions(previous_extruder,
                               active_extruder); // move idler and selector to new filament position
-                //engage_filament_pulley(false); // TODO 3: remove deprecated
+                engage_filament_pulley(false);
             }
         }
         _return = true;

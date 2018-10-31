@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <Arduino.h>
 #include "main.h"
+#include "main.cpp"
+#include "uart.h"
 #include "mmctl.h"
 #include "Buttons.h"
 #include "permanent_storage.h"
@@ -13,8 +15,13 @@
 
 // public variables:
 int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
-
-
+/*
+#if (UART_COM == 0)
+FILE *uart_com = uart0io;
+#elif (UART_COM == 1)
+FILE *uart_com = uart1io;
+#endif //(UART_COM == 0)
+*/
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
@@ -53,7 +60,6 @@ void set_positions(int _current_extruder, int _next_extruder)
     int _selector_steps = ((_current_extruder - _next_extruder) * SELECTOR_STEPS) * -1;
     int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
 
-    // move both to new position
     move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
     move_selector(_selector_steps);
 }
@@ -253,8 +259,7 @@ void recover_after_eject()
 bool load_filament_withSensor()
 {
 
-    engage_filament_pulley(
-        true); // if idler is in parked position un-park him get in contact with filament
+    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     uint8_t current_loading_normal[3] = CURRENT_LOADING_NORMAL;
     uint8_t current_loading_stealth[3] = CURRENT_LOADING_STEALTH;
@@ -262,7 +267,9 @@ bool load_filament_withSensor()
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH; 
-    const uint16_t stepsToExtruder = BowdenLength::get();
+    const uint16_t stepsToExtruder = 10000; // BowdenLength::get();
+    unsigned long startTime, currentTime;
+    int flag;
 
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
     // we can expect something like 570 steps to get in sensor
@@ -283,11 +290,34 @@ bool load_filament_withSensor()
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                              current_running_stealth[AX_PUL]);
         }
-        moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL, false);
-        engage_filament_pulley(false);
+        moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
+
+        process_commands(uart_com);
+
+        startTime = millis();
+        flag = 0;
+        
+        while (flag == 0) {
+            currentTime = millis();
+            if ((currentTime - startTime) > 8000) {
+              // fixTheProblem!!
+              startTime = millis();
+            }
+
+            move_pulley(1,MAX_SPEED_PUL);
+            process_commands(uart_com);
+            if (fsensor_triggered) {
+              flag = 1;
+              fsensor_triggered = false;
+            }
+        }
+
+        move_pulley(150,MAX_SPEED_PUL);
+        
+        //engage_filament_pulley(false);
         isFilamentLoaded = true;  // filament loaded
         return true;
-    }
+    } // fixTheProblem!!
     return false;
 }
 
@@ -336,8 +366,7 @@ void load_filament_into_extruder()
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
 
-    engage_filament_pulley(
-        true); // if idler is in parked position un-park him get in contact with filament
+    //engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(151, 385);
@@ -360,7 +389,7 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(460, 455);   // RMM:TODO4 May be able to sync with printer longer here
+    move_pulley(452, 455);   // RMM:TODO4 May be able to sync with printer longer here
 
 
     // reset currents
@@ -371,8 +400,8 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL]);
     }
-    engage_filament_pulley(false);
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    engage_filament_pulley(false);
 }
 
 void init_Pulley()
@@ -604,7 +633,7 @@ MotReturn homeIdlerSmooth()
 // TODO 3: compensate delay for computation time, to get accurate speeds
 // TODO 3: add callback or another parameter, which can stop the motion
 // (e.g. for testing FINDA, timeout, soft stall guard limits, push buttons...)
-MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection, bool withMK3FSensorDetection)
+MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
     MotReturn ret = MR_Success;
 
@@ -653,10 +682,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             }
             if (withFindaDetection && steps > 0 && digitalRead(A1) == 1) return MR_SuccesstoFinda;
             if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_SuccesstoFinda;
-            if (withMK3FSensorDetection && fsensor_triggered) { 
-              fsensor_triggered = false;
-              return MR_Success;
-            }
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;

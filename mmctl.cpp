@@ -21,6 +21,7 @@ bool isHomed = false;
 
 // private variables:
 static int toolChanges = 0;
+int trackToolChanges = 0;
 
 bool feed_filament()
 {
@@ -67,24 +68,24 @@ bool feed_filament()
     return _loaded;
 }
 
-bool switch_extruder_withSensor(int new_extruder)
+bool toolChange(int new_extruder)
 {
-
-    isPrinting = true;
     bool _return = false;
-    if (!isHomed) {
-        home();
-    }
-
-
-    if (active_extruder == 5) {
-        active_extruder = 4;
-        move_selector(-700); // service position
-    }
-
-
+    isPrinting = true;
 
     toolChanges++;
+    trackToolChanges ++;
+
+    if (active_extruder == 5) {
+      
+        active_extruder = 4;
+        move_selector(-700); // service position
+        
+    }
+
+    if (new_extruder == 0) {
+        trackToolChanges = 0;
+    }
 
     shr16_set_led(2 << 2 * (4 - active_extruder));
 
@@ -97,18 +98,18 @@ bool switch_extruder_withSensor(int new_extruder)
             load_filament_withSensor(); // just load filament if not loaded
             _return = true;
         } else {
-            _return = false; // nothing really happened
+            _return = true; // nothing really happened
         }
     } else {
         if (isFilamentLoaded) {
             unload_filament_withSensor(); //failed unload. unload filament first
         }
-        set_positions(previous_extruder,
-                      active_extruder); // move idler and selector to new filament position
-
-        shr16_set_led(2 << 2 * (4 - active_extruder));
-        load_filament_withSensor();
-        _return = true;
+        if (!isFilamentLoaded) {
+            set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+            load_filament_withSensor();
+            _return = true;
+        }
     }
 
     shr16_set_led(0x000);

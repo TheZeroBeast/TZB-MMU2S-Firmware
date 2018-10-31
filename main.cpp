@@ -256,7 +256,7 @@ extern "C" {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
                     fprintf_P(inout, PSTR("ok\n"));
-                    switch_extruder_withSensor(value);
+                    toolChange(value);
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
                 // Load filament
@@ -289,6 +289,7 @@ extern "C" {
                 delay(200);
                 fprintf_P(inout, PSTR("ok\n"));
                 isPrinting = false;
+                trackToolChanges = false;
             } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
                 if (value == 0) { // MMU reset
                     wdt_enable(WDTO_15MS);

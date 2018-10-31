@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION 201 // example: 103 means version 1.0.3
-#define FW_BUILDNR 150 // number of commits in 'master'
+#define FW_VERSION 202 // example: 103 means version 1.0.3
+#define FW_BUILDNR 158 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback

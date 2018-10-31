@@ -12,9 +12,10 @@ extern int active_extruder;
 extern int previous_extruder;
 extern bool isFilamentLoaded;
 extern bool isIdlerParked;
+extern int trackToolChanges;
 
 // functions:
-bool switch_extruder_withSensor(int new_extruder);
+bool toolChange(int new_extruder);
 bool select_extruder(int new_extruder);
 bool service_position();
 bool feed_filament();

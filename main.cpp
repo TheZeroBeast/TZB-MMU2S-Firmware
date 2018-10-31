@@ -386,7 +386,7 @@ void fixTheProblem(void) {
   while (homeSelectorSmooth());
   reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
   while (homeIdlerSmooth());
-  delay(50);  
+  //delay(50);  
   reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
   isFilamentLoaded = false;
   delay(1);                                          // wait for 1 millisecond
@@ -403,7 +403,7 @@ bool load_filament_withSensor()
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH; 
-    const uint16_t stepsToExtruder = 8150; // BowdenLength::get();
+    const uint16_t stepsToExtruder = 8000; // BowdenLength::get();
     unsigned long startTime, currentTime;
     int flag;
 
@@ -447,7 +447,7 @@ bool load_filament_withSensor()
               flag = 1;
               fsensor_triggered = false;
             }
-            delayMicroseconds(800);
+            delayMicroseconds(600);
         }
 
         moveSmooth(AX_PUL, 350, 350,false);

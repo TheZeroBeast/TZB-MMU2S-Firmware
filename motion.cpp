@@ -96,10 +96,9 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
         if (_new_extruder_pos == EXTRUDERS) int new_AX_IDL = EXTRUDERS - 1;
         else new_AX_IDL = _new_extruder_pos;
         steps = ((_current_extruder_pos - new_AX_IDL) * IDLER_STEPS);
-        if (isIdlerParked) {
-            steps -= IDLER_PARKING_STEPS;
-        }
+        isIdlerParked = false;
         if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, acc) == MR_Success) _return = true;
+        engage_filament_pulley(false);
     }
     isFilamentLoaded = false;
     return _return;

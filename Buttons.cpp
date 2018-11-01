@@ -10,9 +10,6 @@
 
 const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 
-void settings_bowden_length();
-
-
 //! @brief Select filament for bowden length calibration
 //!
 //! Filaments are selected by left and right buttons, calibration is activated by middle button.
@@ -28,13 +25,9 @@ void settings_select_filament()
             shr16_set_led(2 << 2 * (4 - active_extruder));
             delay(500);
             if (Btn::middle == buttonClicked()) {
-                if (active_extruder < 5) {
-                    settings_bowden_length();
-                } else {
                     select_extruder(4);
                     select_extruder(0);
                     return;
-                }
             }
         }
     }
@@ -98,7 +91,7 @@ void setupMenu()
                 break;
             case 2:
                 if (!eraseLocked) {
-                    BowdenLength::eraseAll();
+                    //BowdenLength::eraseAll();
                     _exit = true;
                 }
                 break;
@@ -132,67 +125,6 @@ void setupMenu()
 
     shr16_set_led(0x000);
     shr16_set_led(1 << 2 * (4 - active_extruder));
-}
-
-//! @brief Set bowden length
-//!
-//! button | action
-//! ------ | ------
-//! left   | increase bowden length / feed more filament
-//! right  | decrease bowden length / feed less filament
-//! middle | store bowden length to EEPROM and exit
-//!
-//! This state is indicated by following LED pattern:
-//!
-//! RG | RG | RG | RG | RG
-//! -- | -- | -- | -- | --
-//! bb | 00 | 00 | 0b | 00
-//!
-//! @n R - Red LED
-//! @n G - Green LED
-//! @n 1 - active
-//! @n 0 - inactive
-//! @n b - blinking
-//!
-void settings_bowden_length()
-{
-    // load filament above Bondtech gears to check correct length of bowden tube
-    if (!isFilamentLoaded) {
-        BowdenLength bowdenLength;
-        load_filament_withSensor();
-
-        tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
-        do {
-
-            switch (buttonClicked()) {
-            case Btn::right:
-                if (bowdenLength.decrease()) {
-                    moveSmooth(AX_PUL, -bowdenLength.stepSize, MAX_SPEED_PUL);
-                    delay(400);
-                }
-                break;
-
-            case Btn::left:
-                if (bowdenLength.increase()) {
-                    moveSmooth(AX_PUL, bowdenLength.stepSize, MAX_SPEED_PUL);
-                    delay(400);
-                }
-                break;
-            default:
-                break;
-            }
-
-            shr16_set_led(1 << 2 * 4);
-            delay(10);
-            shr16_set_led(2 << 2 * 4);
-            delay(10);
-            shr16_set_led(2 << 2 * 1);
-            delay(50);
-
-        } while (buttonClicked() != Btn::middle);
-
-        unload_filament_withSensor();
-    }
 }
 
 //! @brief Is button pushed?

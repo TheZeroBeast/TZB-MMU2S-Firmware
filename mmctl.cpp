@@ -60,7 +60,7 @@ bool feed_filament()
                 break;
             } else {
                 if (_c < 2) fixTheProblem();
-                break;
+                else break;
                 _c++;
             }
     }

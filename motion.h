@@ -14,10 +14,8 @@ void home();
 void engage_filament_pulley(bool engage);
 
 bool isFilamentInFinda();
-//bool load_filament_withSensor();
 void load_filament_into_extruder();
 
-bool unload_filament_withSensor();
 void set_positions(int _current_extruder, int _next_extruder);
 bool reset_positions(uint8_t axis, int _current_extruder, int _next_extruder, 
     float acc = ACC_NORMAL);

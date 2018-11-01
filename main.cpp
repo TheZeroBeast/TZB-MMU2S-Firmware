@@ -281,8 +281,7 @@ extern "C" {
                 //init all axes
                 tmc2130_init(tmc2130_mode);
                 fprintf_P(inout, PSTR("ok\n"));
-            } else if (sscanf_P(line, PSTR("U%d"), &value) > 0) {
-                // Unload filament
+            } else if (sscanf_P(line, PSTR("U%d"), &value) > 0) { // Unload filament
                 unload_filament_withSensor();
                 delay(200);
                 fprintf_P(inout, PSTR("ok\n"));
@@ -315,10 +314,6 @@ extern "C" {
                 {
                     load_filament_into_extruder();
                     fprintf_P(inout, PSTR("ok\n"));
-                }
-                if (value == 1) {  // used if finda doesn't see filament, attempt to cut and advise print to try again
-                    //fprintf_P(inout, PSTR("ok\n"));
-                    fprintf_P(inout, PSTR("not_ok\n"));
                 }
             } else if (sscanf_P(line, PSTR("E%d"), &value) > 0) {
                 if ((value >= 0) && (value < EXTRUDERS)) { // Ex: eject filament
@@ -374,9 +369,9 @@ void fixTheProblem(void) {
           break;
       }
       shr16_set_led(2 << 2 * (4 - active_extruder));
-      delay(100);
+      delay(150);
       shr16_set_led(0x000);
-      delay(10);
+      delay(300);
       process_commands(uart_com);
   }
 
@@ -456,4 +451,54 @@ bool load_filament_withSensor()
     } fixTheProblem();
     load_filament_withSensor();
     return false;
+}
+
+/**
+ * @brief unload_filament_withSensor
+ * unloads filament from extruder - filament is above Bondtech gears
+ */
+bool unload_filament_withSensor()
+{
+    unsigned long startTime, currentTime;
+    int flag;
+    bool _return = false;
+    tmc2130_init_axis(AX_PUL, tmc2130_mode);
+
+    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+
+    process_commands(uart_com);
+
+    startTime = millis();
+    flag = 0;
+    
+    while (flag == 0) {
+        currentTime = millis();
+        if ((currentTime - startTime) > 8000) {
+          fixTheProblem();
+          load_filament_withSensor();
+          startTime = millis();
+        }
+
+        move_pulley(-1,MAX_SPEED_PUL);
+        process_commands(uart_com);
+        if (fsensor_triggered) {
+          flag = 1;
+          fsensor_triggered = false;
+        }
+        delayMicroseconds(600);
+    }
+
+    switch (moveSmooth(AX_PUL, -10500, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
+      case MR_SuccesstoFinda:
+          moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
+          moveSmooth(AX_PUL, 600, 750 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
+          moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
+          isFilamentLoaded = false; // filament unloaded
+          _return = true;
+      case MR_Failed:
+          fixTheProblem();
+    }
+    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    engage_filament_pulley(false);
+    return _return;    
 }

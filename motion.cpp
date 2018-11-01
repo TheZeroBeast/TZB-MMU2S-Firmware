@@ -175,33 +175,6 @@ void recover_after_eject()
 }
 
 /**
- * @brief unload_filament_withSensor
- * unloads filament from extruder - filament is above Bondtech gears
- */
-bool unload_filament_withSensor()
-{
-    tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    const uint16_t stepsToExtruder = BowdenLength::get();
-
-    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
-
-    switch (moveSmooth(AX_PUL, -10990, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
-      case MR_SuccesstoFinda:
-          moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
-          moveSmooth(AX_PUL, 600, 750 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
-          moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
-          isFilamentLoaded = false; // filament unloaded
-          return true;
-          break;
-      case MR_Failed:
-        return false;
-        break;
-    }
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-    engage_filament_pulley(false);    
-}
-
-/**
  * @brief load_filament_intoExtruder
  * loads filament after confirmed by printer into the Bontech
  * pulley gears so they can grab them.

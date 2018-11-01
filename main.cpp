@@ -384,6 +384,7 @@ void fixTheProblem(void) {
   //delay(50);  
   reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
   isFilamentLoaded = false;
+  engage_filament_pulley(false);                     // park the idler stepper motor
   delay(1);                                          // wait for 1 millisecond
 }
 
@@ -397,10 +398,8 @@ bool load_filament_withSensor()
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
-    uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH; 
-    const uint16_t stepsToExtruder = 8000; // BowdenLength::get();
+    uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
     unsigned long startTime, currentTime;
-    int flag;
 
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
     // we can expect something like 570 steps to get in sensor
@@ -421,14 +420,13 @@ bool load_filament_withSensor()
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                              current_running_stealth[AX_PUL]);
         }
-        moveSmooth(AX_PUL, stepsToExtruder, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
-
-        process_commands(uart_com);
+        moveSmooth(AX_PUL, 8000, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
 
         startTime = millis();
-        flag = 0;
+        fsensor_triggered = false;
+        process_commands(uart_com);
         
-        while (flag == 0) {
+        while (fsensor_triggered == false) {
             currentTime = millis();
             if ((currentTime - startTime) > 8000) {
               fixTheProblem();
@@ -438,14 +436,11 @@ bool load_filament_withSensor()
 
             move_pulley(1,MAX_SPEED_PUL);
             process_commands(uart_com);
-            if (fsensor_triggered) {
-              flag = 1;
-              fsensor_triggered = false;
-            }
             delayMicroseconds(600);
         }
-
-        moveSmooth(AX_PUL, 350, 350,false);
+        fsensor_triggered = false;
+        delayMicroseconds(600);
+        moveSmooth(AX_PUL, 350, 350,false, false);
         isFilamentLoaded = true;  // filament loaded
         return true;
     } fixTheProblem();
@@ -460,18 +455,16 @@ bool load_filament_withSensor()
 bool unload_filament_withSensor()
 {
     unsigned long startTime, currentTime;
-    int flag;
     bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
     engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
 
-    process_commands(uart_com);
-
     startTime = millis();
-    flag = 0;
+    fsensor_triggered = false;
+    process_commands(uart_com);
     
-    while (flag == 0) {
+    while (fsensor_triggered == false) {
         currentTime = millis();
         if ((currentTime - startTime) > 8000) {
           fixTheProblem();
@@ -481,12 +474,10 @@ bool unload_filament_withSensor()
 
         move_pulley(-1,MAX_SPEED_PUL);
         process_commands(uart_com);
-        if (fsensor_triggered) {
-          flag = 1;
-          fsensor_triggered = false;
-        }
         delayMicroseconds(600);
     }
+    fsensor_triggered = false;
+    delayMicroseconds(600);
 
     switch (moveSmooth(AX_PUL, -10500, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
       case MR_SuccesstoFinda:

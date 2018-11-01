@@ -77,6 +77,11 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     bool _return = false;
 
     if (axis == AX_SEL) {
+        
+        if (digitalRead(A1) == 1) {
+            isFilamentLoaded = false;
+            return false;
+        }
         int new_AX_SEL = -1;
         int cur_AX_SEL = -1;
         if (_new_extruder_pos == EXTRUDERS) {
@@ -93,11 +98,12 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
         if (moveSmooth(AX_SEL, steps, MAX_SPEED_SEL, true, true, acc) == MR_Success) _return = true;
     } else if (axis == AX_IDL) {
         int new_AX_IDL = -1;
-        if (_new_extruder_pos == EXTRUDERS) int new_AX_IDL = EXTRUDERS - 1;
+        if (_new_extruder_pos == EXTRUDERS) new_AX_IDL = EXTRUDERS - 1;
         else new_AX_IDL = _new_extruder_pos;
         steps = ((_current_extruder_pos - new_AX_IDL) * IDLER_STEPS);
         isIdlerParked = false;
         if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, acc) == MR_Success) _return = true;
+        delay(50);
         engage_filament_pulley(false);
     }
     isFilamentLoaded = false;
@@ -435,9 +441,9 @@ MotReturn homeSelectorSmooth()
 MotReturn homeIdlerSmooth()
 {
     for (int c = 3; c > 0; c--) { // touch end 3 times
-        moveSmooth(AX_IDL, 2000, 2250, false);
+        moveSmooth(AX_IDL, 2000, MAX_SPEED_IDL, false);
         if (c > 1) {
-            moveSmooth(AX_IDL, -300, 2250, false);
+            moveSmooth(AX_IDL, -300, MAX_SPEED_IDL, false);
         }
     }
     return moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
@@ -513,7 +519,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 if (rehomeOnFail) {
                     if (homeIdlerSmooth() == MR_Success) {
                         reset_positions(AX_IDL, 0, active_extruder);
-                        //return MR_FailedAndRehomed;
+                        return MR_FailedAndRehomed;
                     } else {
                         return MR_Failed;
                     }
@@ -530,7 +536,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 if (rehomeOnFail) {
                     if (homeSelectorSmooth() == MR_Success) {
                         reset_positions(AX_SEL, 0, active_extruder);
-                        //return MR_FailedAndRehomed;
+                        return MR_FailedAndRehomed;
                     } else {
                         return MR_Failed;
                     }

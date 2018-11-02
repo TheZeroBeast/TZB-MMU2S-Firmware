@@ -22,6 +22,8 @@
 int8_t sys_state = 0;
 uint8_t sys_signals = 0;
 bool fsensor_triggered = false;
+bool unloadatBoot = false;
+bool mmuFSensorLoading = false;
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
 #if (UART_COM == 0)
@@ -79,15 +81,6 @@ void setup()
 
     bool requestMenu = false;
 
-
-    /**
-     * Setup handling booting with filament present
-     */
-    if (digitalRead(A1) == 1) {
-        fprintf_P(uart_com, PSTR("FB\n")); //startup message
-        delay(10);
-        process_commands(uart_com);
-    }
     fprintf_P(uart_com, PSTR("start\n")); //startup message
 
     spi_init();
@@ -102,6 +95,21 @@ void setup()
 
     init_Pulley();
 
+    /**
+    * Setup handling booting with filament present
+    *//*
+    if (digitalRead(A1) == 1) {
+        fprintf_P(uart_com, PSTR("FB\n")); //startup message
+        delay(200);
+        while (!unloadatBoot) {
+             process_commands(uart_com);
+             delay(200);
+        }
+        unloadatBoot = false;
+    }
+
+    fprintf_P(uart_com, PSTR("start\n")); //startup message
+    */
 
     if (buttonClicked() == Btn::middle) {
         requestMenu = true;
@@ -258,12 +266,13 @@ extern "C" {
 
         if ((count > 0) && (c == 0)) {
             //line received
-            //printf_P(PSTR("line received: '%s' %d\n"), line, count);
+            //printf_P(PSTR("line received: '%s' %d\n"), line, count);`
             count = 0;
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
                     fprintf_P(inout, PSTR("ok\n"));
+                    mmuFSensorLoading = true;
                     toolChange(value);
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
@@ -335,14 +344,13 @@ extern "C" {
                     recover_after_eject();
                     fprintf_P(inout, PSTR("ok\n"));
                 }
-            } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
+            } else if (sscanf_P(line, PSTR("FS")) > 0) {
                 fsensor_triggered = true;
                 fprintf_P(inout, PSTR("ok\n"));
-            } else if (sscanf_P(line, PSTR("FB%d"), &value) > 0) {
-                    unload_filament_withSensor_at_boot();
-                    fprintf_P(inout, PSTR("ok\n"));
-             }else {
-                // nothing received
+            } else if (mmuFSensorLoading) {
+                fprintf_P(inout, PSTR("ok\n"));
+            }else {
+                //fprintf_P(inout, PSTR("not_ok\n"));
             }
         }
     }
@@ -369,18 +377,19 @@ void fault_handler(Fault id)
 void fixTheProblem(void) {
 
   engage_filament_pulley(false);                     // park the idler stepper motor
+  delay(50);
   tmc2130_disable_axis(AX_SEL, tmc2130_mode);
   tmc2130_disable_axis(AX_IDL, tmc2130_mode);
 
   while (1) {
       //  wait until key is entered to proceed  (this is to allow for operator intervention)
-      if (Btn::middle == buttonClicked()) {
+      if (Btn::middle == buttonClicked() && digitalRead(A1) == 0) {
           break;
       }
       shr16_set_led(2 << 2 * (4 - active_extruder));
       delay(150);
       shr16_set_led(0x000);
-      delay(300);
+      delay(150);
       process_commands(uart_com);
   }
 
@@ -394,7 +403,7 @@ void fixTheProblem(void) {
   reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
   isFilamentLoaded = false;
   engage_filament_pulley(false);                     // park the idler stepper motor
-  delay(1);                                          // wait for 1 millisecond
+  delay(10);                                          // wait for 1 millisecond
 }
 
 bool load_filament_withSensor()
@@ -409,6 +418,7 @@ bool load_filament_withSensor()
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
     unsigned long startTime, currentTime;
+    bool tag = false;
 
     // load filament until FINDA senses end of the filament, means correctly loaded into the selector
     // we can expect something like 570 steps to get in sensor
@@ -421,7 +431,7 @@ bool load_filament_withSensor()
                                          current_loading_stealth[AX_PUL]);
     }
     // RMM:TODO Handle different modes
-    if (moveSmooth(AX_PUL, 2000, 650, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {
+    if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {
         if (tmc2130_mode == NORMAL_MODE) {
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                              current_running_normal[AX_PUL]);
@@ -435,9 +445,9 @@ bool load_filament_withSensor()
         fsensor_triggered = false;
         process_commands(uart_com);
         
-        while (fsensor_triggered == false) {
+        while (tag == false) {
             currentTime = millis();
-            if ((currentTime - startTime) > 8000) {
+            if ((currentTime - startTime) > 12000) {
               fixTheProblem();
               load_filament_withSensor();
               startTime = millis();
@@ -445,15 +455,19 @@ bool load_filament_withSensor()
 
             move_pulley(1,MAX_SPEED_PUL);
             process_commands(uart_com);
+            if (fsensor_triggered = true) tag = true;
             delayMicroseconds(600);
         }
+
+        mmuFSensorLoading = false;
         fsensor_triggered = false;
-        delayMicroseconds(600);
+        //delayMicroseconds(600);
         moveSmooth(AX_PUL, 350, 350,false, false);
         isFilamentLoaded = true;  // filament loaded
         return true;
-    } fixTheProblem();
-    load_filament_withSensor();
+    }
+    //fixTheProblem();
+    //load_filament_withSensor();
     return false;
 }
 
@@ -466,35 +480,37 @@ bool unload_filament_withSensor()
     unsigned long startTime, currentTime;
     bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);
 
     engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
-
+/*
     startTime = millis();
     fsensor_triggered = false;
     process_commands(uart_com);
     
     while (fsensor_triggered == false) {
         currentTime = millis();
-        if ((currentTime - startTime) > 8000) {
+        if ((currentTime - startTime) > 12000) {
           fixTheProblem();
-          return true;
+          break;
           startTime = millis();
         }
 
         move_pulley(-1,MAX_SPEED_PUL);
         process_commands(uart_com);
-        delayMicroseconds(600);
+        delayMicroseconds(300);
     }
     fsensor_triggered = false;
-    delayMicroseconds(600);
-
-    switch (moveSmooth(AX_PUL, -10500, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
+    delayMicroseconds(600);*/
+    moveSmooth(AX_PUL, -400, 350, false, false);
+    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
       case MR_SuccesstoFinda:
           moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
-          moveSmooth(AX_PUL, 600, 750 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
+          moveSmooth(AX_PUL, 600, 650 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
           moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
           isFilamentLoaded = false; // filament unloaded
           _return = true;
+          break;
       case MR_Failed:
           fixTheProblem();
     }
@@ -544,6 +560,7 @@ bool unload_filament_withSensor_at_boot()
           moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
           isFilamentLoaded = false; // filament unloaded
           _return = true;
+          break;
       case MR_Failed:
           fixTheProblem();
     }

@@ -18,7 +18,7 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -130;
+static const int IDLER_STEPS_AFTER_HOMING = -150;
 
 static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -26,7 +26,7 @@ static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 
 static const int SELECTOR_STEPS = 2790 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-static const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 750
+static const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
 static const int BOWDEN_LENGTH = 1000;
 // endstop to tube  - 30 mm, 550 steps
@@ -98,10 +98,11 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
         if (moveSmooth(AX_SEL, steps, MAX_SPEED_SEL, true, true, acc) == MR_Success) _return = true;
     } else if (axis == AX_IDL) {
         int new_AX_IDL = -1;
-        if (_new_extruder_pos == EXTRUDERS) new_AX_IDL = EXTRUDERS - 1;
-        else new_AX_IDL = _new_extruder_pos;
+        if (_new_extruder_pos == EXTRUDERS) {
+          new_AX_IDL = EXTRUDERS - 1;
+        } else new_AX_IDL = _new_extruder_pos;
         steps = ((_current_extruder_pos - new_AX_IDL) * IDLER_STEPS);
-        isIdlerParked = false;
+        isIdlerParked = true;
         if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, acc) == MR_Success) _return = true;
         delay(50);
         engage_filament_pulley(false);

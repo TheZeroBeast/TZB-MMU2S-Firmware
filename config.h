@@ -70,7 +70,7 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 12 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 5 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns

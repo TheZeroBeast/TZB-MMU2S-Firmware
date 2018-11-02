@@ -46,7 +46,7 @@ bool feed_filament()
                                              current_loading_stealth[AX_PUL]);
         }
     
-            if (moveSmooth(AX_PUL, 2000, 650, false, true, ACC_NORMAL, true) == MR_SuccesstoFinda) {
+            if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_SuccesstoFinda) {
                 if (tmc2130_mode == NORMAL_MODE) {
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                                      current_running_normal[AX_PUL]);
@@ -77,12 +77,10 @@ bool toolChange(int new_extruder)
     toolChanges++;
     trackToolChanges ++;
 
-    /*if (active_extruder == 5) {
-      
+    if (active_extruder == 5) {
         active_extruder = 4;
-        move_selector(-700); // service position
-        
-    }*/
+        move_selector(-700); // service position   
+    }
 
     shr16_set_led(2 << 2 * (4 - active_extruder));
 

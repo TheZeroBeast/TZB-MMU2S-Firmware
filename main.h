@@ -15,6 +15,7 @@ extern uint8_t sys_signals;
 void process_signals();
 bool load_filament_withSensor();
 bool unload_filament_withSensor();
+bool unload_filament_withSensor_at_boot();
 void fixTheProblem();
 
 extern uint8_t tmc2130_mode;

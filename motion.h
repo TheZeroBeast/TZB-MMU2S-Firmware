@@ -9,6 +9,7 @@
 
 
 extern int8_t filament_type[EXTRUDERS];
+extern const int IDLER_PARKING_STEPS;
 
 void home();
 void engage_filament_pulley(bool engage);

@@ -212,7 +212,7 @@ void load_filament_into_extruder()
     }
     move_pulley(170, 385);
 
-    // set current to 25%  RMM:TODO reduce to 20% current
+    // set current to 25%
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                          current_running_normal[AX_PUL] / 4);
@@ -220,7 +220,7 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(452, 455);   // RMM:TODO4 May be able to sync with printer longer here
+    move_pulley(452, 455);
 
 
     // reset currents

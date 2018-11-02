@@ -463,7 +463,7 @@ bool load_filament_withSensor()
           mmuFSensorLoading = false;
           fsensor_triggered = false;
           //delayMicroseconds(600);
-          moveSmooth(AX_PUL, 350, 350,false, false);
+          moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 350,false, false);
           isFilamentLoaded = true;  // filament loaded
           return true;
       }

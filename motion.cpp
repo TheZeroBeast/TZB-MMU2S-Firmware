@@ -283,8 +283,9 @@ void home(bool doToolSync)
             set_positions(active_extruder, new_extruder); // move idler and selector to new filament position
             trackToolChanges = 0;
         }
-    } else active_extruder = 0;    
-
+    } else active_extruder = 0;
+    
+    isIdlerParked = false;
     engage_filament_pulley(false);
     shr16_set_led(0x000);
 

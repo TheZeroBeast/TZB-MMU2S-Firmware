@@ -54,7 +54,7 @@ bool feed_filament()
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                                      current_running_stealth[AX_PUL]);
                 }
-                moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
+                moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
                 shr16_set_led(1 << 2 * (4 - active_extruder));
                 _loaded = true;
                 break;
@@ -108,7 +108,7 @@ bool toolChange(int new_extruder)
     }
 
     shr16_set_led(0x000);
-    shr16_set_led(1 << 2 * (4 - active_extruder));
+    shr16_set_led(2 << 2 * (4 - active_extruder));
     return _return;
 }
 

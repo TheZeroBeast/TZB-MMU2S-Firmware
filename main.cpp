@@ -24,6 +24,7 @@ uint8_t sys_signals = 0;
 bool fsensor_triggered = false;
 bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
+bool duplicateTCmd = false;
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
 #if (UART_COM == 0)
@@ -271,13 +272,10 @@ extern "C" {
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
-                    if (active_extruder == value)
-                    toolChange(value);
-                    fprintf_P(inout, PSTR("ok\n"));
-                } else {
-                    mmuFSensorLoading = true;
-                    fprintf_P(inout, PSTR("ok\n"));
-                    toolChange(value);
+                        mmuFSensorLoading = true;
+                        duplicateTCmd = true;
+                        fprintf_P(inout, PSTR("ok\n"));
+                        toolChange(value);
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
                 // Load filament
@@ -326,6 +324,9 @@ extern "C" {
                 } else if (value == 2) { // Read build nr
                     fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
                 }
+            } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
+                fsensor_triggered = true;
+                fprintf_P(inout, PSTR("ok\n"));
             } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
                 if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
                     filament_type[value] = value0;
@@ -348,9 +349,6 @@ extern "C" {
                     recover_after_eject();
                     fprintf_P(inout, PSTR("ok\n"));
                 }
-            } else if (sscanf_P(line, PSTR("FS")) > 0) {
-                fsensor_triggered = true;
-                fprintf_P(inout, PSTR("ok\n"));
             } else if (mmuFSensorLoading) {
                 fprintf_P(inout, PSTR("ok\n"));
             }else {
@@ -383,7 +381,7 @@ void fixTheProblem(void) {
   engage_filament_pulley(false);                     // park the idler stepper motor
   delay(50);
   tmc2130_disable_axis(AX_SEL, tmc2130_mode);
-  tmc2130_disable_axis(AX_IDL, tmc2130_mode);
+  //tmc2130_disable_axis(AX_IDL, tmc2130_mode);
 
   while (1) {
       //  wait until key is entered to proceed  (this is to allow for operator intervention)
@@ -398,15 +396,15 @@ void fixTheProblem(void) {
   }
 
   tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
-  tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
+  //tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
 
   while (homeSelectorSmooth());
   reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
   while (homeIdlerSmooth());
   //delay(50);  
-  reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
+  //reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
   isFilamentLoaded = false;
-  engage_filament_pulley(false);                     // park the idler stepper motor
+  //engage_filament_pulley(false);                     // park the idler stepper motor
   delay(10);                                          // wait for 1 millisecond
 }
 
@@ -469,10 +467,12 @@ bool load_filament_withSensor()
           //delayMicroseconds(600);
           moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 350,false, false);
           isFilamentLoaded = true;  // filament loaded
+          shr16_set_led(2 << 2 * (4 - active_extruder));
           return true;
       }
       fixTheProblem();
       goto loop;
+      shr16_set_led(2 << 2 * (4 - active_extruder));
       return false;
   }
 }
@@ -508,12 +508,14 @@ bool unload_filament_withSensor()
     }
     fsensor_triggered = false;
     delayMicroseconds(600);*/
+    
     moveSmooth(AX_PUL, -400, 350, false, false);
-    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
+    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL, true)) {
       case MR_Success:
           moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
           moveSmooth(AX_PUL, 600, 650 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
-          moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
+          moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
+          if (digitalRead(A1) == 1) fixTheProblem();
           isFilamentLoaded = false; // filament unloaded
           _return = true;
           break;
@@ -563,8 +565,9 @@ bool unload_filament_withSensor_at_boot()
       case MR_Success:
           moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
           moveSmooth(AX_PUL, 600, 650 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
-          moveSmooth(AX_PUL, -580, 550, false, false, ACC_NORMAL);
+          moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL);
           isFilamentLoaded = false; // filament unloaded
+          
           _return = true;
           break;
       case MR_Failed:

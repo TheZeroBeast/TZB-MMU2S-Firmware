@@ -69,8 +69,8 @@
 // Tuning: increase treshold, if stall detection triggers at normal loads
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
-#define TMC2130_SG_THR_SEL 10 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_SEL 9 // 20 didn't work, 15 did, decreased further to 12
+#define TMC2130_SG_THR_IDL 5 // optimized value: 4 (8 and 6 didn't work)
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -97,6 +97,7 @@
 #define ACC_NORMAL 50000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
 #define ACC_FEED_NORMAL 1500 // micro steps / s²
+#define ACC_IDL_NORMAL 25000 // micro steps / s²
 #define ACC_FEED_STEALTH 1000 // micro steps / s²
 
 
@@ -123,7 +124,7 @@
 #define PIN_STP_PUL_HIGH (PORTB |= 0x10)
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
 
-#define TOOLSYNC 20                         // number of tool change (T) commands before a selector resync is performed
+#define TOOLSYNC 2                         // number of tool change (T) commands before a selector resync is performed move back to 20
 
 
 // signals (from interrupts to main loop)

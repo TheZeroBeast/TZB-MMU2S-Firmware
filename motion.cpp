@@ -18,7 +18,7 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -150;
+static const int IDLER_STEPS_AFTER_HOMING = -138;
 
 static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -45,9 +45,6 @@ static int set_idler_direction(int steps);
 static int set_selector_direction(int steps);
 static int set_pulley_direction(int steps);
 
-bool checkOk();
-bool cutOffTip(void);
-
 void set_positions(int _current_extruder, int _next_extruder)
 {
     // steps to move to new position of idler and selector
@@ -67,7 +64,6 @@ void set_positions(int _current_extruder, int _next_extruder)
             }
         }
         moveSmooth(AX_SEL, 35, 2000, false);
-        trackToolChanges = 0;
     }
 }
 
@@ -80,7 +76,7 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     if (axis == AX_SEL) {
         
         if (digitalRead(A1) == 1) {
-            isFilamentLoaded = false;
+            isFilamentLoaded = true;
             return false;
         }
         int new_AX_SEL = -1;
@@ -110,7 +106,7 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     }
     isFilamentLoaded = false;
     return _return;
-}
+} 
 
 /**
  * @brief Eject Filament
@@ -273,15 +269,21 @@ void engage_filament_pulley(bool engage)
     }
 }
 
-void home()
+void home(bool doToolSync)
 {
     homeIdlerSmooth();
     homeSelectorSmooth();
     shr16_set_led(0x155);
 
     isHomed = true;
-
-    active_extruder = 0;
+    if (doToolSync == true) {
+        int new_extruder = active_extruder;
+        active_extruder = 0;
+        if (active_extruder != new_extruder) {
+            set_positions(active_extruder, new_extruder); // move idler and selector to new filament position
+            trackToolChanges = 0;
+        }
+    } else active_extruder = 0;    
 
     engage_filament_pulley(false);
     shr16_set_led(0x000);
@@ -295,7 +297,7 @@ void move_idler(int steps, uint16_t speed)
     if (speed > MAX_SPEED_IDL) {
         speed = MAX_SPEED_IDL;
     }
-    moveSmooth(AX_IDL, steps, MAX_SPEED_IDL);
+    moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, ACC_IDL_NORMAL);
 }
 
 /**
@@ -374,60 +376,6 @@ int set_pulley_direction(int steps)
     return steps;
 }
 
-bool checkOk()
-{
-    bool _ret = false;
-    int _steps = 0;
-    int _endstop_hit = 0;
-
-    // filament in FINDA, let's try to unload it
-    if (isFilamentInFinda()) {
-        _steps = 3000;
-        _endstop_hit = 0;
-        do {
-            moveSmooth(AX_PUL, -1, 0, false);
-            delayMicroseconds(3000);
-            if (isFilamentInFinda() == false) {
-                _endstop_hit++;
-            }
-            _steps--;
-        } while (_steps > 0 && _endstop_hit < 50);
-    }
-
-    if (isFilamentInFinda() == false) {
-        // looks ok, load filament to FINDA
-        _steps = 3000;
-        _endstop_hit = 0;
-        do {
-            moveSmooth(AX_PUL, 1, 0, false);
-            delayMicroseconds(3000);
-            if (isFilamentInFinda()) {
-                _endstop_hit++;
-            }
-            _steps--;
-        } while (_steps > 0 && _endstop_hit < 50);
-
-        if (_steps == 0) {
-            // we ran out of steps, means something is again wrong, abort
-            _ret = false;
-        } else {
-            // looks ok !
-            // unload to PTFE tube
-            for (int i = 600; i > 0; i--) { // 570
-                moveSmooth(AX_PUL, -1, 0, false);
-                delayMicroseconds(3000);
-            }
-            _ret = true;
-        }
-
-    } else {
-        // something is wrong, abort
-        _ret = false;
-    }
-
-    return _ret;
-}
-
 MotReturn homeSelectorSmooth()
 {
     for (int c = 2; c > 0; c--) { // touch end 2 times
@@ -442,10 +390,10 @@ MotReturn homeSelectorSmooth()
 
 MotReturn homeIdlerSmooth()
 {
-    for (int c = 3; c > 0; c--) { // touch end 3 times
-        moveSmooth(AX_IDL, 2000, 2500, false);
+    for (int c = 2; c > 0; c--) { // touch end 3 times
+        moveSmooth(AX_IDL, 2000, 3000, false);
         if (c > 1) {
-            moveSmooth(AX_IDL, -500, MAX_SPEED_IDL, false);
+            moveSmooth(AX_IDL, -350, MAX_SPEED_IDL, false);
         }
     }
     return moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);

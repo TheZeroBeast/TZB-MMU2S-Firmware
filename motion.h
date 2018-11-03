@@ -12,7 +12,7 @@ extern int8_t filament_type[EXTRUDERS];
 extern const int IDLER_PARKING_STEPS;
 extern const int STEPS_MK3FSensor_To_Bondtech;
 
-void home();
+void home(bool doToolSync = false);
 void engage_filament_pulley(bool engage);
 
 bool isFilamentInFinda();

@@ -400,7 +400,7 @@ void fixTheProblem(void) {
 
   while (homeSelectorSmooth());
   reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
-  while (homeIdlerSmooth());
+  //while (homeIdlerSmooth());
   //delay(50);  
   //reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
   isFilamentLoaded = false;

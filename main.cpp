@@ -271,8 +271,12 @@ extern "C" {
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
+                    if (active_extruder == value)
+                    toolChange(value);
                     fprintf_P(inout, PSTR("ok\n"));
+                } else {
                     mmuFSensorLoading = true;
+                    fprintf_P(inout, PSTR("ok\n"));
                     toolChange(value);
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
@@ -432,7 +436,7 @@ bool load_filament_withSensor()
                                            current_loading_stealth[AX_PUL]);
       }
       
-      if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_SuccesstoFinda) {
+      if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_Success) {
           if (tmc2130_mode == NORMAL_MODE) {
               tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                                current_running_normal[AX_PUL]);
@@ -456,7 +460,7 @@ bool load_filament_withSensor()
   
               move_pulley(1,MAX_SPEED_PUL);
               process_commands(uart_com);
-              if (fsensor_triggered = true) tag = true;
+              if (fsensor_triggered == true) tag = true;
               delayMicroseconds(300);  ///RMM:TODO changed to 300 from 600us on 3 Nov 18
           }
   
@@ -479,7 +483,7 @@ bool load_filament_withSensor()
  */
 bool unload_filament_withSensor()
 {
-    unsigned long startTime, currentTime;
+    //unsigned long startTime, currentTime;
     bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     tmc2130_init_axis(AX_IDL, tmc2130_mode);
@@ -506,7 +510,7 @@ bool unload_filament_withSensor()
     delayMicroseconds(600);*/
     moveSmooth(AX_PUL, -400, 350, false, false);
     switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
-      case MR_SuccesstoFinda:
+      case MR_Success:
           moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
           moveSmooth(AX_PUL, 600, 650 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
           moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
@@ -556,10 +560,10 @@ bool unload_filament_withSensor_at_boot()
     delayMicroseconds(600);
 
     switch (moveSmooth(AX_PUL, -10500, MAX_SPEED_PUL - MAX_SPEED_PUL/3, false, false, ACC_FEED_NORMAL, true)) {
-      case MR_SuccesstoFinda:
+      case MR_Success:
           moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
-          moveSmooth(AX_PUL, 600, 750 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
-          moveSmooth(AX_PUL, -580, 650, false, false, ACC_NORMAL);
+          moveSmooth(AX_PUL, 600, 650 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
+          moveSmooth(AX_PUL, -580, 550, false, false, ACC_NORMAL);
           isFilamentLoaded = false; // filament unloaded
           _return = true;
           break;

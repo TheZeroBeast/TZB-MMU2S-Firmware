@@ -46,7 +46,7 @@ bool feed_filament()
                                              current_loading_stealth[AX_PUL]);
         }
     
-            if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_SuccesstoFinda) {
+            if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_Success) {
                 if (tmc2130_mode == NORMAL_MODE) {
                     tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
                                                      current_running_normal[AX_PUL]);

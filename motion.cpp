@@ -26,10 +26,10 @@ static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 
 static const int SELECTOR_STEPS = 2790 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-static const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
+const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
 static const int BOWDEN_LENGTH = 1000;
-static const int STEPS_MK3FSensor_To_Bondtech = 350;
+const int STEPS_MK3FSensor_To_Bondtech = 370;
 // endstop to tube  - 30 mm, 550 steps
 
 static const int EJECT_PULLEY_STEPS = 2500;
@@ -201,7 +201,7 @@ void load_filament_into_extruder()
     //engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    move_pulley(151, 385);
+    move_pulley(150, 385);
 
     // set current to 75%
     if (tmc2130_mode == NORMAL_MODE) {
@@ -443,7 +443,7 @@ MotReturn homeSelectorSmooth()
 MotReturn homeIdlerSmooth()
 {
     for (int c = 3; c > 0; c--) { // touch end 3 times
-        moveSmooth(AX_IDL, 2000, MAX_SPEED_IDL, false);
+        moveSmooth(AX_IDL, 2000, 2300, false);
         if (c > 1) {
             moveSmooth(AX_IDL, -300, MAX_SPEED_IDL, false);
         }
@@ -510,8 +510,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
-            if (withFindaDetection && steps > 0 && digitalRead(A1) == 1) return MR_SuccesstoFinda;
-            if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_SuccesstoFinda;
+            if (withFindaDetection && steps > 0 && digitalRead(A1) == 1) return MR_Success;
+            if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_Success;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;
@@ -572,7 +572,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             }
             break;
         case ConstVelocity: {
-            volatile float dummy = acc * dt; // keep same timing in branches of switch
             if (stepsLeft <= accSteps) {
                 st = Decelerate;
                 shr16_set_led(1 << 4);

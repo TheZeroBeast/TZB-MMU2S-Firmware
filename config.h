@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION 202 // example: 103 means version 1.0.3
-#define FW_BUILDNR 158 // number of commits in 'master'
+#define FW_VERSION 210 // example: 103 means version 1.0.3
+#define FW_BUILDNR 173 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -124,7 +124,7 @@
 #define PIN_STP_PUL_HIGH (PORTB |= 0x10)
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
 
-#define TOOLSYNC 2                         // number of tool change (T) commands before a selector resync is performed move back to 20
+#define TOOLSYNC 20                         // number of tool change (T) commands before a selector resync is performed
 
 
 // signals (from interrupts to main loop)

@@ -2,11 +2,15 @@
 MMU 3-axis stepper control
 
 ## Building
-This is configured to work directly with MK2.5/MK3 with matching printer FW to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
+This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
 
-https://github.com/TheZeroBeast/Prusa-Firmware/tree/MMU-MK3-FSensorBuild/Firmware
+https://github.com/TheZeroBeast/Prusa-Firmware/tree/MMU-MK3-FSensorBuild
 
-Error Handling is in the process of beening implemented but at present when in error state the active MMU colour flashes, steppers are disabled to allow easy fixing of issue.
+Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
+
+At this point Version 2.1.0 BN: 173 is stable in combination with MK3 FW above taht hasn't been Versioned above prusa master yet(to come soon).
+
+Error Handling is in the process of beening implemented but at present when in error state the active MMU colour flashes, selector stepper is disabled to allow easy fixing of issue.
 Once fixed the MIDDLE button rehomes and attempts failed function again e.g. Loading filament/Switching MMU colour.
 
 ## Building

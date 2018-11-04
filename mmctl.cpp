@@ -97,11 +97,16 @@ bool toolChange(int new_extruder)
             unload_filament_withSensor(); //failed unload. unload filament first
         }
         if (!isFilamentLoaded) {
-            if (trackToolChanges == TOOLSYNC) home(true);
+            if (trackToolChanges == TOOLSYNC) {
+              home(true);
+              set_positions(0, active_extruder); // move idler and selector to new filament position
+              delay(50);
+              engage_filament_pulley(true);
+            } else {
+               set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+            }
             toolChanges++;
             trackToolChanges ++;
-            delay(50);
-            set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
             shr16_set_led(2 << 2 * (4 - active_extruder));
             load_filament_withSensor();
             _return = true;

@@ -280,7 +280,7 @@ void home(bool doToolSync)
         int new_extruder = active_extruder;
         active_extruder = 0;
         if (active_extruder != new_extruder) {
-            set_positions(active_extruder, new_extruder); // move idler and selector to new filament position
+            //set_positions(active_extruder, new_extruder); // move idler and selector to new filament position
             trackToolChanges = 0;
         }
     } else active_extruder = 0;

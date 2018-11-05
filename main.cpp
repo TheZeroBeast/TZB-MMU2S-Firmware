@@ -27,6 +27,8 @@ bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
+static char echo[32];
+
 #if (UART_COM == 0)
 FILE *uart_com = uart0io;
 #elif (UART_COM == 1)
@@ -251,7 +253,35 @@ extern "C" {
 
         if ((count > 0) && (c == 0)) {
             //line received
-            //printf_P(PSTR("line received: '%s' %d\n"), line, count);`
+            //printf_P(PSTR("line received: '%s' %d\n"), line, count);
+            if (sscanf_P(line, PSTR("!!")) > 0) {
+                for (int i = 0; i < 32; i++) {
+                    line[i] = echo[i];
+                }
+            } else {
+                for (int i = 0; i < 32; i++) {
+                    echo[i] = line[i];
+                }
+                if (sscanf_P(line, PSTR("T0")) > 0) { fprintf_P(inout, PSTR("T0\n")); return; }
+                if (sscanf_P(line, PSTR("T1")) > 0) { fprintf_P(inout, PSTR("T1\n")); return; }
+                if (sscanf_P(line, PSTR("T2")) > 0) { fprintf_P(inout, PSTR("T2\n")); return; }
+                if (sscanf_P(line, PSTR("T3")) > 0) { fprintf_P(inout, PSTR("T3\n")); return; }
+                if (sscanf_P(line, PSTR("T4")) > 0) { fprintf_P(inout, PSTR("T4\n")); return; }
+                if (sscanf_P(line, PSTR("L0")) > 0) { fprintf_P(inout, PSTR("L0\n")); return; }
+                if (sscanf_P(line, PSTR("L1")) > 0) { fprintf_P(inout, PSTR("L1\n")); return; }
+                if (sscanf_P(line, PSTR("L2")) > 0) { fprintf_P(inout, PSTR("L2\n")); return; }
+                if (sscanf_P(line, PSTR("L3")) > 0) { fprintf_P(inout, PSTR("L3\n")); return; }
+                if (sscanf_P(line, PSTR("L4")) > 0) { fprintf_P(inout, PSTR("L4\n")); return; }
+                if (sscanf_P(line, PSTR("C0")) > 0) { fprintf_P(inout, PSTR("C0\n")); return; }
+                if (sscanf_P(line, PSTR("U0")) > 0) { fprintf_P(inout, PSTR("U0\n")); return; }
+                if (sscanf_P(line, PSTR("E0")) > 0) { fprintf_P(inout, PSTR("E0\n")); return; }
+                if (sscanf_P(line, PSTR("E1")) > 0) { fprintf_P(inout, PSTR("E1\n")); return; }
+                if (sscanf_P(line, PSTR("E2")) > 0) { fprintf_P(inout, PSTR("E2\n")); return; }
+                if (sscanf_P(line, PSTR("E3")) > 0) { fprintf_P(inout, PSTR("E3\n")); return; }
+                if (sscanf_P(line, PSTR("E4")) > 0) { fprintf_P(inout, PSTR("E4\n")); return; }
+                if (sscanf_P(line, PSTR("R0")) > 0) { fprintf_P(inout, PSTR("R0\n")); return; }
+            }
+            
             count = 0;
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned

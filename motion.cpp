@@ -17,14 +17,14 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
-static const int SELECTOR_STEPS_AFTER_HOMING = -3725;
+static const int SELECTOR_STEPS_AFTER_HOMING = -3715;
 static const int IDLER_STEPS_AFTER_HOMING = -138;
 
 static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const int SELECTOR_STEPS = 2790 / (EXTRUDERS - 1);
+static const int SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
@@ -63,7 +63,7 @@ void set_positions(int _current_extruder, int _next_extruder)
                 moveSmooth(AX_SEL, 100, 2000, false);
             }
         }
-        moveSmooth(AX_SEL, 10, 2000, false);
+        moveSmooth(AX_SEL, 20, 2000, false);
     }
 }
 

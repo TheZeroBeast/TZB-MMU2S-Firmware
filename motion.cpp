@@ -17,7 +17,7 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
-static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
+static const int SELECTOR_STEPS_AFTER_HOMING = -3725;
 static const int IDLER_STEPS_AFTER_HOMING = -138;
 
 static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
@@ -29,7 +29,7 @@ static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16t
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
 static const int BOWDEN_LENGTH = 1000;
-const int STEPS_MK3FSensor_To_Bondtech = 370;
+const int STEPS_MK3FSensor_To_Bondtech = 380;
 // endstop to tube  - 30 mm, 550 steps
 
 static const int EJECT_PULLEY_STEPS = 2500;
@@ -63,7 +63,7 @@ void set_positions(int _current_extruder, int _next_extruder)
                moveSmooth(AX_SEL, 100, 2000, false);
             }
         }
-        moveSmooth(AX_SEL, 35, 2000, false);
+        moveSmooth(AX_SEL, 10, 2000, false);
     }
 }
 

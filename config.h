@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION 210 // example: 103 means version 1.0.3
-#define FW_BUILDNR 173 // number of commits in 'master'
+#define FW_VERSION 211 // example: 103 means version 1.0.3
+#define FW_BUILDNR 174 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -90,13 +90,13 @@
 #define CURRENT_LOADING_STEALTH     { 30, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_PUL 1000 // micro steps
+#define MAX_SPEED_PUL 1600 // micro steps
 #define MAX_SPEED_SEL 5000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 1800 // micro steps   changed from 2500 to 1800 3 Nov 18
 #define ACC_NORMAL 50000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_FEED_NORMAL 1500 // micro steps / s²
+#define ACC_FEED_NORMAL 1400 // micro steps / s²
 #define ACC_IDL_NORMAL 25000 // micro steps / s²
 #define ACC_FEED_STEALTH 1000 // micro steps / s²
 

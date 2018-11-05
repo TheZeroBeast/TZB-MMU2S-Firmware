@@ -365,7 +365,6 @@ void fixTheProblem(void) {
   engage_filament_pulley(false);                     // park the idler stepper motor
   delay(50);
   tmc2130_disable_axis(AX_SEL, tmc2130_mode);
-  //tmc2130_disable_axis(AX_IDL, tmc2130_mode);
 
   while (1) {
       //  wait until key is entered to proceed  (this is to allow for operator intervention)
@@ -376,19 +375,14 @@ void fixTheProblem(void) {
       delay(150);
       shr16_set_led(0x000);
       delay(150);
-      process_commands(uart_com);
+      //process_commands(uart_com);
   }
 
   tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
-  //tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
 
   while (homeSelectorSmooth());
   reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
-  //while (homeIdlerSmooth());
-  //delay(50);  
-  //reset_positions(AX_IDL, 0, active_extruder, ACC_NORMAL);
   isFilamentLoaded = false;
-  //engage_filament_pulley(false);                     // park the idler stepper motor
   delay(10);                                          // wait for 1 millisecond
 }
 
@@ -436,8 +430,7 @@ bool load_filament_withSensor()
               currentTime = millis();
               if ((currentTime - startTime) > 12000) {
                 fixTheProblem();
-                load_filament_withSensor();
-                startTime = millis();
+                goto loop;
               }
   
               move_pulley(1,MAX_SPEED_PUL);
@@ -469,25 +462,30 @@ bool load_filament_withSensor()
  */
 bool unload_filament_withSensor()
 {
-    //unsigned long startTime, currentTime;
     bool _return = false;
-    tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    tmc2130_init_axis(AX_IDL, tmc2130_mode);
-
-    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    loop:
+    {
+        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        tmc2130_init_axis(AX_IDL, tmc2130_mode);
     
-    moveSmooth(AX_PUL, -400, 350, false, false);
-    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL, true)) {
-      case MR_Success:
-          moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
-          moveSmooth(AX_PUL, 600, 650 - MAX_SPEED_PUL/4, false, false, ACC_NORMAL, true);
-          moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
-          if (digitalRead(A1) == 1) fixTheProblem();
-          isFilamentLoaded = false; // filament unloaded
-          _return = true;
-          break;
-      case MR_Failed:
-          fixTheProblem();
+        engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+        
+        moveSmooth(AX_PUL, -400, 350, false, false);
+        switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true)) {
+          case MR_Success:
+              moveSmooth(AX_PUL, -50, 650, false, false, ACC_NORMAL);
+              moveSmooth(AX_PUL, 600, 650, false, false, ACC_NORMAL, true);
+              moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
+              if (digitalRead(A1) == 1) {
+                  fixTheProblem();
+                  goto loop;
+              }
+              isFilamentLoaded = false; // filament unloaded
+              _return = true;
+              break;
+          case MR_Failed:
+              fixTheProblem();
+        }
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);

@@ -44,7 +44,13 @@ Changelog of MMU 2.0 Firmware
 * add define TESTING_STEALTH
 * defined max. speeds and acceleration for normal and stealth mode
 
-
+# V2.1.1 RMM
+* moveSmooth ACC and FINDA triggering within, defaults ACC to NORMAL and FINDA to false
+* implemented new Karl motion into entire MMU firmware
+* adjusted homing methods and settings, hopefully it works on majority of setups
+* implemented rehome after 20 toolChanges, idea credit to Chuck Kozlowski
+* implemented MK3 comms to confirm when filament arrives at MK3, removed all tube length cal methods
+* implemented fixTheProblem that pauses for user to fix issue, Middle button to continue, this version fixed loop that was possible if two triggered, nested
 
 # V1.0.2
 * fixed current settings

@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION 211 // example: 103 means version 1.0.3
-#define FW_BUILDNR 175 // number of commits in 'master'
+#define FW_BUILDNR 176 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback

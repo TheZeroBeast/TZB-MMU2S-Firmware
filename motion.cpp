@@ -51,7 +51,7 @@ void set_positions(int _current_extruder, int _next_extruder)
     int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
 
     move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
-    
+
     if (_next_extruder > 0) {
         int _selector_steps = ((_current_extruder - _next_extruder) * SELECTOR_STEPS) * -1;
         move_selector(_selector_steps);
@@ -60,7 +60,7 @@ void set_positions(int _current_extruder, int _next_extruder)
         for (int c = 2; c > 0; c--) { // touch end 2 times
             moveSmooth(AX_SEL, -4000, 2000, false);
             if (c > 1) {
-               moveSmooth(AX_SEL, 100, 2000, false);
+                moveSmooth(AX_SEL, 100, 2000, false);
             }
         }
         moveSmooth(AX_SEL, 10, 2000, false);
@@ -74,7 +74,7 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     bool _return = false;
 
     if (axis == AX_SEL) {
-        
+
         if (digitalRead(A1) == 1) {
             isFilamentLoaded = true;
             return false;
@@ -96,7 +96,7 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     } else if (axis == AX_IDL) {
         int new_AX_IDL = -1;
         if (_new_extruder_pos == EXTRUDERS) {
-          new_AX_IDL = EXTRUDERS - 1;
+            new_AX_IDL = EXTRUDERS - 1;
         } else new_AX_IDL = _new_extruder_pos;
         steps = ((_current_extruder_pos - new_AX_IDL) * IDLER_STEPS);
         isIdlerParked = false;
@@ -106,14 +106,14 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
     }
     isFilamentLoaded = false;
     return _return;
-} 
+}
 
 /**
  * @brief Eject Filament
  * move selector sideways and push filament forward little bit, so user can catch it,
  * unpark idler at the end to user can pull filament out
  * @param extruder: extruder channel (0..4)
- */ 
+ */
 void eject_filament(int extruder)
 {
     int selector_position = 0;
@@ -284,7 +284,7 @@ void home(bool doToolSync)
             trackToolChanges = 0;
         }
     } else active_extruder = 0;
-    
+
     isIdlerParked = false;
     engage_filament_pulley(false);
     shr16_set_led(0x000);

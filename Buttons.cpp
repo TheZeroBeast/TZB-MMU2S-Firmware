@@ -25,9 +25,9 @@ void settings_select_filament()
             shr16_set_led(2 << 2 * (4 - active_extruder));
             delay(500);
             if (Btn::middle == buttonClicked()) {
-                    select_extruder(4);
-                    select_extruder(0);
-                    return;
+                select_extruder(4);
+                select_extruder(0);
+                return;
             }
         }
     }

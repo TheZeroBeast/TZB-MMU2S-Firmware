@@ -33,7 +33,7 @@ bool feed_filament()
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
-    
+
 
     int _c = 0;
     engage_filament_pulley(true);
@@ -45,24 +45,24 @@ bool feed_filament()
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
                                              current_loading_stealth[AX_PUL]);
         }
-    
-            if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_Success) {
-                if (tmc2130_mode == NORMAL_MODE) {
-                    tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                                     current_running_normal[AX_PUL]);
-                } else {
-                    tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
-                                                     current_running_stealth[AX_PUL]);
-                }
-                moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
-                shr16_set_led(1 << 2 * (4 - active_extruder));
-                _loaded = true;
-                break;
+
+        if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_Success) {
+            if (tmc2130_mode == NORMAL_MODE) {
+                tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
+                                                 current_running_normal[AX_PUL]);
             } else {
-                if (_c < 2) fixTheProblem();
-                else break;
-                _c++;
+                tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
+                                                 current_running_stealth[AX_PUL]);
             }
+            moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
+            shr16_set_led(1 << 2 * (4 - active_extruder));
+            _loaded = true;
+            break;
+        } else {
+            if (_c < 2) fixTheProblem();
+            else break;
+            _c++;
+        }
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
@@ -76,7 +76,7 @@ bool toolChange(int new_extruder)
 
     if (active_extruder == 5) {
         active_extruder = 4;
-        move_selector(-700); // service position   
+        move_selector(-700); // service position
     }
 
     shr16_set_led(2 << 2 * (4 - active_extruder));
@@ -98,12 +98,12 @@ bool toolChange(int new_extruder)
         }
         if (!isFilamentLoaded) {
             if (trackToolChanges == TOOLSYNC) {
-              home(true);
-              set_positions(0, active_extruder); // move idler and selector to new filament position
-              delay(50);
-              engage_filament_pulley(true);
+                home(true);
+                set_positions(0, active_extruder); // move idler and selector to new filament position
+                delay(50);
+                engage_filament_pulley(true);
             } else {
-               set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
+                set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
             }
             toolChanges++;
             trackToolChanges ++;
@@ -128,10 +128,10 @@ bool toolChange(int new_extruder)
 bool select_extruder(int new_extruder)
 {
     if (digitalRead(A1) == 1) return false;
-  
+
     int previous_extruder = active_extruder;
     active_extruder = new_extruder;
-    
+
     bool _return = false;
     if (!isHomed) {
         home();

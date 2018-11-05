@@ -8,8 +8,9 @@ https://github.com/TheZeroBeast/Prusa-Firmware/tree/MMU-MK3-FSensorBuild
 
 Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 
-Below are the stable versions of MMU2 & MK3 FW required.
-MMU: V#: 2.1.1	B#:  175
+### Below are the stable versions of MMU2 & MK3 FW required.
+MMU: V#: 2.1.1	B#:  176
+
 MK3: V#: 5.0.0	B#: 2107
 
 Error Handling is in the process of beening implemented but at present when in error state the active MMU colour flashes, selector stepper is disabled to allow easy fixing of issue.

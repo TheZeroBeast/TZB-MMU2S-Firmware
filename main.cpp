@@ -261,7 +261,7 @@ extern "C" {
                     line[i] = echo[i];
                 }
                 count = 0;
-            } else if ((strstr(line, "FS") == NULL || (strstr(line, "P0") != NULL))) {
+            } else if (strstr(line, "P0") == NULL) {
                 for (int i = 0; i < 32; i++) {
                     echo[i] = line[i];
                 }
@@ -339,8 +339,13 @@ extern "C" {
                     fprintf_P(inout, PSTR("R0\n"));
                     return;
                 }
+                if (strstr(line, "FS") != NULL) {
+                    fprintf_P(inout, PSTR("FS\n"));
+                    return;
+                }
             }
-
+            count = 0;
+            
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
@@ -396,13 +401,9 @@ extern "C" {
                 } else if (value == 2) { // Read build nr
                     fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
                 }
-            } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
-                if (value == 1) {
-                    fsensor_triggered = true;
-                    fprintf_P(inout, PSTR("ok\n"));
-                } else if (value == 0 ) {
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
+            } else if (strstr(line, "FS") > 0) {
+                fsensor_triggered = true;
+                fprintf_P(inout, PSTR("ok\n"));
             } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
                 if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
                     filament_type[value] = value0;

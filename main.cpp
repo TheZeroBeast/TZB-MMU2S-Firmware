@@ -25,6 +25,7 @@ bool fsensor_triggered = false;
 bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
+bool fixedTheProblem = false;
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
 static char echo[32];
@@ -340,7 +341,6 @@ extern "C" {
                 }
             }
 
-            //count = 0;
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
@@ -425,97 +425,10 @@ extern "C" {
                     recover_after_eject();
                     fprintf_P(inout, PSTR("ok\n"));
                 }
-            } else {
-                //fprintf_P(inout, PSTR("not_ok\n"));
             }
-
-            /*count = 0;
-            if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
-                //T-code scanned
-                if ((value >= 0) && (value < EXTRUDERS)) {
-                    mmuFSensorLoading = true;
-                    duplicateTCmd = true;
-                    fprintf_P(inout, PSTR("ok\n"));
-                    toolChange(value);
-                }
-            } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
-                // Load filament
-                if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded) {
-
-                    select_extruder(value);
-                    delay(10);
-                    feed_filament();
-                    delay(100);
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
-            } else if (sscanf_P(line, PSTR("M%d"), &value) > 0) {
-                // M0: set to normal mode; M1: set to stealth mode
-                switch (value) {
-                case 0:
-                    tmc2130_mode = NORMAL_MODE;
-                    break;
-                case 1:
-                    tmc2130_mode = STEALTH_MODE;
-                    break;
-                default:
-                    return;
-                }
-                //init all axes
-                tmc2130_init(tmc2130_mode);
-                fprintf_P(inout, PSTR("ok\n"));
-            } else if (sscanf_P(line, PSTR("U%d"), &value) > 0) { // Unload filament
-                unload_filament_withSensor();
-                delay(200);
-                fprintf_P(inout, PSTR("ok\n"));
-                isPrinting = false;
-                trackToolChanges = 0;
-            } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
-                if (value == 0) { // MMU reset
-                    wdt_enable(WDTO_15MS);
-                }
-            } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
-                if (value == 0) { // Read finda
-                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
-                }
-            } else if (sscanf_P(line, PSTR("S%d"), &value) > 0) {
-                if (value == 0) { // return ok
-                    fprintf_P(inout, PSTR("ok\n"));
-                } else if (value == 1) { // Read version
-                    fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
-                } else if (value == 2) { // Read build nr
-                    fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
-                }
-            } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
-                fsensor_triggered = true;
-                fprintf_P(inout, PSTR("ok\n"));
-            } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
-                if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
-                    filament_type[value] = value0;
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
-            } else if (sscanf_P(line, PSTR("C%d"), &value) > 0) {
-                if (value == 0) // C0 continue loading current filament (used after T-code), maybe add different code for
-                    // each extruder (the same way as T-codes) in the future?
-                {
-                    load_filament_into_extruder();
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
-            } else if (sscanf_P(line, PSTR("E%d"), &value) > 0) {
-                if ((value >= 0) && (value < EXTRUDERS)) { // Ex: eject filament
-                    eject_filament(value);
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
-            } else if (sscanf_P(line, PSTR("R%d"), &value) > 0) {
-                if (value == 0) { // R0: recover after eject filament
-                    recover_after_eject();
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
-            } else if (mmuFSensorLoading) {
-                delay(100);
-                fprintf_P(inout, PSTR("ok\n"));
-            } else {
-                //fprintf_P(inout, PSTR("not_ok\n"));
-            }*/
+        } else if (fixedTheProblem == true) {
+            fixedTheProblem = false;
+            fprintf_P(inout, PSTR("ok\n"));
         }
     }
 } // extern C
@@ -553,7 +466,6 @@ void fixTheProblem(void) {
         delay(150);
         shr16_set_led(0x000);
         delay(150);
-        //process_commands(uart_com);
     }
 
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
@@ -561,7 +473,8 @@ void fixTheProblem(void) {
     while (homeSelectorSmooth());
     reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
     isFilamentLoaded = false;
-    delay(10);                                          // wait for 1 millisecond
+    delay(10);                                          // wait for 10 millisecond
+    fixedTheProblem = true;
 }
 
 bool load_filament_withSensor()

@@ -250,7 +250,7 @@ extern "C" {
         }
         int value = 0;
         int value0 = 0;
-
+        
 
         if ((count > 0) && (c == 0)) {
             //line received
@@ -260,84 +260,30 @@ extern "C" {
                     line[i] = echo[i];
                 }
                 count = 0;
-            } else if ((strstr(line, "FS") == NULL || (strstr(line, "P0") != NULL))) {
+            } else {
                 for (int i = 0; i < 32; i++) {
                     echo[i] = line[i];
                 }
                 count = 0;
                 //delay(10); // delay so MK3 comms is not floaded
-                if (strstr(line, "T0") != NULL) {
-                    fprintf_P(inout, PSTR("T0\n"));
-                    return;
-                }
-                if (strstr(line, "T1") != NULL) {
-                    fprintf_P(inout, PSTR("T1\n"));
-                    return;
-                }
-                if (strstr(line, "T2") != NULL) {
-                    fprintf_P(inout, PSTR("T2\n"));
-                    return;
-                }
-                if (strstr(line, "T3") != NULL) {
-                    fprintf_P(inout, PSTR("T3\n"));
-                    return;
-                }
-                if (strstr(line, "T4") != NULL) {
-                    fprintf_P(inout, PSTR("T4\n"));
-                    return;
-                }
-                if (strstr(line, "L0") != NULL) {
-                    fprintf_P(inout, PSTR("L0\n"));
-                    return;
-                }
-                if (strstr(line, "L1") != NULL) {
-                    fprintf_P(inout, PSTR("L1\n"));
-                    return;
-                }
-                if (strstr(line, "L2") != NULL) {
-                    fprintf_P(inout, PSTR("L2\n"));
-                    return;
-                }
-                if (strstr(line, "L3") != NULL) {
-                    fprintf_P(inout, PSTR("L3\n"));
-                    return;
-                }
-                if (strstr(line, "L4") != NULL) {
-                    fprintf_P(inout, PSTR("L4\n"));
-                    return;
-                }
-                if (strstr(line, "C0") != NULL) {
-                    fprintf_P(inout, PSTR("C0\n"));
-                    return;
-                }
-                if (strstr(line, "U0") != NULL) {
-                    fprintf_P(inout, PSTR("U0\n"));
-                    return;
-                }
-                if (strstr(line, "E0") != NULL) {
-                    fprintf_P(inout, PSTR("E0\n"));
-                    return;
-                }
-                if (strstr(line, "E1") != NULL) {
-                    fprintf_P(inout, PSTR("E1\n"));
-                    return;
-                }
-                if (strstr(line, "E2") != NULL) {
-                    fprintf_P(inout, PSTR("E2\n"));
-                    return;
-                }
-                if (strstr(line, "E3") != NULL) {
-                    fprintf_P(inout, PSTR("E3\n"));
-                    return;
-                }
-                if (strstr(line, "E4") != NULL) {
-                    fprintf_P(inout, PSTR("E4\n"));
-                    return;
-                }
-                if (strstr(line, "R0") != NULL) {
-                    fprintf_P(inout, PSTR("R0\n"));
-                    return;
-                }
+                if (strstr(line, "T0") != NULL) { fprintf_P(inout, PSTR("T0\n")); return; }
+                if (strstr(line, "T1") != NULL) { fprintf_P(inout, PSTR("T1\n")); return; }
+                if (strstr(line, "T2") != NULL) { fprintf_P(inout, PSTR("T2\n")); return; }
+                if (strstr(line, "T3") != NULL) { fprintf_P(inout, PSTR("T3\n")); return; }
+                if (strstr(line, "T4") != NULL) { fprintf_P(inout, PSTR("T4\n")); return; }
+                if (strstr(line, "L0") != NULL) { fprintf_P(inout, PSTR("L0\n")); return; }
+                if (strstr(line, "L1") != NULL) { fprintf_P(inout, PSTR("L1\n")); return; }
+                if (strstr(line, "L2") != NULL) { fprintf_P(inout, PSTR("L2\n")); return; }
+                if (strstr(line, "L3") != NULL) { fprintf_P(inout, PSTR("L3\n")); return; }
+                if (strstr(line, "L4") != NULL) { fprintf_P(inout, PSTR("L4\n")); return; }
+                if (strstr(line, "C0") != NULL) { fprintf_P(inout, PSTR("C0\n")); return; }
+                if (strstr(line, "U0") != NULL) { fprintf_P(inout, PSTR("U0\n")); return; }
+                if (strstr(line, "E0") != NULL) { fprintf_P(inout, PSTR("E0\n")); return; }
+                if (strstr(line, "E1") != NULL) { fprintf_P(inout, PSTR("E1\n")); return; }
+                if (strstr(line, "E2") != NULL) { fprintf_P(inout, PSTR("E2\n")); return; }
+                if (strstr(line, "E3") != NULL) { fprintf_P(inout, PSTR("E3\n")); return; }
+                if (strstr(line, "E4") != NULL) { fprintf_P(inout, PSTR("E4\n")); return; }
+                if (strstr(line, "R0") != NULL) { fprintf_P(inout, PSTR("R0\n")); return; }
             }
 
             //count = 0;
@@ -397,12 +343,8 @@ extern "C" {
                     fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
                 }
             } else if (sscanf_P(line, PSTR("FS%d"), &value) > 0) {
-                if (value == 1) {
-                    fsensor_triggered = true;
-                    fprintf_P(inout, PSTR("ok\n"));
-                } else if (value == 0 ) {
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
+                fsensor_triggered = true;
+                fprintf_P(inout, PSTR("ok\n"));
             } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
                 if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
                     filament_type[value] = value0;
@@ -425,10 +367,13 @@ extern "C" {
                     recover_after_eject();
                     fprintf_P(inout, PSTR("ok\n"));
                 }
+            } else if (mmuFSensorLoading) {
+                delay(100);
+                fprintf_P(inout, PSTR("ok\n"));
             } else {
                 //fprintf_P(inout, PSTR("not_ok\n"));
             }
-
+            
             /*count = 0;
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned

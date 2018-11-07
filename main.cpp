@@ -256,7 +256,7 @@ extern "C" {
         int value0 = 0;
 
         if (fixTheProblems == true) {
-            fprintf_P(inout, PSTR("not_ok\n"));
+            //fprintf_P(inout, PSTR("nk\n"));
             count = 0;
         } else if (fixedTheProblem == true) {
             fixTheProblems = false;
@@ -273,7 +273,11 @@ extern "C" {
                     line[i] = echo[i];
                 }
                 count = 0;
-            } else if (strstr(line, "P0") == NULL) {
+            } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
+                if (value == 0) { // Read finda
+                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
+                }
+            } else { //if (strstr(line, "P0") == NULL) {
                 for (int i = 0; i < 32; i++) {
                     echo[i] = line[i];
                 }
@@ -355,10 +359,6 @@ extern "C" {
                     fprintf_P(inout, PSTR("FS\n"));
                     return;
                 }
-                if (strstr(line, "FL") != NULL) {
-                    fprintf_P(inout, PSTR("FS\n"));
-                    return;
-                }
             }
             count = 0;
             
@@ -372,11 +372,12 @@ extern "C" {
                         mmuFSensorLoading = true;
                         duplicateTCmd = false;
                         toolChange(value);
-                        fprintf_P(inout, PSTR("FL\n"));
                         if (load_filament_at_toolChange){
+                            fprintf_P(inout, PSTR("fl\n"));
                             load_filament_withSensor();
                             load_filament_at_toolChange = false;
-                        }
+                            fprintf_P(inout, PSTR("ok\n"));
+                        } else fprintf_P(inout, PSTR("nk\n"));
                     }
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
@@ -413,10 +414,6 @@ extern "C" {
             } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
                 if (value == 0) { // MMU reset
                     wdt_enable(WDTO_15MS);
-                }
-            } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
-                if (value == 0) { // Read finda
-                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
                 }
             } else if (sscanf_P(line, PSTR("S%d"), &value) > 0) {
                 if (value == 0) { // return ok
@@ -483,7 +480,7 @@ void fixTheProblem(void) {
     delay(50);
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);
 
-    while (!(Btn::middle == buttonClicked() && digitalRead(A1) == 1)) {
+    while (!(Btn::middle == buttonClicked() && digitalRead(A1) == 0)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         /*if (Btn::middle == buttonClicked() && digitalRead(A1) == 0) {
             break;
@@ -552,13 +549,14 @@ loop:
                 currentTime = millis();
                 if ((currentTime - startTime) > 12000) {
                     fixTheProblem();
-                    goto loop;
+                    return;
+                    //goto loop;
                 }
 
-                move_pulley(2,MAX_SPEED_PUL);
+                move_pulley(1,MAX_SPEED_PUL);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
-                delayMicroseconds(500);  ///RMM:TODO changed to 300 from 600us on 3 Nov 18
+                delayMicroseconds(400);  ///RMM:TODO changed to 300 from 600us on 3 Nov 18
             }
 
             mmuFSensorLoading = false;
@@ -567,13 +565,13 @@ loop:
             moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 350,false, false);
             isFilamentLoaded = true;  // filament loaded
             shr16_set_led(0x000);
-            shr16_set_led(2 << 2 * (4 - active_extruder));
+            shr16_set_led(1 << 2 * (4 - active_extruder));
             return true;
         }
         fixTheProblem();
-        goto loop;
+        //goto loop;
         shr16_set_led(0x000);
-        shr16_set_led(2 << 2 * (4 - active_extruder));
+        shr16_set_led(1 << 2 * (4 - active_extruder));
         return false;
     }
 }

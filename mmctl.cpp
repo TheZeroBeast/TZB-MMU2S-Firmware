@@ -87,7 +87,8 @@ bool toolChange(int new_extruder)
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
             shr16_set_led(2 << 2 * (4 - active_extruder));
-            load_filament_withSensor(); // just load filament if not loaded
+            //load_filament_withSensor(); // just load filament if not loaded
+            load_filament_at_toolChange = true;
             _return = true;
         } else {
             _return = true; // nothing really happened
@@ -115,7 +116,7 @@ bool toolChange(int new_extruder)
     }
 
     shr16_set_led(0x000);
-    shr16_set_led(2 << 2 * (4 - active_extruder));
+    shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;
 }
 

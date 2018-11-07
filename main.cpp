@@ -26,6 +26,8 @@ bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
 bool fixedTheProblem = false;
+bool fixTheProblems = false;
+
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
 static char echo[32];
@@ -252,7 +254,16 @@ extern "C" {
         int value = 0;
         int value0 = 0;
 
-
+        if (fixTheProblems == true) {
+            fprintf_P(inout, PSTR("not_ok\n"));
+            count = 0;
+        } else if (fixedTheProblem == true) {
+            fixTheProblems = false;
+            fixedTheProblem = false;
+            fprintf_P(inout, PSTR("ok\n"));
+            count = 0;
+        }
+    
         if ((count > 0) && (c == 0)) {
             //line received
             //printf_P(PSTR("line received: '%s' %d\n"), line, count);
@@ -349,10 +360,15 @@ extern "C" {
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
-                    mmuFSensorLoading = true;
-                    duplicateTCmd = true;
-                    fprintf_P(inout, PSTR("ok\n"));
-                    toolChange(value);
+                    if ((active_extruder == value) & (isFilamentLoaded)) {
+                      duplicateTCmd = true;
+                      fprintf_P(inout, PSTR("ok\n"));
+                    } else {
+                        mmuFSensorLoading = true;
+                        duplicateTCmd = false;
+                        fprintf_P(inout, PSTR("ok\n"));
+                        toolChange(value);
+                    }
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
                 // Load filament
@@ -413,8 +429,10 @@ extern "C" {
                 if (value == 0) // C0 continue loading current filament (used after T-code), maybe add different code for
                     // each extruder (the same way as T-codes) in the future?
                 {
-                    load_filament_into_extruder();
-                    fprintf_P(inout, PSTR("ok\n"));
+                    if (!duplicateTCmd) {
+                        load_filament_into_extruder();
+                        fprintf_P(inout, PSTR("ok\n"));
+                    } else fprintf_P(inout, PSTR("ok\n"));
                 }
             } else if (sscanf_P(line, PSTR("E%d"), &value) > 0) {
                 if ((value >= 0) && (value < EXTRUDERS)) { // Ex: eject filament
@@ -427,9 +445,6 @@ extern "C" {
                     fprintf_P(inout, PSTR("ok\n"));
                 }
             }
-        } else if (fixedTheProblem == true) {
-            fixedTheProblem = false;
-            fprintf_P(inout, PSTR("ok\n"));
         }
     }
 } // extern C
@@ -453,25 +468,28 @@ void fault_handler(Fault id)
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
 void fixTheProblem(void) {
-
+    fixedTheProblem = false;
+    fixTheProblems = true;
     engage_filament_pulley(false);                     // park the idler stepper motor
     delay(50);
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);
 
-    while (1) {
+    while (!(Btn::middle == buttonClicked() && digitalRead(A1) == 1)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
-        if (Btn::middle == buttonClicked() && digitalRead(A1) == 0) {
+        /*if (Btn::middle == buttonClicked() && digitalRead(A1) == 0) {
             break;
-        }
+        }*/
         shr16_set_led(2 << 2 * (4 - active_extruder));
         delay(150);
         shr16_set_led(0x000);
-        delay(150);
+        delay(200);
+        
+        process_commands(uart_com);
     }
 
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
 
-    while (homeSelectorSmooth());
+    homeSelectorSmooth();
     reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
     isFilamentLoaded = false;
     delay(10);                                          // wait for 10 millisecond
@@ -525,10 +543,10 @@ loop:
                     goto loop;
                 }
 
-                move_pulley(1,MAX_SPEED_PUL);
+                move_pulley(2,MAX_SPEED_PUL);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
-                delayMicroseconds(300);  ///RMM:TODO changed to 300 from 600us on 3 Nov 18
+                delayMicroseconds(500);  ///RMM:TODO changed to 300 from 600us on 3 Nov 18
             }
 
             mmuFSensorLoading = false;
@@ -555,8 +573,6 @@ loop:
 bool unload_filament_withSensor()
 {
     bool _return = false;
-loop:
-    {
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         tmc2130_init_axis(AX_IDL, tmc2130_mode);
 
@@ -570,15 +586,14 @@ loop:
             moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
             if (digitalRead(A1) == 1) {
                 fixTheProblem();
-                goto loop;
+                return;
             }
             isFilamentLoaded = false; // filament unloaded
             _return = true;
             break;
-        case MR_Failed:
+        default:
             fixTheProblem();
         }
-    }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
     return _return;

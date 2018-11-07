@@ -12,6 +12,7 @@ extern int8_t sys_state;
 
 // signals from interrupt to main loop
 extern uint8_t sys_signals;
+extern bool load_filament_at_toolChange;
 void process_signals();
 bool load_filament_withSensor();
 bool unload_filament_withSensor();

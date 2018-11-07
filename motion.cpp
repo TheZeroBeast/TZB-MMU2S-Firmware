@@ -418,9 +418,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     if (tmc2130_mode == STEALTH_MODE) {
         withStallDetection = false;
     }
-
-    shr16_set_led(0);
-
+    
     float vMax = speed;
     float v0 = 200; // steps/s, minimum speed
     float v = v0; // current speed
@@ -447,7 +445,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     };
 
     State st = Accelerate;
-    shr16_set_led(1 << 0);
 
     while (stepsLeft) {
         switch (axis) {
@@ -510,20 +507,17 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             if (v >= vMax) {
                 accSteps = stepsDone;
                 st = ConstVelocity;
-                shr16_set_led(1 << 2);
 
                 v = vMax;
             } else if (stepsDone > stepsLeft) {
                 accSteps = stepsDone;
                 st = Decelerate;
-                shr16_set_led(1 << 4);
 
             }
             break;
         case ConstVelocity: {
             if (stepsLeft <= accSteps) {
                 st = Decelerate;
-                shr16_set_led(1 << 4);
             }
         }
         break;
@@ -536,7 +530,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         break;
         }
     }
-
     return ret;
 }
 

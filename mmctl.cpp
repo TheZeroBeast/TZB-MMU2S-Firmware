@@ -108,7 +108,8 @@ bool toolChange(int new_extruder)
             toolChanges++;
             trackToolChanges ++;
             shr16_set_led(2 << 2 * (4 - active_extruder));
-            load_filament_withSensor();
+            //load_filament_withSensor();
+            load_filament_at_toolChange = true;
             _return = true;
         }
     }

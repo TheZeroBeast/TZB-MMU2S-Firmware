@@ -27,6 +27,7 @@ bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
 bool fixedTheProblem = false;
 bool fixTheProblems = false;
+bool load_filament_at_toolChange = false;
 
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
@@ -354,6 +355,10 @@ extern "C" {
                     fprintf_P(inout, PSTR("FS\n"));
                     return;
                 }
+                if (strstr(line, "FL") != NULL) {
+                    fprintf_P(inout, PSTR("FS\n"));
+                    return;
+                }
             }
             count = 0;
             
@@ -366,8 +371,12 @@ extern "C" {
                     } else {
                         mmuFSensorLoading = true;
                         duplicateTCmd = false;
-                        fprintf_P(inout, PSTR("ok\n"));
                         toolChange(value);
+                        fprintf_P(inout, PSTR("FL\n"));
+                        if (load_filament_at_toolChange){
+                            load_filament_withSensor();
+                            load_filament_at_toolChange = false;
+                        }
                     }
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
@@ -479,11 +488,14 @@ void fixTheProblem(void) {
         /*if (Btn::middle == buttonClicked() && digitalRead(A1) == 0) {
             break;
         }*/
-        shr16_set_led(2 << 2 * (4 - active_extruder));
-        delay(150);
+        delay(100);
         shr16_set_led(0x000);
-        delay(200);
-        
+        delay(100);
+        if (digitalRead(A1) == 1) {
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+        } else {
+            shr16_set_led(1 << 2 * (4 - active_extruder));
+        }
         process_commands(uart_com);
     }
 

@@ -20,6 +20,9 @@ MK3: V#: 5.0.1	B#: 2110?? waiting to merge patch1
     - detach extruder PTFE and load filament into MK3, should grab and continue
     - reattach PTFE
 
+## Slic3r Advance Settging for load/unload Speed
+
+
 ## Building this custom setup
 This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
 

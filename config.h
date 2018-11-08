@@ -86,8 +86,8 @@
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
 #define CURRENT_HOMING              { 1, 35, 40}
 
-#define CURRENT_LOADING_NORMAL      { 30, 35, 35}
-#define CURRENT_LOADING_STEALTH     { 30, 35, 35}
+//#define CURRENT_LOADING_NORMAL      { 30, 35, 35}
+//#define CURRENT_LOADING_STEALTH     { 30, 35, 35}
 
 // speeds and accelerations
 #define MAX_SPEED_PUL 1600 // micro steps
@@ -97,8 +97,8 @@
 #define ACC_NORMAL 50000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
 #define ACC_FEED_NORMAL 1400 // micro steps / s²
-#define ACC_IDL_NORMAL 25000 // micro steps / s²
 #define ACC_FEED_STEALTH 1000 // micro steps / s²
+#define ACC_IDL_NORMAL 25000 // micro steps / s²
 
 
 //mode

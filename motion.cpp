@@ -100,7 +100,7 @@ bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_
         steps = ((_current_extruder_pos - new_AX_IDL) * IDLER_STEPS);
         isIdlerParked = false;
         if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, acc) == MR_Success) _return = true;
-        delay(50);
+        delay(50); // delay to release the stall detection
         engage_filament_pulley(false);
     }
     isFilamentLoaded = false;
@@ -270,23 +270,32 @@ void engage_filament_pulley(bool engage)
 
 void home(bool doToolSync)
 {
-    tmc2130_init(HOMING_MODE); // trinamic, homing
+    tmc2130_init(HOMING_MODE);  // trinamic, homing
+    //tmc2130_init_axis(AX_IDL, HOMING_MODE);
+    //tmc2130_init_axis(AX_SEL, HOMING_MODE);
     homeIdlerSmooth();
     homeSelectorSmooth();
-    shr16_set_led(0x155);
-
-    isHomed = true;
-    if (doToolSync) {
-        trackToolChanges = 0;
-    } else active_extruder = 0;
+    tmc2130_init(tmc2130_mode); // trinamic, normal
+    //tmc2130_init_axis(AX_IDL, tmc2130_mode);
+    //tmc2130_init_axis(AX_SEL, tmc2130_mode);
+    
+    shr16_set_led(0x155);       // All five red
 
     isIdlerParked = false;
+    delay(50); // delay to release the stall detection
     engage_filament_pulley(false);
-    shr16_set_led(0x000);
+    shr16_set_led(0x000);       // All five off
 
     isFilamentLoaded = false;
     shr16_set_led(1 << 2 * (4 - active_extruder));
-    tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
+    
+    isHomed = true;
+
+    if (doToolSync) {
+        delay(50); // delay to release the stall detection
+        set_positions(0, active_extruder); // move idler and selector to new filament position
+        trackToolChanges = 0;
+    } else active_extruder = 0;
 }
 
 void move_idler(int steps, uint16_t speed)
@@ -411,6 +420,7 @@ MotReturn homeIdlerSmooth()
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
     MotReturn ret = MR_Success;
+    if (withFindaDetection) ret = MR_Failed;
 
     if (tmc2130_mode == STEALTH_MODE) {
         withStallDetection = false;
@@ -426,6 +436,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     switch (axis) {
     case AX_PUL:
         stepsLeft = set_pulley_direction(steps);
+        tmc2130_init_axis(AX_PUL, tmc2130_mode);
         break;
     case AX_IDL:
         stepsLeft = set_idler_direction(steps);
@@ -462,7 +473,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 delay(50); // delay to release the stall detection
                 if (rehomeOnFail) {
                     if (homeIdlerSmooth() == MR_Success) {
-                        delay(50);
+                        delay(50); // delay to release the stall detection
                         reset_positions(AX_IDL, 0, active_extruder);
                         return MR_FailedAndRehomed;
                     } else {

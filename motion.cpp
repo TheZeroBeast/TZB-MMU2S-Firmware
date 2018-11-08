@@ -29,7 +29,7 @@ static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16t
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
 static const int BOWDEN_LENGTH = 1000;
-const int STEPS_MK3FSensor_To_Bondtech = 360;
+const int STEPS_MK3FSensor_To_Bondtech = 380;
 
 static const int EJECT_PULLEY_STEPS = 2500;
 
@@ -270,18 +270,14 @@ void engage_filament_pulley(bool engage)
 
 void home(bool doToolSync)
 {
+    tmc2130_init(HOMING_MODE); // trinamic, homing
     homeIdlerSmooth();
     homeSelectorSmooth();
     shr16_set_led(0x155);
 
     isHomed = true;
-    if (doToolSync == true) {
-        int new_extruder = active_extruder;
-        active_extruder = 0;
-        if (active_extruder != new_extruder) {
-            //set_positions(active_extruder, new_extruder); // move idler and selector to new filament position
-            trackToolChanges = 0;
-        }
+    if (doToolSync) {
+        trackToolChanges = 0;
     } else active_extruder = 0;
 
     isIdlerParked = false;
@@ -290,6 +286,7 @@ void home(bool doToolSync)
 
     isFilamentLoaded = false;
     shr16_set_led(1 << 2 * (4 - active_extruder));
+    tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 }
 
 void move_idler(int steps, uint16_t speed)

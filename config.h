@@ -81,10 +81,10 @@
 
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH     { 1,  7, 16}
-#define CURRENT_HOLDING_NORMAL      { 1, 10, 22}  // 22}
+#define CURRENT_HOLDING_NORMAL      { 1, 10, 22}
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 35}
+#define CURRENT_HOMING              { 1, 35, 40}
 
 #define CURRENT_LOADING_NORMAL      { 30, 35, 35}
 #define CURRENT_LOADING_STEALTH     { 30, 35, 35}

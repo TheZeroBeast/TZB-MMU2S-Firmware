@@ -17,7 +17,6 @@ extern int trackToolChanges;
 // functions:
 bool toolChange(int new_extruder);
 bool select_extruder(int new_extruder);
-bool service_position();
 bool feed_filament();
 void led_blink(int _no);
 

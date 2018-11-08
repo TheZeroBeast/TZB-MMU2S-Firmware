@@ -74,7 +74,7 @@ bool toolChange(int new_extruder)
     bool _return = false;
     isPrinting = true;
 
-    if (active_extruder == 5) {
+    if (active_extruder == EXTRUDERS) {
         active_extruder = 4;
         move_selector(-700); // service position
     }
@@ -164,13 +164,6 @@ bool select_extruder(int new_extruder)
     shr16_set_led(0x000);
     shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;
-}
-
-bool service_position()
-{
-    // TODO 2: fixme, when abs-coords are implemented
-    move_selector(600); // TODO 1: check if 600 is ok!
-    return true;
 }
 
 void led_blink(int _no)

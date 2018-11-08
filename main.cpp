@@ -93,7 +93,7 @@ void setup()
     spi_init();
     led_blink(2);
 
-    tmc2130_init(HOMING_MODE); // trinamic, homing
+    //tmc2130_init(HOMING_MODE); // trinamic, homing
     led_blink(3);
 
 
@@ -123,7 +123,7 @@ void setup()
     home();
     // TODO 2: add reading previously stored mode (stealth/normal) from eeprom
 
-    tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
+    //tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 
 
     // check if to goto the settings menu
@@ -254,16 +254,6 @@ extern "C" {
         }
         int value = 0;
         int value0 = 0;
-
-        if (fixTheProblems == true) {
-            //fprintf_P(inout, PSTR("nk\n"));
-            count = 0;
-        } else if (fixedTheProblem == true) {
-            fixTheProblems = false;
-            fixedTheProblem = false;
-            fprintf_P(inout, PSTR("ok\n"));
-            count = 0;
-        }
     
         if ((count > 0) && (c == 0)) {
             //line received
@@ -480,11 +470,8 @@ void fixTheProblem(void) {
     delay(50);
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);
 
-    while (!(Btn::middle == buttonClicked() && digitalRead(A1) == 0)) {
+    while (Btn::middle != buttonClicked()) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
-        /*if (Btn::middle == buttonClicked() && digitalRead(A1) == 0) {
-            break;
-        }*/
         delay(100);
         shr16_set_led(0x000);
         delay(100);
@@ -493,14 +480,16 @@ void fixTheProblem(void) {
         } else {
             shr16_set_led(1 << 2 * (4 - active_extruder));
         }
-        process_commands(uart_com);
     }
 
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
 
-    homeSelectorSmooth();
-    reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
-    isFilamentLoaded = false;
+    if (digitalRead(A1) == 0) {
+      homeSelectorSmooth();
+      reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
+      isFilamentLoaded = false;
+    } else isFilamentLoaded = true;
+    
     delay(10);                                          // wait for 10 millisecond
     fixedTheProblem = true;
 }

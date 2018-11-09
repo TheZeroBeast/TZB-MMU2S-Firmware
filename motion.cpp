@@ -157,23 +157,27 @@ void eject_filament(int extruder)
     // unpark idler so user can easily remove filament
     engage_filament_pulley(false);
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    isFilamentLoaded = false; // ensure MMU knows it doesn't have filament loaded so next T? command works
 }
 
 void recover_after_eject()
 {
     // restore state before eject filament
-    tmc2130_init_axis(AX_PUL, tmc2130_mode);
+    //tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
 
-    // pull back filament
-    engage_filament_pulley(true);
-    move_pulley(-EJECT_PULLEY_STEPS);
-    engage_filament_pulley(false);
+    // pull back filament // Why if it has just been removed?? WTFudge
+    //engage_filament_pulley(true);
+    //move_pulley(-EJECT_PULLEY_STEPS);
+    
+    //engage_filament_pulley(false);
 
+    while (digitalRead(A1) == 1) fixTheProblem();
+    
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
 
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    //tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 }
 
 /**
@@ -193,7 +197,7 @@ void load_filament_into_extruder()
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
 
-    //engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(150, 385);

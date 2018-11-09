@@ -254,7 +254,7 @@ extern "C" {
         }
         int value = 0;
         int value0 = 0;
-    
+
         if ((count > 0) && (c == 0)) {
             //line received
             //printf_P(PSTR("line received: '%s' %d\n"), line, count);
@@ -351,18 +351,18 @@ extern "C" {
                 }
             }
             count = 0;
-            
+
             if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
                     if ((active_extruder == value) & (isFilamentLoaded)) {
-                      duplicateTCmd = true;
-                      fprintf_P(inout, PSTR("ok\n"));
+                        duplicateTCmd = true;
+                        fprintf_P(inout, PSTR("ok\n"));
                     } else {
                         mmuFSensorLoading = true;
                         duplicateTCmd = false;
                         toolChange(value);
-                        if (load_filament_at_toolChange){
+                        if (load_filament_at_toolChange) {
                             fprintf_P(inout, PSTR("fl\n"));
                             load_filament_withSensor();
                             load_filament_at_toolChange = false;
@@ -491,11 +491,11 @@ void fixTheProblem(void) {
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
 
     if ((digitalRead(A1) == 0) && !manHome) {
-      homeSelectorSmooth();
-      delay(50); // time to clear stallguard
-      reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
+        homeSelectorSmooth();
+        delay(50); // time to clear stallguard
+        reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
     } else if (digitalRead(A1) == 1) isFilamentLoaded = true;
-    
+
     delay(10);                                          // wait for 10 millisecond
     //fixedTheProblem = true;
 }
@@ -578,29 +578,29 @@ loop:
 bool unload_filament_withSensor()
 {
     bool _return = false;
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
-        tmc2130_init_axis(AX_IDL, tmc2130_mode);
+    tmc2130_init_axis(AX_PUL, tmc2130_mode);
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);
 
-        engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
 
-        moveSmooth(AX_PUL, -400, 350, false, false);
-        switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true)) {
-        case MR_Success:
-            moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
-            moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
-            moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
-            if (digitalRead(A1) == 1) {
-                fixTheProblem();
-                //return;
-            }
-            isFilamentLoaded = false; // filament unloaded
-            _return = true;
-            break;
-        default:
+    moveSmooth(AX_PUL, -400, 350, false, false);
+    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true)) {
+    case MR_Success:
+        moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
+        moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
+        moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
+        if (digitalRead(A1) == 1) {
             fixTheProblem();
-            isFilamentLoaded = false; // filament unloaded
-            _return = true;
+            //return;
         }
+        isFilamentLoaded = false; // filament unloaded
+        _return = true;
+        break;
+    default:
+        fixTheProblem();
+        isFilamentLoaded = false; // filament unloaded
+        _return = true;
+    }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
     return _return;

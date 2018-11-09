@@ -169,11 +169,11 @@ void recover_after_eject()
     // pull back filament // Why if it has just been removed?? WTFudge
     //engage_filament_pulley(true);
     //move_pulley(-EJECT_PULLEY_STEPS);
-    
+
     //engage_filament_pulley(false);
 
     while (digitalRead(A1) == 1) fixTheProblem();
-    
+
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
 
@@ -282,7 +282,7 @@ void home(bool doToolSync)
     tmc2130_init(tmc2130_mode); // trinamic, normal
     //tmc2130_init_axis(AX_IDL, tmc2130_mode);
     //tmc2130_init_axis(AX_SEL, tmc2130_mode);
-    
+
     shr16_set_led(0x155);       // All five red
 
     isIdlerParked = false;
@@ -292,7 +292,7 @@ void home(bool doToolSync)
 
     isFilamentLoaded = false;
     shr16_set_led(1 << 2 * (4 - active_extruder));
-    
+
     isHomed = true;
 
     if (doToolSync) {
@@ -429,7 +429,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     if (tmc2130_mode == STEALTH_MODE) {
         withStallDetection = false;
     }
-    
+
     float vMax = speed;
     float v0 = 200; // steps/s, minimum speed
     float v = v0; // current speed

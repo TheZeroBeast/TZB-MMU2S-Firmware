@@ -26,7 +26,7 @@ int trackToolChanges = 0;
 bool feed_filament(void)
 {
     bool _loaded = false;
-    
+
     /*uint8_t current_loading_normal[3] = CURRENT_LOADING_NORMAL;
     uint8_t current_loading_stealth[3] = CURRENT_LOADING_STEALTH;
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
@@ -37,7 +37,7 @@ bool feed_filament(void)
 
     int _c = 0;
     engage_filament_pulley(true);
-    
+
     while (!_loaded) {
         /*if (tmc2130_mode == NORMAL_MODE) {
             tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],

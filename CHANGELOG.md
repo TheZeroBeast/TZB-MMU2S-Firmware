@@ -44,13 +44,20 @@ Changelog of MMU 2.0 Firmware
 * add define TESTING_STEALTH
 * defined max. speeds and acceleration for normal and stealth mode
 
+# V2.1.2 RMM
+* corrected bug in 20 toolChange rehome resulting in extruder 0 being used for that change instead of intended filament. Eventually results in incorrect execution of T? command as MK3 thinks a different extruder is being used.
+* corrected bug resulting in adjacent filament extruder C0 command amount after you have fixed an issue.
+* MMU now does positive acknowledgement on all commands so it can't miss any as it has been doing
+* improvements for fixTheProblem() that now works better hand in hand with load, unload and FeedFilament issues
+* corrected a moveSmooth() error resulting in a successful move with FINDA enabled even if FINDA never triggered. Now resulting in an error to be fixed by user.
+
 # V2.1.1 RMM
 * moveSmooth ACC and FINDA triggering within, defaults ACC to NORMAL and FINDA to false
 * implemented new Karl motion into entire MMU firmware
 * adjusted homing methods and settings, hopefully it works on majority of setups
 * implemented rehome after 20 toolChanges, idea credit to Chuck Kozlowski
 * implemented MK3 comms to confirm when filament arrives at MK3, removed all tube length cal methods
-* implemented fixTheProblem that pauses for user to fix issue, Middle button to continue, this version fixed loop that was possible if two triggered, nested
+* implemented fixTheProblem() that pauses for user to fix issue, Middle button to continue, this version fixed loop that was possible if two triggered, nested
 
 # V1.0.2
 * fixed current settings

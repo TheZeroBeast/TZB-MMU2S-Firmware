@@ -1,22 +1,36 @@
 # MM-control-01
 MMU 3-axis stepper control
 
-## Building
+# Below are the stable versions of MMU2 & MK3 FW required.
+MMU: V#: 2.1.2	B#:  177?? waiting to merge patch1
+
+MK3: V#: 5.0.1	B#: 2110?? waiting to merge patch1
+
+# When in error state Active Extruder LED will blink, FINDA Sensing is RED and GREEN for not, realtime
+  - if unloading when failed
+    - pull back filament
+    - push selector aside
+    - push out and cut damaged/ground end off
+    - push filament back, clear of selector
+    - push middle button to rehome selector and continue (if idler suspected not synced press right to rehome and continue)
+  
+  - if loading when failed NOTE: MK3 will be waiting for filament
+    - troubleshoot issue, usually was due to being caught on an edge
+    - push middle button to clear problem and continue
+    - detach extruder PTFE and load filament into MK3, should grab and continue
+    - reattach PTFE
+
+## Slic3r Advance Settging for load/unload Speed
+![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds.png)
+
+## Building this custom setup
 This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
 
 https://github.com/TheZeroBeast/Prusa-Firmware/tree/MMU-MK3-FSensorBuild
 
 Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 
-### Below are the stable versions of MMU2 & MK3 FW required.
-MMU: V#: 2.1.1	B#:  176
-
-MK3: V#: 5.0.0	B#: 2107
-
-Error Handling is in the process of beening implemented but at present when in error state the active MMU colour flashes, selector stepper is disabled to allow easy fixing of issue.
-Once fixed the MIDDLE button rehomes and attempts failed function again e.g. Loading filament/Switching MMU colour.
-
-## Building
+### Building
 ### Arduino
 Recomended version is arduino 1.8.5.
 #### Adding MMUv2 board

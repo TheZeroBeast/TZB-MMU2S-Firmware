@@ -266,9 +266,9 @@ int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t
     tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
     tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
     if (axis == AX_PUL) {
-      tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 1);
+        tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 1);
     } else {
-      tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 0);
+        tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 0);
     }
     return 0;
 }

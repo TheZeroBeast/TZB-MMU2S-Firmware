@@ -2,9 +2,9 @@
 MMU 3-axis stepper control
 
 # Below are the stable versions of MMU2 & MK3 FW required.
-MMU: V#: 2.1.2	B#:  177?? waiting to merge patch1
+MMU: V#: 2.1.2	B#:  200 waiting to merge patch1
 
-MK3: V#: 5.0.1	B#: 2110?? waiting to merge patch1
+MK3: V#: 5.0.1	B#: 2131 waiting to merge patch1
 
 # When in error state Active Extruder LED will blink, FINDA Sensing is RED and GREEN for not, realtime
   - if unloading when failed

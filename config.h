@@ -71,6 +71,8 @@
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 7 // 20 didn't work, 15 did, decreased further to 12
 #define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_SEL 7 // 20 didn't work, 15 did, decreased further to 12, RMM - was at 9
+#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -85,15 +87,20 @@
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
 #define CURRENT_HOMING              { 1, 35, 28}
+#define CURRENT_HOMING              { 1, 30, 28}
 
 // speeds and accelerations
 #define MAX_SPEED_PUL 2000 // micro steps
 #define MAX_SPEED_SEL 8000 // micro steps
+#define MAX_SPEED_PUL 2400 // micro steps
+#define MAX_SPEED_SEL 5000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
 #define ACC_NORMAL 80000 // micro steps / s²
+#define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
+#define ACC_NORMAL 60000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_FEED_NORMAL 1400 // micro steps / s²
+#define ACC_FEED_NORMAL 1300 // micro steps / s²
 #define ACC_FEED_STEALTH 1000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
 

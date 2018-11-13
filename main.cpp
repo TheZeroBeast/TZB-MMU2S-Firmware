@@ -25,8 +25,6 @@ bool fsensor_triggered = false;
 bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
-//bool fixedTheProblem = false;
-//bool fixTheProblems = false;
 bool load_filament_at_toolChange = false;
 
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
@@ -107,9 +105,9 @@ void setup()
     }
 
     // if FINDA is sensing filament do not home
-    while (digitalRead(A1) == 1) {
+    while (isFilamentInFinda()) {
         while (Btn::right != buttonClicked()) {
-            if (digitalRead(A1) == 1) {
+            if (isFilamentInFinda()) {
                 shr16_set_led(0x2aa);
             } else {
                 shr16_set_led(0x155);
@@ -265,7 +263,7 @@ extern "C" {
                 count = 0;
             } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
                 if (value == 0) { // Read finda
-                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
+                    fprintf_P(inout, PSTR("%dok\n"), isFilamentInFinda());
                 }
             } else { //if (strstr(line, "P0") == NULL) {
                 for (int i = 0; i < 32; i++) {
@@ -464,77 +462,39 @@ void fault_handler(Fault id)
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
 void fixTheProblem(void) {
-    //fixedTheProblem = false;
-    //fixTheProblems = true;
-    bool manHome = false;
-    engage_filament_pulley(false);                     // park the idler stepper motor
-    delay(50); // delay to release the stall detection
+    engage_filament_pulley(false);                      // park the idler stepper motor
+    
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);
 
-    while (Btn::middle != buttonClicked()) {
+    while ((Btn::middle != buttonClicked()) && isFilamentInFinda()) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         delay(100);
         shr16_set_led(0x000);
         delay(100);
-        if (digitalRead(A1) == 1) {
+        if (isFilamentInFinda()) {
             shr16_set_led(2 << 2 * (4 - active_extruder));
-        } else {
-            if (Btn::right == buttonClicked()) {
-                home(true);
-                manHome = true;
-                break;
-            }
-            shr16_set_led(1 << 2 * (4 - active_extruder));
-        }
+        } else shr16_set_led(1 << 2 * (4 - active_extruder));
     }
 
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
-
-    if ((digitalRead(A1) == 0) && !manHome) {
-        homeSelectorSmooth();
-        delay(50); // time to clear stallguard
-        reset_positions(AX_SEL, 0, active_extruder, ACC_NORMAL);
-    } else if (digitalRead(A1) == 1) isFilamentLoaded = true;
-
-    delay(10);                                          // wait for 10 millisecond
-    //fixedTheProblem = true;
+    home(true); // Home and return to previous active extruder
 }
 
 bool load_filament_withSensor()
 {
 loop:
     {
-        engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+        engage_filament_pulley(true); // If idler is in parked position un-park him get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
-        /*uint8_t current_loading_normal[3] = CURRENT_LOADING_NORMAL;
-        uint8_t current_loading_stealth[3] = CURRENT_LOADING_STEALTH;
-        uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
-        uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
-        uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
-        uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;*/
+
         unsigned long startTime, currentTime;
         bool tag = false;
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor
 
-        /*if (tmc2130_mode == NORMAL_MODE) {
-            tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                             current_loading_normal[AX_PUL]);
-        } else {
-            tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
-                                             current_loading_stealth[AX_PUL]);
-        }*/
-
         if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_Success) {
-            /*if (tmc2130_mode == NORMAL_MODE) {
-                tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                                 current_running_normal[AX_PUL]);
-            } else {
-                tmc2130_init_axis_current_normal(AX_PUL, current_holding_stealth[AX_PUL],
-                                                 current_running_stealth[AX_PUL]);
-            }*/
-            moveSmooth(AX_PUL, 8500, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
+            moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
 
             startTime = millis();
             fsensor_triggered = false;
@@ -545,8 +505,6 @@ loop:
                 if ((currentTime - startTime) > 12000) {
                     fixTheProblem();
                     break;
-                    //return;
-                    //goto loop;
                 }
 
                 move_pulley(1,MAX_SPEED_PUL);
@@ -589,7 +547,7 @@ bool unload_filament_withSensor()
         moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
         moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
-        if (digitalRead(A1) == 1) {
+        if (isFilamentInFinda()) {
             fixTheProblem();
             //return;
         }

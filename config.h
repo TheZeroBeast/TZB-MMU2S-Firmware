@@ -69,7 +69,7 @@
 // Tuning: increase treshold, if stall detection triggers at normal loads
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
-#define TMC2130_SG_THR_SEL 9 // 20 didn't work, 15 did, decreased further to 12
+#define TMC2130_SG_THR_SEL 7 // 20 didn't work, 15 did, decreased further to 12
 #define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
 
 
@@ -85,9 +85,6 @@
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
 #define CURRENT_HOMING              { 1, 35, 28}
-
-//#define CURRENT_LOADING_NORMAL      { 30, 35, 35}
-//#define CURRENT_LOADING_STEALTH     { 30, 35, 35}
 
 // speeds and accelerations
 #define MAX_SPEED_PUL 2000 // micro steps

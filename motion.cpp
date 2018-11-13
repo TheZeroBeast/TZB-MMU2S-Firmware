@@ -28,8 +28,9 @@ static const int SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
-static const int BOWDEN_LENGTH = 1000;
+const int BOWDEN_LENGTH = 8000;
 const int STEPS_MK3FSensor_To_Bondtech = 380;
+const int EXTRA_STEPS_SELECTOR_SERVICE = 150;
 
 static const int EJECT_PULLEY_STEPS = 2500;
 
@@ -46,13 +47,17 @@ static int set_pulley_direction(int steps);
 
 void set_positions(int _current_extruder, int _next_extruder)
 {
+    delay(50);
+    int _idler_steps = _idler_steps = _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
+    if (_next_extruder == EXTRUDERS)    _idler_steps = _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
+    if (_current_extruder == EXTRUDERS) _idler_steps = _idler_steps = ((_current_extruder - 1) - _next_extruder) * IDLER_STEPS;
     // steps to move to new position of idler and selector
-    int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
-
     move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
 
     if (_next_extruder > 0) {
         int _selector_steps = ((_current_extruder - _next_extruder) * SELECTOR_STEPS) * -1;
+        if (_next_extruder == EXTRUDERS)    _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
+        if (_current_extruder == EXTRUDERS) _selector_steps -= EXTRA_STEPS_SELECTOR_SERVICE;
         move_selector(_selector_steps);
     } else {
         moveSmooth(AX_SEL, 100, 2000, false);
@@ -64,47 +69,6 @@ void set_positions(int _current_extruder, int _next_extruder)
         }
         moveSmooth(AX_SEL, 33, 2000, false);
     }
-}
-
-bool reset_positions(uint8_t axis, int _current_extruder_pos, int _new_extruder_pos, float acc)
-{
-    // steps to move axis to new position of idler and selector independantly
-    int steps = 0;
-    bool _return = false;
-
-    if (axis == AX_SEL) {
-
-        if (digitalRead(A1) == 1) {
-            isFilamentLoaded = true;
-            return false;
-        }
-        int new_AX_SEL = -1;
-        int cur_AX_SEL = -1;
-        if (_new_extruder_pos == EXTRUDERS) {
-            int new_AX_SEL = EXTRUDERS - 1;
-            steps = (((_current_extruder_pos - new_AX_SEL) * SELECTOR_STEPS) * -1) + 700; // amount to service position
-        } else {
-            if (_current_extruder_pos == EXTRUDERS) {
-                int cur_AX_SEL = EXTRUDERS - 1;
-                steps = (((cur_AX_SEL - _new_extruder_pos) * SELECTOR_STEPS) * -1)-700; // Return from service position
-            } else {
-                steps = ((_current_extruder_pos - _new_extruder_pos) * SELECTOR_STEPS) * -1;
-            }
-        }
-        if (moveSmooth(AX_SEL, steps, MAX_SPEED_SEL, true, true, acc) == MR_Success) _return = true;
-    } else if (axis == AX_IDL) {
-        int new_AX_IDL = -1;
-        if (_new_extruder_pos == EXTRUDERS) {
-            new_AX_IDL = EXTRUDERS - 1;
-        } else new_AX_IDL = _new_extruder_pos;
-        steps = ((_current_extruder_pos - new_AX_IDL) * IDLER_STEPS);
-        isIdlerParked = false;
-        if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, acc) == MR_Success) _return = true;
-        delay(50); // delay to release the stall detection
-        engage_filament_pulley(false);
-    }
-    isFilamentLoaded = false;
-    return _return;
 }
 
 /**
@@ -172,7 +136,7 @@ void recover_after_eject()
 
     //engage_filament_pulley(false);
 
-    while (digitalRead(A1) == 1) fixTheProblem();
+    while (isFilamentInFinda()) fixTheProblem();
 
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
@@ -272,11 +236,21 @@ void engage_filament_pulley(bool engage)
     }
 }
 
+void reset_engage_filament_pulley(bool previouslyEngaged)  //reset after mid op homing
+{
+    if (isIdlerParked && previouslyEngaged) { // get idler in contact with filament
+        move_idler(IDLER_PARKING_STEPS);
+        isIdlerParked = false;
+    } else if (!isIdlerParked && !previouslyEngaged) { // park idler so filament can move freely
+        move_idler(IDLER_PARKING_STEPS * -1);
+        isIdlerParked = true;
+    }
+}
+
 void home(bool doToolSync)
 {
     tmc2130_init(HOMING_MODE);  // trinamic, homing
-    //tmc2130_init_axis(AX_IDL, HOMING_MODE);
-    //tmc2130_init_axis(AX_SEL, HOMING_MODE);
+    bool previouslyEngaged = isIdlerParked;
     homeIdlerSmooth();
     homeSelectorSmooth();
     tmc2130_init(tmc2130_mode); // trinamic, normal
@@ -296,8 +270,8 @@ void home(bool doToolSync)
     isHomed = true;
 
     if (doToolSync) {
-        delay(50); // delay to release the stall detection
         set_positions(0, active_extruder); // move idler and selector to new filament position
+        reset_engage_filament_pulley(previouslyEngaged);
         trackToolChanges = 0;
     } else active_extruder = 0;
 }
@@ -467,25 +441,16 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
-            if (withFindaDetection && steps > 0 && digitalRead(A1) == 1) return MR_Success;
-            if (withFindaDetection && steps < 0 && digitalRead(A1) == 0) return MR_Success;
+            if (withFindaDetection && steps > 0 && isFilamentInFinda()) return MR_Success;
+            if (withFindaDetection && steps < 0 && isFilamentInFinda() == 0) return MR_Success;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;
             PIN_STP_IDL_LOW;
             if (withStallDetection && digitalRead(A5) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) {
-                    if (homeIdlerSmooth() == MR_Success) {
-                        delay(50); // delay to release the stall detection
-                        reset_positions(AX_IDL, 0, active_extruder);
-                        return MR_FailedAndRehomed;
-                    } else {
-                        return MR_Failed;
-                    }
-                } else {
-                    return MR_Failed;
-                }
+                if (rehomeOnFail) home(true); // Home and return to previous active extruder
+                else return MR_Failed;
             }
             break;
         case AX_SEL:
@@ -493,16 +458,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_SEL_LOW;
             if (withStallDetection && digitalRead(A4) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) {
-                    if (homeSelectorSmooth() == MR_Success) {
-                        reset_positions(AX_SEL, 0, active_extruder);
-                        return MR_FailedAndRehomed;
-                    } else {
-                        return MR_Failed;
-                    }
-                } else {
-                    return MR_Failed;
-                }
+                if (rehomeOnFail) home(true); // Home and return to previous active extruder
+                else return MR_Failed;
             }
             break;
         }

@@ -10,17 +10,18 @@
 
 extern int8_t filament_type[EXTRUDERS];
 extern const int IDLER_PARKING_STEPS;
+extern const int BOWDEN_LENGTH;
 extern const int STEPS_MK3FSensor_To_Bondtech;
 
 void home(bool doToolSync = false);
 void engage_filament_pulley(bool engage);
+void reset_engage_filament_pulley(bool previouslyEngaged);
 
 bool isFilamentInFinda();
 void load_filament_into_extruder();
 
 void set_positions(int _current_extruder, int _next_extruder);
-bool reset_positions(uint8_t axis, int _current_extruder, int _next_extruder,
-                     float acc = ACC_NORMAL);
+
 void init_Pulley();
 
 void move_idler(int steps, uint16_t speed = MAX_SPEED_IDL);

@@ -1,38 +1,110 @@
 # MM-control-01
 MMU 3-axis stepper control
 
-# Below are the stable versions of MMU2 & MK3 FW required.
-MMU: V#: 2.1.2	B#:  201
+## Below are the stable versions of MMU2 & MK3 FW required.
+MMU: V#: 2.1.3	B#:  208
 
-MK3: V#: 5.0.1	B#: 2132
+MK3: V#: 5.0.2	B#: 2234
 
-# When in error state Active Extruder LED will blink, FINDA Sensing is RED and GREEN for not, realtime
-  - if unloading when failed
-    - pull back filament
-    - push selector aside
-    - push out and cut damaged/ground end off
-    - push filament back, clear of selector
-    - push middle button to rehome selector and continue (if idler suspected not synced press right to rehome and continue)
-  
-  - if loading when failed NOTE: MK3 will be waiting for filament
-    - troubleshoot issue, usually was due to being caught on an edge
-    - push middle button to clear problem and continue
-    - detach extruder PTFE and load filament into MK3, should grab and continue
-    - reattach PTFE
+## When in error state Active Extruder LED will blink, FINDA Sensing is RED and GREEN for not, realtime
+  - if unload or load failed
+    - troubleshoot issue, usually was due to being caught on an edge or ground section of filament
+    - ensure filament clear of selector
+    - push middle button to rehome and continue
 
 ## Slic3r Advance Settging for load/unload Speed
 ![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds.png)
 
-## Building this custom setup
+
+
+# Building this custom setup
 This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
 
-https://github.com/TheZeroBeast/Prusa-Firmware/tree/MMU-MK3-FSensorBuild
+https://github.com/TheZeroBeast/Prusa-Firmware
 
 Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 
-### Building
+
+## Table of contents
+
+<!--ts-->
+   * [Building](#building)
+     * [Cmake](#cmake)
+       * [Automatic, remote, using travis-ci](#automatic-remote-using-travis-ci)
+       * [Automatic, local, using script and prepared tools package](#automatic-local-using-script-and-prepared-tools-package)
+       * [Manually with installed tools](#manually-with-installed-tools)
+     * [Arduino](#arduino)
+     * [PlatformIO](#platformio)
+   * [Flashing](#flashing)
+   * [Building documentation](#building-documentation)
+     
+<!--te-->
+
+## Building
+### Cmake
+#### Automatic, remote, using travis-ci
+
+Create new github user, eg. your_user_name-your_repository_name-travis. This step is not mandatory, only recomended to limit access rights for travis to single repository. Grant this user access to your repository. Register this user on https://travis-ci.org/. Create API key for this user. In Github click on this user, settings, Developer settings, Personal access tokens, Generate new token, select public_repo, click on Generate token. Copy this token.
+Login into https://travis-ci.org/ enable build of your repository, click on repository setting, add environment variable ACCESS_TOKEN. As value paste your token.
+
+Each commit is build, but only for tagged commits MM-control-01.hex is attached to your release by travis.
+
+#### Automatic, local, using script and prepared tools package
+##### Linux
+
+You need unzip and wget tools.
+
+run ./build.sh
+
+It downloads neccessary tools, extracts it to ../MM-build-env-\<version\>, creates ../MM-control-01-build folder, configures build scripts in it and builds it using ninja.
+
+##### Windows
+
+Download MM-build-env-Win64-<version>.zip from https://github.com/prusa3d/MM-build-env/releases. Unpack it. Run configure.bat. This opens cmake-gui with preconfigured tools paths. Select path where is your source code located, select where you wish to build - out of source build is recomended. Click on generate, select generator - Ninja, or \<Your favourite IDE\> - Ninja.
+  
+Run build.bat generated in your binary directory.
+
+#### Manually with installed tools
+
+You need cmake, avr-gcc, avr-libc and cmake supported build system (e.g. ninja) installed.
+
+Out of source tree build is recommended, in case of Eclipse CDT project file generation is necceessary. If you don't want out of source tree build, you can skip this step.
+~~~
+cd ..
+mkdir MM-control-01_cmake
+cd MM-control-01_cmake
+~~~
+Generate build system - consult cmake --help for build systems generators and IDE project files supported on your platform.
+~~~
+cmake -G "build system generator" path_to_source
+~~~
+example 1 - build system only
+~~~
+cmake -G "Ninja" ../MM-control-01
+~~~
+example 2 - build system and project file for your IDE
+~~~
+cmake -G "Eclipse CDT4 - Ninja ../MM-control-01
+~~~
+Invoke build system you selected in previous step. Example:
+~~~
+ninja
+~~~
+file MM-control-01.hex is generated.
+
 ### Arduino
-Recomended version is arduino 1.8.5.
+Recomended version is arduino 1.8.5.  
+in MM-control-01 subfolder create file version.h  
+use version.h.in as template, replace ${value} with numbers or strings according to comments in template file.  
+create file dirty.h with content if you are building unmodified git commit
+~~~
+#define FW_LOCAL_CHANGES 0
+~~~
+or
+~~~
+#define FW_LOCAL_CHANGES 1
+~~~
+if you have uncommitted local changes.
 #### Adding MMUv2 board
 In Arduino IDE open File / Settings  
 Set Additional boards manager URL to:  
@@ -55,7 +127,12 @@ PlatformIO build is not supported by Prusa Research, please report any PlatformI
 #### Arduino
 click Upload
 #### Slic3er
-Hex file needs to be edited to be recognized as for MMUv2, to be specified later (in several years)
+Hex file needs to be edited to be recognized as for MMUv2 in case of Arduino build. This is done automatically in cmake build.
+
+Add following line to the begining of MM-control-01.hex:
+~~~
+; device = mm-control
+~~~
 #### Avrdude
 Board needs to be reset to bootloader. Bootloader has 5 seconds timeout and then returns to the application.
 

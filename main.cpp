@@ -466,7 +466,7 @@ void fixTheProblem(void) {
     
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);
 
-    while ((Btn::middle != buttonClicked()) && isFilamentInFinda()) {
+    while ((Btn::middle != buttonClicked()) || isFilamentInFinda()) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         delay(100);
         shr16_set_led(0x000);
@@ -493,8 +493,8 @@ loop:
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor
 
-        if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_Success) {
-            moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);
+        if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
+            moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);      // Load filament down to MK3-FSensor
 
             startTime = millis();
             fsensor_triggered = false;
@@ -502,7 +502,7 @@ loop:
 
             while (tag == false) {
                 currentTime = millis();
-                if ((currentTime - startTime) > 12000) {
+                if ((currentTime - startTime) > 12000) {      // After min bowden length load slow until MK3-FSensor trips
                     fixTheProblem();
                     break;
                 }
@@ -510,12 +510,12 @@ loop:
                 move_pulley(1,MAX_SPEED_PUL);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
-                delayMicroseconds(400);  ///RMM:TODO changed to 300 from 600us on 3 Nov 18
+                delayMicroseconds(250);
             }
 
             mmuFSensorLoading = false;
             fsensor_triggered = false;
-            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 350,false, false);
+            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);
             isFilamentLoaded = true;  // filament loaded
             shr16_set_led(0x000);
             shr16_set_led(1 << 2 * (4 - active_extruder));

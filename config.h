@@ -69,7 +69,7 @@
 // Tuning: increase treshold, if stall detection triggers at normal loads
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
-#define TMC2130_SG_THR_SEL 7 // 20 didn't work, 15 did, decreased further to 12
+#define TMC2130_SG_THR_SEL 6 // 20 didn't work, 15 did, decreased further to 12
 #define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
 
 

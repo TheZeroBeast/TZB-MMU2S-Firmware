@@ -29,7 +29,7 @@ static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16t
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
 const int BOWDEN_LENGTH = 8000;
-const int STEPS_MK3FSensor_To_Bondtech = 380;
+const int STEPS_MK3FSensor_To_Bondtech = 390;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 150;
 
 static const int EJECT_PULLEY_STEPS = 2500;
@@ -48,9 +48,9 @@ static int set_pulley_direction(int steps);
 void set_positions(int _current_extruder, int _next_extruder)
 {
     delay(50);
-    int _idler_steps = _idler_steps = _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
-    if (_next_extruder == EXTRUDERS)    _idler_steps = _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
-    if (_current_extruder == EXTRUDERS) _idler_steps = _idler_steps = ((_current_extruder - 1) - _next_extruder) * IDLER_STEPS;
+    int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
+    if (_next_extruder == EXTRUDERS)    _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
+    if (_current_extruder == EXTRUDERS) _idler_steps = ((_current_extruder - 1) - _next_extruder) * IDLER_STEPS;
     // steps to move to new position of idler and selector
     move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
 
@@ -369,7 +369,7 @@ MotReturn homeSelectorSmooth()
         }
     }
 
-    return moveSmooth(AX_SEL, SELECTOR_STEPS_AFTER_HOMING, 8000, false);
+    return moveSmooth(AX_SEL, SELECTOR_STEPS_AFTER_HOMING, MAX_SPEED_SEL, false);
 }
 
 MotReturn homeIdlerSmooth()
@@ -393,8 +393,6 @@ MotReturn homeIdlerSmooth()
  * @return
  */
 // TODO 3: compensate delay for computation time, to get accurate speeds
-// TODO 3: add callback or another parameter, which can stop the motion
-// (e.g. for testing FINDA, timeout, soft stall guard limits, push buttons...)
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
     MotReturn ret = MR_Success;
@@ -442,14 +440,15 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 return MR_Failed;
             }
             if (withFindaDetection && steps > 0 && isFilamentInFinda()) return MR_Success;
-            if (withFindaDetection && steps < 0 && isFilamentInFinda() == 0) return MR_Success;
+            if (withFindaDetection && steps < 0 && isFilamentInFinda() == false) return MR_Success;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;
             PIN_STP_IDL_LOW;
             if (withStallDetection && digitalRead(A5) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) home(true); // Home and return to previous active extruder
+                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
+                if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
             break;
@@ -458,7 +457,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_SEL_LOW;
             if (withStallDetection && digitalRead(A4) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) home(true); // Home and return to previous active extruder
+                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
+                if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
             break;

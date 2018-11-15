@@ -462,9 +462,10 @@ void fault_handler(Fault id)
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
 void fixTheProblem(void) {
-    engage_filament_pulley(false);                      // park the idler stepper motor
-    
-    tmc2130_disable_axis(AX_SEL, tmc2130_mode);
+  
+    engage_filament_pulley(false);                    // park the idler stepper motor
+    tmc2130_disable_axis(AX_SEL, tmc2130_mode);       // turn OFF the selector stepper motor
+    tmc2130_disable_axis(AX_IDL, tmc2130_mode);       // turn OFF the idler stepper motor
 
     while ((Btn::middle != buttonClicked()) || isFilamentInFinda()) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
@@ -477,6 +478,7 @@ void fixTheProblem(void) {
     }
 
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
     home(true); // Home and return to previous active extruder
 }
 
@@ -504,7 +506,7 @@ loop:
                 currentTime = millis();
                 if ((currentTime - startTime) > 12000) {      // After min bowden length load slow until MK3-FSensor trips
                     fixTheProblem();
-                    break;
+                    goto loop;
                 }
 
                 move_pulley(1,MAX_SPEED_PUL);
@@ -547,10 +549,8 @@ bool unload_filament_withSensor()
         moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
         moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
-        if (isFilamentInFinda()) {
-            fixTheProblem();
-            //return;
-        }
+        if (isFilamentInFinda()) fixTheProblem();
+        
         isFilamentLoaded = false; // filament unloaded
         _return = true;
         break;

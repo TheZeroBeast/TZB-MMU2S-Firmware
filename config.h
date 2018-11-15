@@ -1,8 +1,7 @@
 // config.h - main configuration file
 
-
-#define FW_VERSION 213 // example: 103 means version 1.0.3
-#define FW_BUILDNR 208 // number of commits in 'master'
+#define FW_VERSION 214 // example: 103 means version 1.0.3
+#define FW_BUILDNR 999 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -69,8 +68,8 @@
 // Tuning: increase treshold, if stall detection triggers at normal loads
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
-#define TMC2130_SG_THR_SEL 6 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_SEL 6
+#define TMC2130_SG_THR_IDL 6
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -122,7 +121,6 @@
 
 #define TOOLSYNC 20                         // number of tool change (T) commands before a selector resync is performed
 
-
 // signals (from interrupts to main loop)
 #define SIG_ID_BTN 1 // any button changed
 
@@ -154,7 +152,6 @@
 
 // number of extruders
 #define EXTRUDERS 5
-
 
 // diagnostic functions
 #define _DIAG

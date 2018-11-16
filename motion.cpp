@@ -126,22 +126,9 @@ void eject_filament(int extruder)
 
 void recover_after_eject()
 {
-    // restore state before eject filament
-    //tmc2130_init_axis(AX_PUL, tmc2130_mode);
-
-
-    // pull back filament // Why if it has just been removed?? WTFudge
-    //engage_filament_pulley(true);
-    //move_pulley(-EJECT_PULLEY_STEPS);
-
-    //engage_filament_pulley(false);
-
     while (isFilamentInFinda()) fixTheProblem();
-
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
-
-    //tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 }
 
 /**
@@ -184,7 +171,8 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(452, 455);
+    //move_pulley(452, 455);
+    moveSmooth(AX_PUL, 452, 455, true, true, ACC_NORMAL, false, true);
 
 
     // reset currents
@@ -196,7 +184,7 @@ void load_filament_into_extruder()
                                           current_running_stealth[AX_PUL]);
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-    engage_filament_pulley(false);
+    //engage_filament_pulley(false);
 }
 
 void init_Pulley()
@@ -393,7 +381,7 @@ MotReturn homeIdlerSmooth()
  * @return
  */
 // TODO 3: compensate delay for computation time, to get accurate speeds
-MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
+MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection, bool disengageAtEnd)
 {
     MotReturn ret = MR_Success;
     if (withFindaDetection) ret = MR_Failed;
@@ -412,6 +400,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     switch (axis) {
     case AX_PUL:
         stepsLeft = set_pulley_direction(steps);
+        if (disengageAtEnd) set_idler_direction(IDLER_PARKING_STEPS * -1);
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         break;
     case AX_IDL:
@@ -435,6 +424,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         case AX_PUL:
             PIN_STP_PUL_HIGH;
             PIN_STP_PUL_LOW;
+            if ((stepsLeft <= IDLER_PARKING_STEPS) && disengageAtEnd) { PIN_STP_IDL_HIGH; PIN_STP_IDL_LOW; }
             if (withStallDetection && digitalRead(A3) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
@@ -499,6 +489,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         break;
         }
     }
+    if ((stepsLeft <= IDLER_PARKING_STEPS) && disengageAtEnd) isIdlerParked = true;
     return ret;
 }
 

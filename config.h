@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION 213 // example: 103 means version 1.0.3
-#define FW_BUILDNR 208 // number of commits in 'master'
+#define FW_VERSION 214 // example: 103 means version 1.0.3
+#define FW_BUILDNR 999 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -69,8 +69,8 @@
 // Tuning: increase treshold, if stall detection triggers at normal loads
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
-#define TMC2130_SG_THR_SEL 6 // 20 didn't work, 15 did, decreased further to 12
-#define TMC2130_SG_THR_IDL 6 // optimized value: 4 (8 and 6 didn't work)
+#define TMC2130_SG_THR_SEL 6
+#define TMC2130_SG_THR_IDL 6
 
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -84,7 +84,7 @@
 #define CURRENT_HOLDING_NORMAL      { 1, 10, 22}
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 28}
+#define CURRENT_HOMING              { 1, 35, 30}
 
 // speeds and accelerations
 #define MAX_SPEED_PUL 2000 // micro steps

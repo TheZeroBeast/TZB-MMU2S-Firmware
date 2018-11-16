@@ -350,7 +350,7 @@ extern "C" {
             }
             count = 0;
 
-            if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
+            if (sscanf_P(line, PSTR("T%d"), &value) > 0x00) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
                     if ((active_extruder == value) & (isFilamentLoaded)) {
@@ -413,7 +413,7 @@ extern "C" {
                 }
             } else if (strstr(line, "FS") > 0) {
                 fsensor_triggered = true;
-                fprintf_P(inout, PSTR("ok\n"));
+                //fprintf_P(inout, PSTR("ok\n"));
             } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
                 if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
                     filament_type[value] = value0;
@@ -438,6 +438,9 @@ extern "C" {
                     recover_after_eject();
                     fprintf_P(inout, PSTR("ok\n"));
                 }
+            } else if (!mmuFSensorLoading && fsensor_triggered) {
+              fsensor_triggered = false;
+              fprintf_P(inout, PSTR("ok\n"));
             }
         }
     }
@@ -504,7 +507,7 @@ loop:
 
             while (tag == false) {
                 currentTime = millis();
-                if ((currentTime - startTime) > 12000) {      // After min bowden length load slow until MK3-FSensor trips
+                if ((currentTime - startTime) > 5000) {      // After min bowden length load slow until MK3-FSensor trips
                     fixTheProblem();
                     goto loop;
                 }
@@ -512,15 +515,16 @@ loop:
                 move_pulley(1,MAX_SPEED_PUL);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
-                delayMicroseconds(250);
+                delayMicroseconds(100);
             }
 
-            mmuFSensorLoading = false;
-            fsensor_triggered = false;
+            //mmuFSensorLoading = false;
+            //fsensor_triggered = false;
             moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);
-            isFilamentLoaded = true;  // filament loaded
             shr16_set_led(0x000);
             shr16_set_led(1 << 2 * (4 - active_extruder));
+            isFilamentLoaded = true;  // filament loaded
+            mmuFSensorLoading = false;
             return true;
         }
         fixTheProblem();

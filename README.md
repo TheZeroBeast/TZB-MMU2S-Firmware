@@ -1,10 +1,12 @@
 # MM-control-01
 MMU 3-axis stepper control
 
-## Below are the stable versions of MMU2 & MK3 FW required.
+## Below are the stable versions of MMU2 & MK3 FW required and a link to releases of latest compiled hex files.
 MMU: V#: 2.1.3	B#:  208
 
 MK3: V#: 5.0.2	B#: 2234
+
+https://github.com/TheZeroBeast/MM-control-01/releases
 
 ## When in error state Active Extruder LED will blink, FINDA Sensing is RED and GREEN for not, realtime
   - if unload or load failed

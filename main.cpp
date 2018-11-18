@@ -365,7 +365,7 @@ extern "C" {
                             load_filament_withSensor();
                             load_filament_at_toolChange = false;
                             fprintf_P(inout, PSTR("ok\n"));
-                        } else fprintf_P(inout, PSTR("nk\n"));
+                        } //else fprintf_P(inout, PSTR("nk\n"));
                     }
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
@@ -498,7 +498,7 @@ loop:
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor
 
-        if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
+        if (moveSmooth(AX_PUL, 1000, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
             moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);      // Load filament down to MK3-FSensor
 
             startTime = millis();
@@ -515,11 +515,7 @@ loop:
                 move_pulley(1,MAX_SPEED_PUL);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
-                delayMicroseconds(100);
             }
-
-            //mmuFSensorLoading = false;
-            //fsensor_triggered = false;
             moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);
             shr16_set_led(0x000);
             shr16_set_led(1 << 2 * (4 - active_extruder));
@@ -529,9 +525,6 @@ loop:
         }
         fixTheProblem();
         goto loop;
-        shr16_set_led(0x000);
-        shr16_set_led(1 << 2 * (4 - active_extruder));
-        return false;
     }
 }
 
@@ -553,6 +546,7 @@ bool unload_filament_withSensor()
         moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
         moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
+        delay(10); /// Added to improove the rare case where unload fails but appears successfull
         if (isFilamentInFinda()) fixTheProblem();
         
         isFilamentLoaded = false; // filament unloaded

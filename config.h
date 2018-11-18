@@ -87,7 +87,7 @@
 #define CURRENT_HOMING              { 1, 35, 30}
 
 // speeds and accelerations
-#define MAX_SPEED_PUL 2000 // micro steps
+#define MAX_SPEED_PUL 3000 // micro steps // RMM testing 3000 from 2000
 #define MAX_SPEED_SEL 8000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
@@ -120,7 +120,7 @@
 #define PIN_STP_PUL_HIGH (PORTB |= 0x10)
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
 
-#define TOOLSYNC 20                         // number of tool change (T) commands before a selector resync is performed
+#define TOOLSYNC 5                         // number of tool change (T) commands before a selector resync is performed
 
 
 // signals (from interrupts to main loop)

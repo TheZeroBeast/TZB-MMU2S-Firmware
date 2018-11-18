@@ -487,7 +487,8 @@ void fixTheProblem(void) {
 
 bool load_filament_withSensor()
 {
-loop:
+    fsensor_triggered = false;
+    loop:
     {
         engage_filament_pulley(true); // If idler is in parked position un-park him get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
@@ -496,14 +497,14 @@ loop:
         bool tag = false;
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
-        // we can expect something like 570 steps to get in sensor
+        // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
 
         if (moveSmooth(AX_PUL, 1000, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
             moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);      // Load filament down to MK3-FSensor
 
             startTime = millis();
-            fsensor_triggered = false;
-            process_commands(uart_com);
+            //fsensor_triggered = false;  // moved outside loop incase MK3 updates fsensor_triggered before next loop clears it. Error hasn't happened yet from what I've seen
+            process_commands(uart_com);                                           // Run through serial read buffer so fsensor_triggered can be updated
 
             while (tag == false) {
                 currentTime = millis();
@@ -516,8 +517,8 @@ loop:
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
             }
-            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);
-            shr16_set_led(0x000);
+            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
+            shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
             isFilamentLoaded = true;  // filament loaded
             mmuFSensorLoading = false;
@@ -537,26 +538,23 @@ bool unload_filament_withSensor()
     bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     tmc2130_init_axis(AX_IDL, tmc2130_mode);
-
     engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
-
-    moveSmooth(AX_PUL, -400, 350, false, false);
-    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true)) {
-    case MR_Success:
+    
+    moveSmooth(AX_PUL, -400, 450, false, false);
+    if (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/6), false, false, ACC_FEED_NORMAL, true) == MR_Success) {
         moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
         moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
-        delay(10); /// Added to improove the rare case where unload fails but appears successfull
+        delay(100); /// Added to improove the rare case where unload fails but appears successfull on inspection of MMU
         if (isFilamentInFinda()) fixTheProblem();
-        
         isFilamentLoaded = false; // filament unloaded
         _return = true;
-        break;
-    default:
+    } else {
         fixTheProblem();
         isFilamentLoaded = false; // filament unloaded
         _return = true;
     }
+    
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
     return _return;

@@ -24,12 +24,12 @@ static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const int SELECTOR_STEPS = 2820 / (EXTRUDERS - 1); // RMM Changed from 2800
+static const int SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
 
 const int BOWDEN_LENGTH = 8000;
-const int STEPS_MK3FSensor_To_Bondtech = 380;
+const int STEPS_MK3FSensor_To_Bondtech = 390;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 150;
 
 static const int EJECT_PULLEY_STEPS = 2500;
@@ -171,7 +171,6 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    //move_pulley(452, 455);
     moveSmooth(AX_PUL, 452, 455, true, true, ACC_NORMAL, false, true);
 
 
@@ -184,7 +183,6 @@ void load_filament_into_extruder()
                                           current_running_stealth[AX_PUL]);
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-    //engage_filament_pulley(false);
 }
 
 void init_Pulley()
@@ -430,13 +428,14 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
                 return MR_Failed;
             }
             if (withFindaDetection && steps > 0 && isFilamentInFinda()) return MR_Success;
-            if (withFindaDetection && steps < 0 && (isFilamentInFinda() == false)) return MR_Success;
+            if (withFindaDetection && steps < 0 && isFilamentInFinda() == false) return MR_Success;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;
             PIN_STP_IDL_LOW;
             if (withStallDetection && digitalRead(A5) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
+                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
                 if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
@@ -446,6 +445,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_SEL_LOW;
             if (withStallDetection && digitalRead(A4) == 1) { // stall detected
                 delay(50); // delay to release the stall detection
+                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
                 if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
@@ -487,7 +487,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         break;
         }
     }
-    if ((stepsLeft <= IDLER_PARKING_STEPS) && disengageAtEnd) isIdlerParked = true;
+    if (disengageAtEnd) isIdlerParked = true;
     return ret;
 }
 

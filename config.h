@@ -84,7 +84,7 @@
 #define CURRENT_HOLDING_NORMAL      { 1, 10, 22}
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 30}
+#define CURRENT_HOMING              { 1, 35, 35}
 
 // speeds and accelerations
 #define MAX_SPEED_PUL 3000 // micro steps // RMM testing 3000 from 2000
@@ -93,7 +93,7 @@
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_FEED_NORMAL 1400 // micro steps / s²
+#define ACC_FEED_NORMAL 1500 // micro steps / s²
 #define ACC_FEED_STEALTH 1000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
 
@@ -120,7 +120,7 @@
 #define PIN_STP_PUL_HIGH (PORTB |= 0x10)
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
 
-#define TOOLSYNC 5                         // number of tool change (T) commands before a selector resync is performed
+#define TOOLSYNC 25                         // number of tool change (T) commands before a selector resync is performed
 
 
 // signals (from interrupts to main loop)

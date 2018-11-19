@@ -541,7 +541,7 @@ bool unload_filament_withSensor()
     engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
     
     moveSmooth(AX_PUL, -400, 450, false, false);
-    if (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/6), false, false, ACC_FEED_NORMAL, true) == MR_Success) {
+    if (moveSmooth(AX_PUL, -8700, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true) == MR_Success) {
         moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
         moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);

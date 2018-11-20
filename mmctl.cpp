@@ -34,7 +34,7 @@ bool feed_filament(void)
     while (!_loaded) {
 
         if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_Success) {
-            moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
+            moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);
             shr16_set_led(1 << 2 * (4 - active_extruder));
             _loaded = true;
             break;
@@ -104,7 +104,7 @@ bool toolChange(int new_extruder)
 //! @return
 bool select_extruder(int new_extruder)
 {
-    if (isFilamentInFinda()) return false;
+    if (digitalRead(A1)) return false;
 
     int previous_extruder = active_extruder;
     active_extruder = new_extruder;

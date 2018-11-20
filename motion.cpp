@@ -26,10 +26,11 @@ static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 
 static const int SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
+const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
 
 const int BOWDEN_LENGTH = 8000;
 const int STEPS_MK3FSensor_To_Bondtech = 390;
+const int FILAMENT_PARKING_STEPS = -320;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 150;
 
 static const int EJECT_PULLEY_STEPS = 2500;
@@ -126,7 +127,7 @@ void eject_filament(int extruder)
 
 void recover_after_eject()
 {
-    while (isFilamentInFinda()) fixTheProblem();
+    while (digitalRead(A1)) fixTheProblem();
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
 }
@@ -285,7 +286,7 @@ void move_selector(int steps, uint16_t speed)
             speed = MAX_SPEED_STEALTH_SEL;
         }
     }
-    if (isFilamentInFinda() == false) {
+    if (digitalRead(A1) == false) {
         moveSmooth(AX_SEL, steps, speed);
     }
 }
@@ -398,7 +399,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     switch (axis) {
     case AX_PUL:
         stepsLeft = set_pulley_direction(steps);
-        if (disengageAtEnd) set_idler_direction(IDLER_PARKING_STEPS * -1);
+        if (disengageAtEnd) { set_idler_direction(IDLER_PARKING_STEPS * -1); stepsLeft += (IDLER_PARKING_STEPS/2); }// 217 and steps left plus half
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         break;
     case AX_IDL:
@@ -422,20 +423,20 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         case AX_PUL:
             PIN_STP_PUL_HIGH;
             PIN_STP_PUL_LOW;
-            if ((stepsLeft <= IDLER_PARKING_STEPS) && disengageAtEnd) { PIN_STP_IDL_HIGH; PIN_STP_IDL_LOW; }
-            if (withStallDetection && digitalRead(A3) == 1) { // stall detected
+            if ((stepsLeft <= IDLER_PARKING_STEPS) && disengageAtEnd)    { PIN_STP_IDL_HIGH; PIN_STP_IDL_LOW; }   // Park AX_IDL for last parking steps
+            if ((stepsLeft >= (IDLER_PARKING_STEPS/2)) && disengageAtEnd){ PIN_STP_PUL_HIGH; PIN_STP_PUL_LOW; }   // finish AX_PUL move half way through AX_IDL parking
+            if (withStallDetection && digitalRead(A3)) { // stall detected
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
-            if (withFindaDetection && steps > 0 && isFilamentInFinda()) return MR_Success;
-            if (withFindaDetection && steps < 0 && isFilamentInFinda() == false) return MR_Success;
+            if (withFindaDetection && ( steps > 0 ) && digitalRead(A1)) return MR_Success;
+            if (withFindaDetection && ( steps < 0 ) && (digitalRead(A1) == false)) return MR_Success;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;
             PIN_STP_IDL_LOW;
-            if (withStallDetection && digitalRead(A5) == 1) { // stall detected
+            if (withStallDetection && digitalRead(A5)) { // stall detected
                 delay(50); // delay to release the stall detection
-                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
                 if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
@@ -443,9 +444,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         case AX_SEL:
             PIN_STP_SEL_HIGH;
             PIN_STP_SEL_LOW;
-            if (withStallDetection && digitalRead(A4) == 1) { // stall detected
+            if (withStallDetection && digitalRead(A4)) { // stall detected
                 delay(50); // delay to release the stall detection
-                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
                 if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
@@ -489,9 +489,4 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     }
     if (disengageAtEnd) isIdlerParked = true;
     return ret;
-}
-
-bool isFilamentInFinda()
-{
-    return digitalRead(A1) == 1;
 }

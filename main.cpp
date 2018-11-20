@@ -105,9 +105,9 @@ void setup()
     }
 
     // if FINDA is sensing filament do not home
-    while (isFilamentInFinda()) {
+    while (digitalRead(A1)) {
         while (Btn::right != buttonClicked()) {
-            if (isFilamentInFinda()) {
+            if (digitalRead(A1)) {
                 shr16_set_led(0x2aa);
             } else {
                 shr16_set_led(0x155);
@@ -263,7 +263,7 @@ extern "C" {
                 count = 0;
             } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
                 if (value == 0) { // Read finda
-                    fprintf_P(inout, PSTR("%dok\n"), isFilamentInFinda());
+                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
                 }
             } else { //if (strstr(line, "P0") == NULL) {
                 for (int i = 0; i < 32; i++) {
@@ -470,12 +470,12 @@ void fixTheProblem(void) {
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);       // turn OFF the selector stepper motor
     tmc2130_disable_axis(AX_IDL, tmc2130_mode);       // turn OFF the idler stepper motor
 
-    while ((Btn::middle != buttonClicked()) || isFilamentInFinda()) {
+    while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         delay(100);
         shr16_set_led(0x000);
         delay(100);
-        if (isFilamentInFinda()) {
+        if (digitalRead(A1)) {
             shr16_set_led(2 << 2 * (4 - active_extruder));
         } else shr16_set_led(1 << 2 * (4 - active_extruder));
     }
@@ -490,7 +490,7 @@ bool load_filament_withSensor()
     fsensor_triggered = false;
     loop:
     {
-        engage_filament_pulley(true); // If idler is in parked position un-park him get in contact with filament
+        engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
         unsigned long startTime, currentTime;
@@ -503,7 +503,6 @@ bool load_filament_withSensor()
             moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);      // Load filament down to MK3-FSensor
 
             startTime = millis();
-            //fsensor_triggered = false;  // moved outside loop incase MK3 updates fsensor_triggered before next loop clears it. Error hasn't happened yet from what I've seen
             process_commands(uart_com);                                           // Run through serial read buffer so fsensor_triggered can be updated
 
             while (tag == false) {
@@ -537,25 +536,16 @@ bool unload_filament_withSensor()
 {
     bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    tmc2130_init_axis(AX_IDL, tmc2130_mode);
-    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    //tmc2130_init_axis(AX_IDL, tmc2130_mode);
+    engage_filament_pulley(true); // get in contact with filament
     
-    moveSmooth(AX_PUL, -400, 450, false, false);
-    if (moveSmooth(AX_PUL, -8700, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true) == MR_Success) {
-        moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
-        moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
-        moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
-        delay(100); /// Added to improove the rare case where unload fails but appears successfull on inspection of MMU
-        if (isFilamentInFinda()) fixTheProblem();
-        isFilamentLoaded = false; // filament unloaded
-        _return = true;
-    } else {
-        fixTheProblem();
-        isFilamentLoaded = false; // filament unloaded
-        _return = true;
+    moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1), MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL); // unload to before FINDA
+    if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL) == MR_Success) {                               // move to trigger FINDA
+      moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
     }
-    
+    if (digitalRead(A1)) fixTheProblem();                                                                       // If -1000 steps didn't trigger FINDA
+    isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
-    return _return;
+    return true;
 }

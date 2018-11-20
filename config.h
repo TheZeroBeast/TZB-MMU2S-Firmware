@@ -120,7 +120,7 @@
 #define PIN_STP_PUL_HIGH (PORTB |= 0x10)
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
 
-#define TOOLSYNC 25                         // number of tool change (T) commands before a selector resync is performed
+#define TOOLSYNC 15                         // number of tool change (T) commands before a selector resync is performed
 
 
 // signals (from interrupts to main loop)

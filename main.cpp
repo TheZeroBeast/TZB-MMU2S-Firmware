@@ -534,13 +534,12 @@ bool load_filament_withSensor()
  */
 bool unload_filament_withSensor()
 {
-    bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    //tmc2130_init_axis(AX_IDL, tmc2130_mode);
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);
     engage_filament_pulley(true); // get in contact with filament
     
-    moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1), MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL); // unload to before FINDA
-    if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL) == MR_Success) {                               // move to trigger FINDA
+    moveSmooth(AX_PUL, ((BOWDEN_LENGTH + STEPS_MK3FSensor_To_Bondtech) * -1), MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL); // unload to before FINDA  // - (MAX_SPEED_PUL/5)
+    if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL, true) == MR_Success) {                               // move to trigger FINDA
       moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
     }
     if (digitalRead(A1)) fixTheProblem();                                                                       // If -1000 steps didn't trigger FINDA

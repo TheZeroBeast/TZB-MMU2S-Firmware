@@ -20,25 +20,24 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
 static const int IDLER_STEPS_AFTER_HOMING = -138;
 
-static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
+//static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const int SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
+static const int SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
 
 const int BOWDEN_LENGTH = 8000;
 const int STEPS_MK3FSensor_To_Bondtech = 390;
-const int FILAMENT_PARKING_STEPS = -320;
-const int EXTRA_STEPS_SELECTOR_SERVICE = 150;
+const int FILAMENT_PARKING_STEPS = -620;
+const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
 
 static const int EJECT_PULLEY_STEPS = 2500;
 
 // private variables:
 
 static int selector_steps_for_eject = 0;
-
 static int idler_steps_for_eject = 0;
 
 // private functions:
@@ -149,7 +148,7 @@ void load_filament_into_extruder()
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
 
-    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    engage_filament_pulley(true); // get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(150, 385);
@@ -172,8 +171,9 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    moveSmooth(AX_PUL, 452, 455, true, true, ACC_NORMAL, false, true);
-
+    move_pulley(452, 455);
+    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    engage_filament_pulley(false); // release contact with filament
 
     // reset currents
     if (tmc2130_mode == NORMAL_MODE) {
@@ -380,7 +380,7 @@ MotReturn homeIdlerSmooth()
  * @return
  */
 // TODO 3: compensate delay for computation time, to get accurate speeds
-MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection, bool disengageAtEnd)
+MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
     MotReturn ret = MR_Success;
     if (withFindaDetection) ret = MR_Failed;
@@ -399,7 +399,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
     switch (axis) {
     case AX_PUL:
         stepsLeft = set_pulley_direction(steps);
-        if (disengageAtEnd) { set_idler_direction(IDLER_PARKING_STEPS * -1); stepsLeft += (IDLER_PARKING_STEPS/2); }// 217 and steps left plus half
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         break;
     case AX_IDL:
@@ -423,8 +422,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         case AX_PUL:
             PIN_STP_PUL_HIGH;
             PIN_STP_PUL_LOW;
-            if ((stepsLeft <= IDLER_PARKING_STEPS) && disengageAtEnd)    { PIN_STP_IDL_HIGH; PIN_STP_IDL_LOW; }   // Park AX_IDL for last parking steps
-            if ((stepsLeft >= (IDLER_PARKING_STEPS/2)) && disengageAtEnd){ PIN_STP_PUL_HIGH; PIN_STP_PUL_LOW; }   // finish AX_PUL move half way through AX_IDL parking
             if (withStallDetection && digitalRead(A3)) { // stall detected
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
@@ -487,6 +484,5 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         break;
         }
     }
-    if (disengageAtEnd) isIdlerParked = true;
     return ret;
 }

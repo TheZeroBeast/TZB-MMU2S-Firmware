@@ -105,9 +105,9 @@ void setup()
     }
 
     // if FINDA is sensing filament do not home
-    while (isFilamentInFinda()) {
+    while (digitalRead(A1)) {
         while (Btn::right != buttonClicked()) {
-            if (isFilamentInFinda()) {
+            if (digitalRead(A1)) {
                 shr16_set_led(0x2aa);
             } else {
                 shr16_set_led(0x155);
@@ -263,7 +263,7 @@ extern "C" {
                 count = 0;
             } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
                 if (value == 0) { // Read finda
-                    fprintf_P(inout, PSTR("%dok\n"), isFilamentInFinda());
+                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
                 }
             } else { //if (strstr(line, "P0") == NULL) {
                 for (int i = 0; i < 32; i++) {
@@ -350,7 +350,7 @@ extern "C" {
             }
             count = 0;
 
-            if (sscanf_P(line, PSTR("T%d"), &value) > 0) {
+            if (sscanf_P(line, PSTR("T%d"), &value) > 0x00) {
                 //T-code scanned
                 if ((value >= 0) && (value < EXTRUDERS)) {
                     if ((active_extruder == value) & (isFilamentLoaded)) {
@@ -365,7 +365,7 @@ extern "C" {
                             load_filament_withSensor();
                             load_filament_at_toolChange = false;
                             fprintf_P(inout, PSTR("ok\n"));
-                        } else fprintf_P(inout, PSTR("nk\n"));
+                        } //else fprintf_P(inout, PSTR("nk\n"));
                     }
                 }
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
@@ -413,7 +413,7 @@ extern "C" {
                 }
             } else if (strstr(line, "FS") > 0) {
                 fsensor_triggered = true;
-                fprintf_P(inout, PSTR("ok\n"));
+                //fprintf_P(inout, PSTR("ok\n"));
             } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
                 if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
                     filament_type[value] = value0;
@@ -438,6 +438,9 @@ extern "C" {
                     recover_after_eject();
                     fprintf_P(inout, PSTR("ok\n"));
                 }
+            } else if (!mmuFSensorLoading && fsensor_triggered) {
+                fsensor_triggered = false;
+                fprintf_P(inout, PSTR("ok\n"));
             }
         }
     }
@@ -462,17 +465,17 @@ void fault_handler(Fault id)
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
 void fixTheProblem(void) {
-  
+
     engage_filament_pulley(false);                    // park the idler stepper motor
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);       // turn OFF the selector stepper motor
     tmc2130_disable_axis(AX_IDL, tmc2130_mode);       // turn OFF the idler stepper motor
 
-    while ((Btn::middle != buttonClicked()) || isFilamentInFinda()) {
+    while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         delay(100);
         shr16_set_led(0x000);
         delay(100);
-        if (isFilamentInFinda()) {
+        if (digitalRead(A1)) {
             shr16_set_led(2 << 2 * (4 - active_extruder));
         } else shr16_set_led(1 << 2 * (4 - active_extruder));
     }
@@ -484,27 +487,27 @@ void fixTheProblem(void) {
 
 bool load_filament_withSensor()
 {
+    fsensor_triggered = false;
 loop:
     {
-        engage_filament_pulley(true); // If idler is in parked position un-park him get in contact with filament
+        engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
         unsigned long startTime, currentTime;
         bool tag = false;
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
-        // we can expect something like 570 steps to get in sensor
+        // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
 
-        if (moveSmooth(AX_PUL, 2500, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
+        if (moveSmooth(AX_PUL, 1000, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
             moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);      // Load filament down to MK3-FSensor
 
             startTime = millis();
-            fsensor_triggered = false;
-            process_commands(uart_com);
+            process_commands(uart_com);                                           // Run through serial read buffer so fsensor_triggered can be updated
 
             while (tag == false) {
                 currentTime = millis();
-                if ((currentTime - startTime) > 12000) {      // After min bowden length load slow until MK3-FSensor trips
+                if ((currentTime - startTime) > 5000) {      // After min bowden length load slow until MK3-FSensor trips
                     fixTheProblem();
                     goto loop;
                 }
@@ -512,22 +515,16 @@ loop:
                 move_pulley(1,MAX_SPEED_PUL);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
-                delayMicroseconds(250);
             }
-
-            mmuFSensorLoading = false;
-            fsensor_triggered = false;
-            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);
-            isFilamentLoaded = true;  // filament loaded
-            shr16_set_led(0x000);
+            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
+            shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
+            isFilamentLoaded = true;  // filament loaded
+            mmuFSensorLoading = false;
             return true;
         }
         fixTheProblem();
         goto loop;
-        shr16_set_led(0x000);
-        shr16_set_led(1 << 2 * (4 - active_extruder));
-        return false;
     }
 }
 
@@ -537,29 +534,17 @@ loop:
  */
 bool unload_filament_withSensor()
 {
-    bool _return = false;
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     tmc2130_init_axis(AX_IDL, tmc2130_mode);
+    engage_filament_pulley(true); // get in contact with filament
 
-    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
-
-    moveSmooth(AX_PUL, -400, 350, false, false);
-    switch (moveSmooth(AX_PUL, -12000, MAX_SPEED_PUL - (MAX_SPEED_PUL/5), false, false, ACC_FEED_NORMAL, true)) {
-    case MR_Success:
-        moveSmooth(AX_PUL, -50, 550, false, false, ACC_NORMAL);
-        moveSmooth(AX_PUL, 600, 550, false, false, ACC_NORMAL, true);
-        moveSmooth(AX_PUL, -600, 550, false, false, ACC_NORMAL); //ACC_FEED_NORMAL);
-        if (isFilamentInFinda()) fixTheProblem();
-        
-        isFilamentLoaded = false; // filament unloaded
-        _return = true;
-        break;
-    default:
-        fixTheProblem();
-        isFilamentLoaded = false; // filament unloaded
-        _return = true;
+    moveSmooth(AX_PUL, ((BOWDEN_LENGTH + STEPS_MK3FSensor_To_Bondtech) * -1), MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL); // unload to before FINDA  // - (MAX_SPEED_PUL/5)
+    if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL, true) == MR_Success) {                               // move to trigger FINDA
+        moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
     }
+    if (digitalRead(A1)) fixTheProblem();                                                                       // If -1000 steps didn't trigger FINDA
+    isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);
-    return _return;
+    return true;
 }

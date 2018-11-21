@@ -18,6 +18,7 @@ bool isFilamentLoaded = false;
 bool isIdlerParked = false;
 bool isPrinting = false;
 bool isHomed = false;
+bool homedOnUnload = false;
 
 // private variables:
 static int toolChanges = 0;
@@ -33,7 +34,8 @@ bool feed_filament(void)
     while (!_loaded) {
 
         if (moveSmooth(AX_PUL, 4000, 650, false, true, ACC_NORMAL, true) == MR_Success) {
-            moveSmooth(AX_PUL, -600, 650, false, false, ACC_NORMAL);
+            delay(5);
+            moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);
             shr16_set_led(1 << 2 * (4 - active_extruder));
             _loaded = true;
             break;
@@ -76,17 +78,15 @@ bool toolChange(int new_extruder)
             unload_filament_withSensor(); //failed unload. unload filament first
         }
         if (!isFilamentLoaded) {
-            if (trackToolChanges == TOOLSYNC) {
+            if (trackToolChanges == TOOLSYNC) { // Home every period TOOLSYNC
                 home(true);
-                delay(50); // delay to release the stall detection
-                engage_filament_pulley(true);
-            } else {
-                set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
-            }
+                // move idler and selector to new filament position
+            } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder);
             toolChanges++;
             trackToolChanges ++;
             shr16_set_led(2 << 2 * (4 - active_extruder));
             load_filament_at_toolChange = true;
+            homedOnUnload = false;
             _return = true;
         }
     }
@@ -105,7 +105,7 @@ bool toolChange(int new_extruder)
 //! @return
 bool select_extruder(int new_extruder)
 {
-    if (isFilamentInFinda()) return false;
+    if (digitalRead(A1)) return false;
 
     int previous_extruder = active_extruder;
     active_extruder = new_extruder;

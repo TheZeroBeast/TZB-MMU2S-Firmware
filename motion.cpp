@@ -20,24 +20,24 @@ int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
 static const int IDLER_STEPS_AFTER_HOMING = -138;
 
-static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
+//static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const int SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
+static const int SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; //
+const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
 
 const int BOWDEN_LENGTH = 8000;
 const int STEPS_MK3FSensor_To_Bondtech = 390;
-const int EXTRA_STEPS_SELECTOR_SERVICE = 150;
+const int FILAMENT_PARKING_STEPS = -620;
+const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
 
 static const int EJECT_PULLEY_STEPS = 2500;
 
 // private variables:
 
 static int selector_steps_for_eject = 0;
-
 static int idler_steps_for_eject = 0;
 
 // private functions:
@@ -126,22 +126,9 @@ void eject_filament(int extruder)
 
 void recover_after_eject()
 {
-    // restore state before eject filament
-    //tmc2130_init_axis(AX_PUL, tmc2130_mode);
-
-
-    // pull back filament // Why if it has just been removed?? WTFudge
-    //engage_filament_pulley(true);
-    //move_pulley(-EJECT_PULLEY_STEPS);
-
-    //engage_filament_pulley(false);
-
-    while (isFilamentInFinda()) fixTheProblem();
-
+    while (digitalRead(A1)) fixTheProblem();
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
-
-    //tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 }
 
 /**
@@ -161,7 +148,7 @@ void load_filament_into_extruder()
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
 
-    engage_filament_pulley(true); // if idler is in parked position un-park him get in contact with filament
+    engage_filament_pulley(true); // get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     move_pulley(150, 385);
@@ -185,7 +172,8 @@ void load_filament_into_extruder()
                                           current_running_stealth[AX_PUL] / 4);
     }
     move_pulley(452, 455);
-
+    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    engage_filament_pulley(false); // release contact with filament
 
     // reset currents
     if (tmc2130_mode == NORMAL_MODE) {
@@ -196,7 +184,6 @@ void load_filament_into_extruder()
                                           current_running_stealth[AX_PUL]);
     }
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
-    engage_filament_pulley(false);
 }
 
 void init_Pulley()
@@ -299,7 +286,7 @@ void move_selector(int steps, uint16_t speed)
             speed = MAX_SPEED_STEALTH_SEL;
         }
     }
-    if (isFilamentInFinda() == false) {
+    if (digitalRead(A1) == false) {
         moveSmooth(AX_SEL, steps, speed);
     }
 }
@@ -435,19 +422,18 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         case AX_PUL:
             PIN_STP_PUL_HIGH;
             PIN_STP_PUL_LOW;
-            if (withStallDetection && digitalRead(A3) == 1) { // stall detected
+            if (withStallDetection && digitalRead(A3)) { // stall detected
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
-            if (withFindaDetection && steps > 0 && isFilamentInFinda()) return MR_Success;
-            if (withFindaDetection && steps < 0 && isFilamentInFinda() == false) return MR_Success;
+            if (withFindaDetection && ( steps > 0 ) && digitalRead(A1)) return MR_Success;
+            if (withFindaDetection && ( steps < 0 ) && (digitalRead(A1) == false)) return MR_Success;
             break;
         case AX_IDL:
             PIN_STP_IDL_HIGH;
             PIN_STP_IDL_LOW;
-            if (withStallDetection && digitalRead(A5) == 1) { // stall detected
+            if (withStallDetection && digitalRead(A5)) { // stall detected
                 delay(50); // delay to release the stall detection
-                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
                 if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
@@ -455,9 +441,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         case AX_SEL:
             PIN_STP_SEL_HIGH;
             PIN_STP_SEL_LOW;
-            if (withStallDetection && digitalRead(A4) == 1) { // stall detected
+            if (withStallDetection && digitalRead(A4)) { // stall detected
                 delay(50); // delay to release the stall detection
-                //if ((rehomeOnFail) && (isFilamentInFinda() == false)) home(true); // Home and return to previous active extruder
                 if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
@@ -500,9 +485,4 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
         }
     }
     return ret;
-}
-
-bool isFilamentInFinda()
-{
-    return digitalRead(A1) == 1;
 }

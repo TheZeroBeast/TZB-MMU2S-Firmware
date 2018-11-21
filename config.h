@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION 214 // example: 103 means version 1.0.3
-#define FW_BUILDNR 222 // number of commits in 'master'
+#define FW_VERSION 215 // example: 103 means version 1.0.3
+#define FW_BUILDNR 999 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -87,14 +87,14 @@
 #define CURRENT_HOMING              { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_PUL 3000 // micro steps // RMM testing 3000 from 2000
+//#define MAX_SPEED_PUL 3000 // micro steps // RMM testing 3000 from 2000
 #define MAX_SPEED_SEL 8000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_FEED_NORMAL 1500 // micro steps / s²
-#define ACC_FEED_STEALTH 1000 // micro steps / s²
+//#define ACC_FEED_NORMAL 1500 // micro steps / s²
+//#define ACC_FEED_STEALTH 1000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
 
 //mode

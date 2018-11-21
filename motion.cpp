@@ -12,8 +12,43 @@
 #include "permanent_storage.h"
 #include "config.h"
 
-// public variables:
-int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
+// public variables:  RMM : TODO
+int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
+const int filament_lookup_table[5][3] = {{3000,   400, 2000}, 
+                                         {1500,    50, 1000},
+                                         { 390,   400,  390},
+                                         {-620,  -620, -620},
+                                         {5000, 10000, 6000}};
+ /**
+  * [X] == variables based on type
+  * [Y] == filament types (0: default; 1:flex; 2: PVA)
+  * 
+  *   Y     0      |       1       |       2       |
+  * X _____________|_______________|_______________|
+  *   |            |               |               |
+  * 0 |   3000     |      400      |      2000     |
+  * __|____________|_______________|_______________|
+  *   |            |               |               |
+  * 1 |   1500     |       50      |      1000     |
+  * __|____________|_______________|_______________|
+  *   |            |               |               |
+  * 2 |    390     |      400      |       390     |
+  * __|____________|_______________|_______________|
+  *   |            |               |               |
+  * 3 |   -620     |     -620      |      -620     |
+  * __|____________|_______________|_______________|
+  *   |            |               |               |
+  * 4 |   5000     |    10000      |      6000     |
+  * __|____________|_______________|_______________|
+  *
+  * [X]
+  *  0   MAX_SPPED_PUL                  S/S
+  *  1   ACC_FEED_PUL                   S/S/S
+  *  2   STEPS_MK3FSensor_To_Bondtech   STEPS
+  *  3   FILAMENT_PARKING_STEPS         STEPS
+  *  4   FSensor TIMEOUT                MS
+  *  
+  */
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
@@ -29,8 +64,8 @@ static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16t
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
 
 const int BOWDEN_LENGTH = 8000;
-const int STEPS_MK3FSensor_To_Bondtech = 390;
-const int FILAMENT_PARKING_STEPS = -620;
+//const int STEPS_MK3FSensor_To_Bondtech = 390;
+//const int FILAMENT_PARKING_STEPS = -620;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
 
 static const int EJECT_PULLEY_STEPS = 2500;

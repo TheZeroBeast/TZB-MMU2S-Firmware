@@ -500,23 +500,23 @@ loop:
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
 
         if (moveSmooth(AX_PUL, 1000, 650, false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
-            moveSmooth(AX_PUL, BOWDEN_LENGTH, MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL);      // Load filament down to MK3-FSensor
+            moveSmooth(AX_PUL, BOWDEN_LENGTH, filament_lookup_table[0][active_extruder], false, false, filament_lookup_table[1][active_extruder]);      // Load filament down to MK3-FSensor
 
             startTime = millis();
             process_commands(uart_com);                                           // Run through serial read buffer so fsensor_triggered can be updated
 
             while (tag == false) {
                 currentTime = millis();
-                if ((currentTime - startTime) > 5000) {      // After min bowden length load slow until MK3-FSensor trips
+                if ((currentTime - startTime) > filament_lookup_table[4][active_extruder]) {      // After min bowden length load slow until MK3-FSensor trips
                     fixTheProblem();
                     goto loop;
                 }
 
-                move_pulley(1,MAX_SPEED_PUL);
+                move_pulley(1,filament_lookup_table[0][active_extruder]);
                 process_commands(uart_com);
                 if (fsensor_triggered == true) tag = true;
             }
-            moveSmooth(AX_PUL, STEPS_MK3FSensor_To_Bondtech, 385,false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
+            moveSmooth(AX_PUL, filament_lookup_table[2][active_extruder], 385,false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
             shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
             isFilamentLoaded = true;  // filament loaded
@@ -538,9 +538,9 @@ bool unload_filament_withSensor()
     tmc2130_init_axis(AX_IDL, tmc2130_mode);
     engage_filament_pulley(true); // get in contact with filament
 
-    moveSmooth(AX_PUL, ((BOWDEN_LENGTH + STEPS_MK3FSensor_To_Bondtech) * -1), MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL); // unload to before FINDA  // - (MAX_SPEED_PUL/5)
-    if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL, true) == MR_Success) {                               // move to trigger FINDA
-        moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
+    moveSmooth(AX_PUL, ((BOWDEN_LENGTH + filament_lookup_table[2][active_extruder]) * -1), filament_lookup_table[0][active_extruder], false, false, filament_lookup_table[1][active_extruder]);
+    if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL, true) == MR_Success) {                         // move to trigger FINDA
+        moveSmooth(AX_PUL, filament_lookup_table[3][active_extruder], 650, false, false, ACC_NORMAL);                              // move to filament parking position
     }
     if (digitalRead(A1)) fixTheProblem();                                                                       // If -1000 steps didn't trigger FINDA
     isFilamentLoaded = false;                                                                                   // update global variable filament unloaded

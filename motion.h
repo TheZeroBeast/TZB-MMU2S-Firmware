@@ -12,8 +12,6 @@ extern int8_t filament_type[EXTRUDERS];
 extern const int filament_lookup_table[5][3]; // [X][Y]Two-dimensional Array of extruder and used variables
 extern const int IDLER_PARKING_STEPS;
 extern const int BOWDEN_LENGTH;
-//extern const int STEPS_MK3FSensor_To_Bondtech;
-//extern const int FILAMENT_PARKING_STEPS;
 
 void home(bool doToolSync = false);
 void engage_filament_pulley(bool engage);

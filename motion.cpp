@@ -64,8 +64,6 @@ static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16t
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
 
 const int BOWDEN_LENGTH = 8000;
-//const int STEPS_MK3FSensor_To_Bondtech = 390;
-//const int FILAMENT_PARKING_STEPS = -620;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
 
 static const int EJECT_PULLEY_STEPS = 2500;

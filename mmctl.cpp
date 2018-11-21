@@ -74,10 +74,7 @@ bool toolChange(int new_extruder)
             _return = true; // nothing really happened
         }
     } else {
-        if (isFilamentLoaded) {
-            unload_filament_withSensor(); //failed unload. unload filament first
-        }
-        if (!isFilamentLoaded) {
+        if (isFilamentLoaded) unload_filament_withSensor(); //unload filament if you need to
             if (trackToolChanges == TOOLSYNC) { // Home every period TOOLSYNC
                 home(true);
                 // move idler and selector to new filament position
@@ -88,7 +85,6 @@ bool toolChange(int new_extruder)
             load_filament_at_toolChange = true;
             homedOnUnload = false;
             _return = true;
-        }
     }
 
     shr16_set_led(0x000);

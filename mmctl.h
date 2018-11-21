@@ -12,7 +12,6 @@ extern int active_extruder;
 extern int previous_extruder;
 extern bool isFilamentLoaded;
 extern bool isIdlerParked;
-extern bool homedOnUnload;
 extern int trackToolChanges;
 
 // functions:

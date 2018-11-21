@@ -542,7 +542,7 @@ bool unload_filament_withSensor()
     if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL, true) == MR_Success) {                               // move to trigger FINDA
         moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
     }
-    if (digitalRead(A1)) { fixTheProblem(); homedOnUnload = true; }                                                                      // If -1000 steps didn't trigger FINDA
+    if (digitalRead(A1)) fixTheProblem();                                                                       // If -1000 steps didn't trigger FINDA
     isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false);

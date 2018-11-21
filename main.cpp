@@ -439,8 +439,8 @@ extern "C" {
                     fprintf_P(inout, PSTR("ok\n"));
                 }
             } else if (!mmuFSensorLoading && fsensor_triggered) {
-              fsensor_triggered = false;
-              fprintf_P(inout, PSTR("ok\n"));
+                fsensor_triggered = false;
+                fprintf_P(inout, PSTR("ok\n"));
             }
         }
     }
@@ -465,7 +465,7 @@ void fault_handler(Fault id)
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
 void fixTheProblem(void) {
-  
+
     engage_filament_pulley(false);                    // park the idler stepper motor
     tmc2130_disable_axis(AX_SEL, tmc2130_mode);       // turn OFF the selector stepper motor
     tmc2130_disable_axis(AX_IDL, tmc2130_mode);       // turn OFF the idler stepper motor
@@ -488,7 +488,7 @@ void fixTheProblem(void) {
 bool load_filament_withSensor()
 {
     fsensor_triggered = false;
-    loop:
+loop:
     {
         engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
@@ -537,10 +537,10 @@ bool unload_filament_withSensor()
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
     tmc2130_init_axis(AX_IDL, tmc2130_mode);
     engage_filament_pulley(true); // get in contact with filament
-    
+
     moveSmooth(AX_PUL, ((BOWDEN_LENGTH + STEPS_MK3FSensor_To_Bondtech) * -1), MAX_SPEED_PUL, false, false, ACC_FEED_NORMAL); // unload to before FINDA  // - (MAX_SPEED_PUL/5)
     if (moveSmooth(AX_PUL, -2000, 650, false, false, ACC_NORMAL, true) == MR_Success) {                               // move to trigger FINDA
-      moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
+        moveSmooth(AX_PUL, FILAMENT_PARKING_STEPS, 650, false, false, ACC_NORMAL);                                // move to filament parking position
     }
     if (digitalRead(A1)) fixTheProblem();                                                                       // If -1000 steps didn't trigger FINDA
     isFilamentLoaded = false;                                                                                   // update global variable filament unloaded

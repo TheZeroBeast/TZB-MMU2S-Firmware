@@ -80,7 +80,7 @@ bool toolChange(int new_extruder)
         if (!isFilamentLoaded) {
             if (trackToolChanges == TOOLSYNC) { // Home every period TOOLSYNC
                 home(true);
-            // move idler and selector to new filament position
+                // move idler and selector to new filament position
             } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder);
             toolChanges++;
             trackToolChanges ++;

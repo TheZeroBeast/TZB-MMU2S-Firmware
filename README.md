@@ -3,7 +3,7 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.4	B#:  222**
+**MMU: V#: 2.1.4	B#:  223**
 
 **MK3: V#: 5.0.3	B#: 2244**
 
@@ -19,6 +19,7 @@ dust/particles still build up over time. **DEFAULT FACTORY BOWDEN LENGETH IS 350
 * Distance to BONDTECH is set for factory R3 extruder configuration
   * Adjust value **STEPS_MK3FSensor_To_Bondtech**, line 32 in file MOTION.CPP if custom value desired
 * Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
+* Blade isn't being used and can be removed. It has been known to add resistance to selector
 * Load/Unload and MMU Parameters should be set in Slic3r for best performance
 
 ## When in error state Active Extruder LED will blink

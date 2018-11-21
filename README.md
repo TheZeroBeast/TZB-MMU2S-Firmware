@@ -2,29 +2,49 @@
 MMU 3-axis stepper control
 
 ## Below are the stable versions of MMU2 & MK3 FW required and a link to releases of latest compiled hex files.
-MMU: V#: 2.1.3	B#:  208
+MMU: V#: 2.1.4	B#:  210
 
-MK3: V#: 5.0.2	B#: 2234
+MK3: V#: 5.0.3	B#: 2235
 
 https://github.com/TheZeroBeast/MM-control-01/releases
 
-## When in error state Active Extruder LED will blink, FINDA Sensing is RED and GREEN for not, realtime
-  - if unload or load failed
-    - troubleshoot issue, usually was due to being caught on an edge or ground section of filament
-    - ensure filament clear of selector
-    - push middle button to rehome and continue
+# POINTS OF NOTE
+    * You DO NOT have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW
+    * Bowden Length is still important as load is optimised to minimise the posibility of 
+    grinding in the event of the MK3-FSensor not triggering, rare if setup correct,
+    dust/particles still build up over time. #DEFAULT FACTORY BOWDEN LENGETH IS 350mm#
+    Adjust value BOWDEN_LENGTH, line 31 in file MOTION.CPP if custom value desired
+    * Distance to BONDTECH is set for factory R3 extruder configuration
+    Adjust value STEPS_MK3FSensor_To_Bondtech, line 32 in file MOTION.CPP if custom value desired
+    * Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
+
+## When in error state Active Extruder LED will blink
+RED if Filament in FINDA
+GREEN if FINDA is clear
+    * If unload or load failed
+    * Troubleshoot issue, usually was due to being caught on an edge or ground section of filament
+        * Note: If fial on UNLOAD the LED will show on teh extruder load is going to instead of current
+        * Note: Failed LOAD where filament is found partly in Extruder requires a burst of air to clean MK3-FSensor
+    * If printer has shut down heaters, click MK3 wheel before clearing MMU2 issue with middle button
+    * *ALWAYS* ensure filament pulled clear of selector.
+    * Push middle button to rehome and continue
+        * If it doesn't work, filament is in FINDA, check again
+        
+
 
 ## Slic3r Advance Settging for load/unload Speed
 ![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds.png)
 
+## Slic3r Single Extruder MMU Parameters under Printer Settings
+![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters.png)
 
+## Examble Octoprint Serial Communications for a successful load using MK3-FSensor
+![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample.png)
 
 # Building this custom setup
 This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
 
 https://github.com/TheZeroBeast/Prusa-Firmware
-
-Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 
 
 ## Table of contents

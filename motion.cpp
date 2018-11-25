@@ -14,11 +14,15 @@
 
 // public variables:  RMM : TODO
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
-const int filament_lookup_table[5][3] = {{3000,   400, 2000}, 
-                                         {1500,    50, 1000},
-                                         { 390,   400,  390},
-                                         {-620,  -620, -620},
-                                         {5000, 10000, 6000}};
+const int filament_lookup_table[8][3] = 
+{{3300,   400, 2000},  // 0
+ {1600,   100, 1000},  // 1
+ { 385,   390,  385},  // 2
+ {-620,  -620, -620},  // 3
+ {5000, 10000, 6000},  // 4
+ { 650,   300,  550},  // 5
+ { 385,   200,  385},  // 6
+ { 455,   200,  455}}; // 7
  /**
   * [X] == variables based on type
   * [Y] == filament types (0: default; 1:flex; 2: PVA)
@@ -26,34 +30,46 @@ const int filament_lookup_table[5][3] = {{3000,   400, 2000},
   *   Y     0      |       1       |       2       |
   * X _____________|_______________|_______________|
   *   |            |               |               |
-  * 0 |   3000     |      400      |      2000     |
+  * 0 |   3300     |      400      |      2000     |
   * __|____________|_______________|_______________|
   *   |            |               |               |
-  * 1 |   1500     |       50      |      1000     |
+  * 1 |   1600     |      100      |      1000     |
   * __|____________|_______________|_______________|
   *   |            |               |               |
-  * 2 |    390     |      400      |       390     |
+  * 2 |    385     |      390      |       385     |
   * __|____________|_______________|_______________|
   *   |            |               |               |
   * 3 |   -620     |     -620      |      -620     |
   * __|____________|_______________|_______________|
   *   |            |               |               |
-  * 4 |   5000     |    10000      |      6000     |
+  * 4 |   5000ms   |    10000ms    |      6000ms   |
   * __|____________|_______________|_______________|
-  *
+  *   |            |               |               |
+  * 5 |    650     |      300      |       550     |
+  * __|____________|_______________|_______________|
+  *   |            |               |               |
+  * 6 |    385     |      200      |       385     |
+  * __|____________|_______________|_______________|
+  *   |            |               |               |
+  * 7 |    455     |      200      |       455     |
+  * __|____________|_______________|_______________|
+  * 
   * [X]
   *  0   MAX_SPPED_PUL                  S/S
   *  1   ACC_FEED_PUL                   S/S/S
   *  2   STEPS_MK3FSensor_To_Bondtech   STEPS
   *  3   FILAMENT_PARKING_STEPS         STEPS
   *  4   FSensor TIMEOUT                MS
+  *  5   FEED_SPEED_PUL                 S/S
+  *  6   L2ExStageOne                   S/S
+  *  7   L2ExStageTwo                   S/S
   *  
   */
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -138;
+static const int IDLER_STEPS_AFTER_HOMING = -142;
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -61,7 +77,7 @@ static const int IDLER_STEPS_AFTER_HOMING = -138;
 
 static const int SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
+const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60; // 237
 
 const int BOWDEN_LENGTH = 8000;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
@@ -119,7 +135,7 @@ void eject_filament(int extruder)
 
     // if there is still filament detected by PINDA unload it first
     if (isFilamentLoaded) {
-        unload_filament_withSensor();
+        unload_filament_withSensor(active_extruder);
     }
 
 
@@ -159,7 +175,7 @@ void eject_filament(int extruder)
 
 void recover_after_eject()
 {
-    while (digitalRead(A1)) fixTheProblem();
+    while (digitalRead(A1)) fixTheProblem(false);
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
 }
@@ -184,17 +200,17 @@ void load_filament_into_extruder()
     engage_filament_pulley(true); // get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    move_pulley(150, 385);
+    move_pulley(150, filament_lookup_table[6][filament_type[active_extruder]]);
 
     // set current to 75%
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] - (current_running_normal[AX_PUL] / 4) );
+        current_running_normal[AX_PUL] - (current_running_normal[AX_PUL] / 4) );
     } else {
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] - (current_running_stealth[AX_PUL] / 4) );
+        current_running_stealth[AX_PUL] - (current_running_stealth[AX_PUL] / 4) );
     }
-    move_pulley(170, 385);
+    move_pulley(170, filament_lookup_table[6][filament_type[active_extruder]]);
 
     // set current to 25%
     if (tmc2130_mode == NORMAL_MODE) {
@@ -204,7 +220,7 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(452, 455);
+    move_pulley(452, filament_lookup_table[7][filament_type[active_extruder]]);
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false); // release contact with filament
 
@@ -274,8 +290,6 @@ void home(bool doToolSync)
     homeIdlerSmooth();
     homeSelectorSmooth();
     tmc2130_init(tmc2130_mode); // trinamic, normal
-    //tmc2130_init_axis(AX_IDL, tmc2130_mode);
-    //tmc2130_init_axis(AX_SEL, tmc2130_mode);
 
     shr16_set_led(0x155);       // All five red
 
@@ -301,6 +315,7 @@ void move_idler(int steps, uint16_t speed)
     if (speed > MAX_SPEED_IDL) {
         speed = MAX_SPEED_IDL;
     }
+
     moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, ACC_IDL_NORMAL);
 }
 
@@ -467,7 +482,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_IDL_LOW;
             if (withStallDetection && digitalRead(A5)) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) fixTheProblem();
+                if (rehomeOnFail) fixTheProblem(false);
                 else return MR_Failed;
             }
             break;
@@ -476,7 +491,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_SEL_LOW;
             if (withStallDetection && digitalRead(A4)) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) fixTheProblem();
+                if (rehomeOnFail) fixTheProblem(false);
                 else return MR_Failed;
             }
             break;

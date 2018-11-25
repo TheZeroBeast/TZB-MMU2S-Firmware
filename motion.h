@@ -7,9 +7,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-
 extern int8_t filament_type[EXTRUDERS];
-extern const int filament_lookup_table[5][3]; // [X][Y]Two-dimensional Array of extruder and used variables
+extern const int filament_lookup_table[8][3]; // [X][Y]Two-dimensional Array of extruder and used variables
 extern const int IDLER_PARKING_STEPS;
 extern const int BOWDEN_LENGTH;
 

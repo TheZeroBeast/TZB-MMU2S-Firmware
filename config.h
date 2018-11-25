@@ -32,14 +32,15 @@
 #define SHR16_LED_MSK 0xffc0
 
 // TMC2130 Direction/Enable signals - hardcoded
-//#define SHR16_DIR_0          0x0001
-//#define SHR16_ENA_0          0x0002
-//#define SHR16_DIR_1          0x0004
-//#define SHR16_ENA_1          0x0008
-//#define SHR16_DIR_2          0x0010
-//#define SHR16_ENA_2          0x0020
-#define SHR16_DIR_MSK 0x0015
-#define SHR16_ENA_MSK 0x002c
+
+ #define SHR16_DIR_0          0x0001
+ #define SHR16_ENA_0          0x0002
+ #define SHR16_DIR_1          0x0004
+ #define SHR16_ENA_1          0x0008
+ #define SHR16_DIR_2          0x0010
+ #define SHR16_ENA_2          0x0020
+ #define SHR16_DIR_MSK        (SHR16_DIR_0 + SHR16_DIR_1 + SHR16_DIR_2)
+ #define SHR16_ENA_MSK        (SHR16_ENA_0 + SHR16_ENA_1 + SHR16_ENA_2)
 
 // UART0 (USB)
 #define UART0_BDR 115200

@@ -27,7 +27,7 @@ extern "C" {
 extern uint16_t shr16_v;
 
 void shr16_init(void);
-void shr16_write(uint16_t v);
+//void shr16_write(uint16_t v);
 void shr16_set_led(uint16_t led);
 void shr16_set_ena(uint8_t ena);
 void shr16_set_dir(uint8_t dir);

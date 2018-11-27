@@ -19,17 +19,17 @@
 
 // shift register outputs
 // LEDS - hardcoded
-//#define SHR16_LEDG0          0x0100
-//#define SHR16_LEDR0          0x0200
-//#define SHR16_LEDG1          0x0400
-//#define SHR16_LEDR1          0x0800
-//#define SHR16_LEDG2          0x1000
-//#define SHR16_LEDR2          0x2000
-//#define SHR16_LEDG3          0x4000
-//#define SHR16_LEDR3          0x8000
-//#define SHR16_LEDG4          0x0040
-//#define SHR16_LEDR4          0x0080
-#define SHR16_LED_MSK 0xffc0
+#define SHR16_LEDG0           0x0100
+#define SHR16_LEDR0           0x0200
+#define SHR16_LEDG1           0x0400
+#define SHR16_LEDR1           0x0800
+#define SHR16_LEDG2           0x1000
+#define SHR16_LEDR2           0x2000
+#define SHR16_LEDG3           0x4000
+#define SHR16_LEDR3           0x8000
+#define SHR16_LEDG4           0x0040
+#define SHR16_LEDR4           0x0080
+#define SHR16_LED_MSK         0xffc0
 
 // TMC2130 Direction/Enable signals - hardcoded
 
@@ -88,15 +88,14 @@
 #define CURRENT_HOMING              { 1, 35, 35}
 
 // speeds and accelerations
-//#define MAX_SPEED_PUL 3000 // micro steps // RMM testing 3000 from 2000
 #define MAX_SPEED_SEL 8000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-//#define ACC_FEED_NORMAL 1500 // micro steps / s²
-//#define ACC_FEED_STEALTH 1000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
+
+
 
 //mode
 #define HOMING_MODE 0

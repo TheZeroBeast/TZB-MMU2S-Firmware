@@ -12,48 +12,21 @@
 #include "permanent_storage.h"
 #include "config.h"
 
-// public variables:  RMM : TODO
+// public variables:
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 const int filament_lookup_table[8][3] = 
-{{3300,   400, 2000},  // 0
- {1600,   100, 1000},  // 1
- { 385,   390,  385},  // 2
- {-620,  -620, -620},  // 3
- {5000, 10000, 6000},  // 4
- { 650,   300,  550},  // 5
- { 385,   200,  385},  // 6
- { 455,   200,  455}}; // 7
+/*0*/ {{4200,   400, 2800},
+/*1*/  {2222,   100, 1500},
+/*2*/  { 385,   390,  385},
+/*3*/  {-610,  -610, -610},
+/*4*/  {5000, 10000, 6000},
+/*5*/  { 600,   300,  550},
+/*6*/  { 385,   200,  385},
+/*7*/  { 455,   200,  455}};
  /**
   * [X] == variables based on type
   * [Y] == filament types (0: default; 1:flex; 2: PVA)
-  * 
-  *   Y     0      |       1       |       2       |
-  * X _____________|_______________|_______________|
-  *   |            |               |               |
-  * 0 |   3300     |      400      |      2000     |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 1 |   1600     |      100      |      1000     |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 2 |    385     |      390      |       385     |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 3 |   -620     |     -620      |      -620     |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 4 |   5000ms   |    10000ms    |      6000ms   |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 5 |    650     |      300      |       550     |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 6 |    385     |      200      |       385     |
-  * __|____________|_______________|_______________|
-  *   |            |               |               |
-  * 7 |    455     |      200      |       455     |
-  * __|____________|_______________|_______________|
-  * 
+  *
   * [X]
   *  0   MAX_SPPED_PUL                  S/S
   *  1   ACC_FEED_PUL                   S/S/S
@@ -285,6 +258,7 @@ void reset_engage_filament_pulley(bool previouslyEngaged)  //reset after mid op 
 
 void home(bool doToolSync)
 {
+    shr16_set_ena_all();
     tmc2130_init(HOMING_MODE);  // trinamic, homing
     bool previouslyEngaged = isIdlerParked;
     homeIdlerSmooth();
@@ -296,7 +270,7 @@ void home(bool doToolSync)
     isIdlerParked = false;
     delay(50); // delay to release the stall detection
     engage_filament_pulley(false);
-    shr16_set_led(0x000);       // All five off
+    shr16_clr_led(); //shr16_set_led(0x000);       // All five off
 
     isFilamentLoaded = false;
     shr16_set_led(1 << 2 * (4 - active_extruder));

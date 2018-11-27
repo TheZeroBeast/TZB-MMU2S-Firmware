@@ -28,11 +28,16 @@ extern uint16_t shr16_v;
 
 void shr16_init(void);
 //void shr16_write(uint16_t v);
+
 void shr16_set_led(uint16_t led);
-void shr16_set_ena(uint8_t ena);
+void shr16_clr_led(void);
+
 void shr16_set_dir(uint8_t dir);
 uint8_t shr16_get_ena(void);
 uint8_t shr16_get_dir(void);
+
+void shr16_set_ena_all(void);
+void shr16_clr_ena_all(void);
 
 #if defined(__cplusplus)
 }

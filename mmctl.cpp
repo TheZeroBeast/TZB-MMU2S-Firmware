@@ -64,10 +64,6 @@ bool toolChange(int new_extruder)
 
     previous_extruder = active_extruder;
     active_extruder = new_extruder;
-
-    if (!isHomed) {
-      
-    }
     
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
@@ -91,7 +87,7 @@ bool toolChange(int new_extruder)
         _return = true;
     }
 
-    shr16_set_led(0x000);
+    shr16_clr_led(); //shr16_set_led(0x000);
     shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;
 }
@@ -126,7 +122,7 @@ bool select_extruder(int new_extruder)
     }
 
 
-    shr16_set_led(0x000);
+    shr16_clr_led(); //shr16_set_led(0x000);
     shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;
 }
@@ -135,11 +131,11 @@ void led_blink(int _no)
 {
     shr16_set_led(1 << 2 * _no);
     delay(40);
-    shr16_set_led(0x000);
+    shr16_clr_led(); //shr16_set_led(0x000);
     delay(20);
     shr16_set_led(1 << 2 * _no);
     delay(40);
 
-    shr16_set_led(0x000);
+    shr16_clr_led(); //shr16_set_led(0x000);
     delay(10);
 }

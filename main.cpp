@@ -113,7 +113,7 @@ void setup()
                 shr16_set_led(0x155);
             }
             delay(300);
-            shr16_set_led(0x000);
+            shr16_clr_led(); //shr16_set_led(0x000);
             delay(300);
         }
     }
@@ -404,9 +404,7 @@ extern "C" {
                  */
                  trackToolChanges = 0;
                  isHomed = false;
-                 tmc2130_disable_axis(AX_IDL, tmc2130_mode);
-                 tmc2130_disable_axis(AX_SEL, tmc2130_mode);
-                 tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+                 shr16_clr_ena_all();
             } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
                 if (value == 0) { // MMU reset
                     wdt_enable(WDTO_15MS);
@@ -482,14 +480,14 @@ void fixTheProblem(bool showPrevious) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         if (!showPrevious) {
             delay(100);
-            shr16_set_led(0x000);
+            shr16_clr_led(); //shr16_set_led(0x000);
             delay(100);
             if (digitalRead(A1)) {
                 shr16_set_led(2 << 2 * (4 - active_extruder));
             } else shr16_set_led(1 << 2 * (4 - active_extruder));
         } else {
             delay(100);
-            shr16_set_led(0x000);
+            shr16_clr_led(); //shr16_set_led(0x000);
             shr16_set_led(1 << 2 * (4 - active_extruder));
             delay(100);
             if (digitalRead(A1)) {
@@ -536,7 +534,7 @@ loop:
                 if (fsensor_triggered == true) tag = true;
             }
             moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]],false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
-            shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
+            shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
             isFilamentLoaded = true;  // filament loaded
             mmuFSensorLoading = false;
@@ -559,10 +557,11 @@ bool unload_filament_withSensor(int extruder)
         engage_filament_pulley(true); // get in contact with filament
         moveSmooth(AX_PUL, ((BOWDEN_LENGTH + filament_lookup_table[2][filament_type[extruder]]) * -1),
         filament_lookup_table[0][filament_type[extruder]], false, false, filament_lookup_table[1][filament_type[extruder]]);
-        if (moveSmooth(AX_PUL, -3000, filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL, true) == MR_Success) {                         // move to trigger FINDA
-            moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]], filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                              // move to filament parking position
-        }
-        if (digitalRead(A1)) { fixTheProblem(true); homedOnUnload = true; }                                                                     // If -1000 steps didn't trigger FINDA
+        if (moveSmooth(AX_PUL, -3000, filament_lookup_table[5][filament_type[extruder]],
+          false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+            moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]], 
+              filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+        } else if (digitalRead(A1)) { fixTheProblem(true); homedOnUnload = true; }                              // If -3000 steps didn't trigger FINDA
     }
     isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
     tmc2130_disable_axis(AX_PUL, tmc2130_mode);

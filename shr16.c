@@ -23,21 +23,21 @@ void shr16_init(void)
 
 void shr16_write(uint16_t v)
 {
-    PORTB &= ~0x40;
+    PORTB &= ~0x40;                 // Pull low PORTB6 to D10 on Shift Register CS
     asm("nop");
     uint16_t m;
-    for (m = 0x8000; m; m >>= 1) {
+    for (m = 0x8000; m; m >>= 1) {  // Step through register updating
         if (m & v) {
-            PORTB |= 0x20;
+            PORTB |= 0x20;          // Pull high data line for one clock pulse D9
         } else {
-            PORTB &= ~0x20;
+            PORTB &= ~0x20;         // Pull low data line for one clock pulse D9
         }
-        PORTC |= 0x80;
+        PORTC |= 0x80;              // C7 clock is synced
         asm("nop");
         PORTC &= ~0x80;
         asm("nop");
     }
-    PORTB |= 0x40;
+    PORTB |= 0x40;                  // Replace high PORTB6 to D10 Shift Register CS
     asm("nop");
     shr16_v = v;
 }
@@ -56,20 +56,51 @@ void shr16_write(uint16_t v)
 void shr16_set_led(uint16_t led) // TODO 2: provide macros with easily readable names
 {
     led = ((led & 0x00ff) << 8) | ((led & 0x0300) >> 2);
-    shr16_write((shr16_v & ~SHR16_LED_MSK) | led);
+    shr16_write(shr16_v | led);
 }
 
-/**
- * @brief shr16_set_ena
- * Enable stepper driver of each channel
- * @param ena: bit mask with bit0 = axis0, ..., bit2 = axis2
- * 1 = enable, 0 = disable
- */
-void shr16_set_ena(uint8_t ena)
+void shr16_clr_led(void)
 {
-    ena ^= 7;
-    ena = ((ena & 1) << 1) | ((ena & 2) << 2) | ((ena & 4) << 3); // 0. << 1 == 1., 1. << 2 == 3., 2. << 3 == 5.
-    shr16_write((shr16_v & ~SHR16_ENA_MSK) | ena);
+    shr16_write(shr16_v & ~SHR16_LED_MSK);
+}
+
+void shr16_set_ena(int axis)
+{
+  switch (axis) {
+  case 0:
+      shr16_write(shr16_v | SHR16_ENA_0);
+      break;
+  case 1:
+      shr16_write(shr16_v | SHR16_ENA_1);
+      break;
+  case 2:
+      shr16_write(shr16_v | SHR16_ENA_2);
+  }
+}
+
+void shr16_set_ena_all(void)
+{
+    // Clear enable pins then set them on
+    shr16_write(shr16_v | SHR16_ENA_MSK);
+}
+
+void shr16_clr_ena(int axis)
+{
+  switch (axis) {
+  case 0:
+      shr16_write(shr16_v & ~SHR16_ENA_0);
+      break;
+  case 1:
+      shr16_write(shr16_v & ~SHR16_ENA_1);
+      break;
+  case 2:
+      shr16_write(shr16_v & ~SHR16_ENA_2);
+  }
+}
+
+void shr16_clr_ena_all(void)
+{
+    shr16_write(shr16_v & ~SHR16_ENA_MSK);
 }
 
 /**

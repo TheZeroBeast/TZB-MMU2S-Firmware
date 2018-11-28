@@ -68,26 +68,6 @@ void shr16_set_ena(int axis)
 {
   switch (axis) {
   case 0:
-      shr16_write(shr16_v | SHR16_ENA_0);
-      break;
-  case 1:
-      shr16_write(shr16_v | SHR16_ENA_1);
-      break;
-  case 2:
-      shr16_write(shr16_v | SHR16_ENA_2);
-  }
-}
-
-void shr16_set_ena_all(void)
-{
-    // Clear enable pins then set them on
-    shr16_write(shr16_v | SHR16_ENA_MSK);
-}
-
-void shr16_clr_ena(int axis)
-{
-  switch (axis) {
-  case 0:
       shr16_write(shr16_v & ~SHR16_ENA_0);
       break;
   case 1:
@@ -98,9 +78,29 @@ void shr16_clr_ena(int axis)
   }
 }
 
+void shr16_set_ena_all(void)
+{
+    // Clear enable pins then set them on
+    shr16_write(shr16_v & ~SHR16_ENA_MSK); // | SHR16_DIR_MSK));
+}
+
+void shr16_clr_ena(int axis)
+{
+  switch (axis) {
+  case 0:
+      shr16_write(shr16_v | SHR16_ENA_0);
+      break;
+  case 1:
+      shr16_write(shr16_v | SHR16_ENA_1);
+      break;
+  case 2:
+      shr16_write(shr16_v | SHR16_ENA_2);
+  }
+}
+
 void shr16_clr_ena_all(void)
 {
-    shr16_write(shr16_v & ~SHR16_ENA_MSK);
+    shr16_write(shr16_v | SHR16_ENA_MSK);
 }
 
 /**

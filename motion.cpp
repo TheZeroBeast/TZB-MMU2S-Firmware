@@ -404,6 +404,7 @@ MotReturn homeIdlerSmooth()
 // TODO 3: compensate delay for computation time, to get accurate speeds
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
+    shr16_set_ena_all();
     MotReturn ret = MR_Success;
     if (withFindaDetection) ret = MR_Failed;
 

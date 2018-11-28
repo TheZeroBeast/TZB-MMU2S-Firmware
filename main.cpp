@@ -67,6 +67,7 @@ void setup()
 {
 
     shr16_init(); // shift register
+    shr16_set_ena_all();
     led_blink(0);
     delay(1000);  // wait for boot ok printer
 

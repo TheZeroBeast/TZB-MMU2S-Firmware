@@ -38,7 +38,7 @@ FILE *uart_com = uart0io;
 FILE *uart_com = uart1io;
 #endif //(UART_COM == 0)
 
-extern "C" void process_commands(FILE *inout);
+void process_commands(FILE *inout);
 
 //! @brief Initialization after reset
 //!
@@ -205,10 +205,10 @@ void loop()
         }
     }
     currentWakeTime = millis();
-    if ((currentWakeTime - startWakeTime) > WAKE_TIMER) disableAllSteppers();
+    if (((currentWakeTime - startWakeTime) > WAKE_TIMER) && !isFilamentLoaded) disableAllSteppers();
 }
 
-extern "C" {
+
     void process_commands(FILE *inout)
     {
         static char line[32];
@@ -422,7 +422,7 @@ extern "C" {
             }
         }
     }
-} // extern C
+
 
 void process_signals()
 {

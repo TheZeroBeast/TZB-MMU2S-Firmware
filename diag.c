@@ -1,7 +1,7 @@
 // diag.c - Trinamic stepper driver
 
 #include "diag.h"
-
+/*
 #ifdef _DIAG
 
 
@@ -97,4 +97,4 @@ int8_t cmd_diag_tmc(FILE *inout, uint8_t axis)
     return 0;
 }
 
-#endif //_DIAG
+#endif //_DIAG*/

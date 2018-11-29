@@ -1,40 +1,36 @@
 # MM-control-01
 MMU 3-axis stepper control
 
-## Latest stable versions & link to **RELEASES** for Precompiled HEX files
+## Below are the stable versions of MMU2 & MK3 FW required and a link to releases of latest compiled hex files.
+MMU: V#: 2.1.4	B#:  210
 
-**MMU: V#: 2.1.4	B#:  228**
+MK3: V#: 5.0.3	B#: 2235
 
-**MK3: V#: 5.0.3	B#: 2244**
-
-**https://github.com/TheZeroBeast/MM-control-01/releases**
+https://github.com/TheZeroBeast/MM-control-01/releases
 
 # POINTS OF NOTE
-* You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW
-* Bowden Length is still important as load is optimised to minimise the posibility of 
-grinding in the event of the MK3-FSensor not triggering, rare if setup correct,
-dust/particles still build up over time. **DEFAULT FACTORY BOWDEN LENGETH IS 350mm**
-  * Adjust value **BOWDEN_LENGTH**, line 31 in file MOTION.CPP if custom value desired.
-    On load there is a 5s window after you here deceleration finish, adjust value so it triggers 1-2s into this window
-* Distance to BONDTECH is set for factory R3 extruder configuration
-  * Adjust value **STEPS_MK3FSensor_To_Bondtech**, line 32 in file MOTION.CPP if custom value desired
-* Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
-* Blade isn't being used and can be removed. It has been known to add resistance to selector
-* Load/Unload and MMU Parameters should be set in Slic3r for best performance
+    * You DO NOT have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW
+    * Bowden Length is still important as load is optimised to minimise the posibility of 
+    grinding in the event of the MK3-FSensor not triggering, rare if setup correct,
+    dust/particles still build up over time. #DEFAULT FACTORY BOWDEN LENGETH IS 350mm#
+    Adjust value BOWDEN_LENGTH, line 31 in file MOTION.CPP if custom value desired
+    * Distance to BONDTECH is set for factory R3 extruder configuration
+    Adjust value STEPS_MK3FSensor_To_Bondtech, line 32 in file MOTION.CPP if custom value desired
+    * Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 
 ## When in error state Active Extruder LED will blink
-### **RED   if FINDA sees Filament**
-### **GREEN if FINDA is clear**
-* If unload or load failed
-* Troubleshoot issue, usually was due to being caught on an edge or ground section of filament
-  * Note: If fail on **UNLOAD** the LED will show on the next extruder instead of current
-  * Note: Failed **LOAD** where filament is found partly in Extruder requires a burst of air to clean MK3-FSensor
-* If printer has shut down heaters, click MK3 wheel before clearing MMU2 issue with middle button
-* **ALWAYS** ensure filament pulled clear of selector.
-* Push middle button to rehome and continue
-  * If nothing happens, filament is in FINDA, check again
-  * If load fails again, give MK3-FSensor another burst of air and try again
-  
+RED if Filament in FINDA
+GREEN if FINDA is clear
+    * If unload or load failed
+    * Troubleshoot issue, usually was due to being caught on an edge or ground section of filament
+        * Note: If fial on UNLOAD the LED will show on teh extruder load is going to instead of current
+        * Note: Failed LOAD where filament is found partly in Extruder requires a burst of air to clean MK3-FSensor
+    * If printer has shut down heaters, click MK3 wheel before clearing MMU2 issue with middle button
+    * *ALWAYS* ensure filament pulled clear of selector.
+    * Push middle button to rehome and continue
+        * If it doesn't work, filament is in FINDA, check again
+        
+
 
 ## Slic3r Advance Settging for load/unload Speed
 ![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds.png)

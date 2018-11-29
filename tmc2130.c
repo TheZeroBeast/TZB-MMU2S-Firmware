@@ -202,6 +202,7 @@ uint8_t tmc2130_usteps2mres(uint16_t usteps)
 //byte 3
 int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
 {
+    shr16_set_ena(axis);
     int8_t ret = 0;
 
     //sets default currents for chosen axis and mode
@@ -230,18 +231,9 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
     return ret;
 }
 
-void tmc2130_disable_axis(uint8_t axis, uint8_t mode)
-{
-    // TODO 2: this is a temporary solution, should use enable pin instead
-    if (mode == STEALTH_MODE) {
-        tmc2130_init_axis_current_stealth(axis, 0, 0);
-    } else {
-        tmc2130_init_axis_current_normal(axis, 0, 0);
-    }
-}
-
 int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r)
 {
+    shr16_set_ena(axis);
     //stealth mode
     if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), current_h, current_r)) {
         return -1;
@@ -257,6 +249,7 @@ int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_
 
 int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r)
 {
+    shr16_set_ena(axis);
     //normal mode
     if (tmc2130_setup_chopper(axis, (uint32_t)__res(axis), current_h, current_r)) {
         return -1;

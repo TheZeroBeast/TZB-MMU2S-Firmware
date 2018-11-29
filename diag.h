@@ -12,9 +12,9 @@ extern "C" {
 
 #ifdef _DIAG
 
-int8_t cmd_uart_bridge(FILE *inout);
-int8_t cmd_diag_uart1(FILE *inout);
-int8_t cmd_diag_tmc(FILE *inout, uint8_t axis);
+//int8_t cmd_uart_bridge(FILE *inout);
+//int8_t cmd_diag_uart1(FILE *inout);
+//int8_t cmd_diag_tmc(FILE *inout, uint8_t axis);
 
 #endif //_DIAG
 

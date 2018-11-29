@@ -1,13 +1,14 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION 214 // example: 103 means version 1.0.3
-#define FW_BUILDNR 228 // number of commits in 'master'
+#define FW_VERSION 215 // example: 103 means version 1.0.3
+#define FW_BUILDNR 999 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
 //#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
 //#define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
+#define WAKE_TIMER            900000        //15m
 
 //#define green_board
 
@@ -19,27 +20,28 @@
 
 // shift register outputs
 // LEDS - hardcoded
-//#define SHR16_LEDG0          0x0100
-//#define SHR16_LEDR0          0x0200
-//#define SHR16_LEDG1          0x0400
-//#define SHR16_LEDR1          0x0800
-//#define SHR16_LEDG2          0x1000
-//#define SHR16_LEDR2          0x2000
-//#define SHR16_LEDG3          0x4000
-//#define SHR16_LEDR3          0x8000
-//#define SHR16_LEDG4          0x0040
-//#define SHR16_LEDR4          0x0080
-#define SHR16_LED_MSK 0xffc0
+#define SHR16_LEDG0           0x0100
+#define SHR16_LEDR0           0x0200
+#define SHR16_LEDG1           0x0400
+#define SHR16_LEDR1           0x0800
+#define SHR16_LEDG2           0x1000
+#define SHR16_LEDR2           0x2000
+#define SHR16_LEDG3           0x4000
+#define SHR16_LEDR3           0x8000
+#define SHR16_LEDG4           0x0040
+#define SHR16_LEDR4           0x0080
+#define SHR16_LED_MSK         0xffc0
 
 // TMC2130 Direction/Enable signals - hardcoded
-//#define SHR16_DIR_0          0x0001
-//#define SHR16_ENA_0          0x0002
-//#define SHR16_DIR_1          0x0004
-//#define SHR16_ENA_1          0x0008
-//#define SHR16_DIR_2          0x0010
-//#define SHR16_ENA_2          0x0020
-#define SHR16_DIR_MSK 0x0015
-#define SHR16_ENA_MSK 0x002c
+
+ #define SHR16_DIR_PUL          0x0001
+ #define SHR16_ENA_PUL          0x0002
+ #define SHR16_DIR_SEL          0x0004
+ #define SHR16_ENA_SEL          0x0008
+ #define SHR16_DIR_IDL          0x0010
+ #define SHR16_ENA_IDL          0x0020
+ #define SHR16_DIR_MSK        (SHR16_DIR_PUL + SHR16_DIR_SEL + SHR16_DIR_IDL)
+ #define SHR16_ENA_MSK        (SHR16_ENA_PUL + SHR16_ENA_SEL + SHR16_ENA_IDL)
 
 // UART0 (USB)
 #define UART0_BDR 115200
@@ -49,6 +51,7 @@
 
 // stdin & stdout uart0/1
 #define UART_STD 0
+#define BUFFER_SIZE 16
 // communication uart0/1
 #define UART_COM 1
 
@@ -87,15 +90,14 @@
 #define CURRENT_HOMING              { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_PUL 3000 // micro steps // RMM testing 3000 from 2000
 #define MAX_SPEED_SEL 8000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_FEED_NORMAL 1500 // micro steps / s²
-#define ACC_FEED_STEALTH 1000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
+
+
 
 //mode
 #define HOMING_MODE 0
@@ -158,6 +160,3 @@
 
 // diagnostic functions
 #define _DIAG
-
-// testing motion controller
-//#define TESTING_STEALTH

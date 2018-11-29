@@ -1,12 +1,5 @@
 Changelog of MMU 2.0 Firmware
 =============================
-# V2.1.3 RMM
-* toolChanges every 25
-* Tuned Bowden length for less destructive failed load situation
-* Re-written home on fail to optimise fail recovery
-* Re-written unload sequence for vastly more reliable unloads
-* Load to Extruder start now synced with MMU2 instead of an arbitrary 1.5s wait
-* Tuned load/unload speeds for PLA, tension bolts must be 2-3 full turns past flush to stop grinding
 
 # V2.1.2 RMM
 * corrected bug in 20 toolChange rehome resulting in extruder 0 being used for that change instead of intended filament. Eventually results in incorrect execution of T? command as MK3 thinks a different extruder is being used.

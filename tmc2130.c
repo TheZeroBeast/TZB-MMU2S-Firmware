@@ -231,26 +231,6 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
     return ret;
 }
 
-void tmc2130_disable_axis(uint8_t axis, uint8_t mode)
-{
-    shr16_clr_ena(axis);
-    /*
-    // TODO 2: this is a temporary solution, should use enable pin instead
-    if (mode == STEALTH_MODE) {
-        tmc2130_init_axis_current_stealth(axis, 0, 0);
-    } else {
-        tmc2130_init_axis_current_normal(axis, 0, 0);
-    }
-
-
-    if (steps < 0) {
-        steps = steps * -1;
-        shr16_set_dir(shr16_get_dir() & ~4);
-    } else {
-        shr16_set_dir(shr16_get_dir() | 4);
-    }*/
-}
-
 int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r)
 {
     shr16_set_ena(axis);

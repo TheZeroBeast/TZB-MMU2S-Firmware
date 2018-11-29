@@ -6,8 +6,6 @@
 // public variables:
 uint16_t shr16_v;
 
-static void shr16_write(uint16_t v);
-
 void shr16_init(void)
 {
     DDRC |= 0x80;
@@ -67,14 +65,14 @@ void shr16_clr_led(void)
 void shr16_set_ena(int axis)
 {
   switch (axis) {
-  case 0:
-      shr16_write(shr16_v & ~SHR16_ENA_0);
+  case AX_PUL:
+      shr16_write(shr16_v & ~SHR16_ENA_PUL);
       break;
-  case 1:
-      shr16_write(shr16_v & ~SHR16_ENA_1);
+  case AX_SEL:
+      shr16_write(shr16_v & ~SHR16_ENA_SEL);
       break;
-  case 2:
-      shr16_write(shr16_v & ~SHR16_ENA_2);
+  case AX_IDL:
+      shr16_write(shr16_v & ~SHR16_ENA_IDL);
   }
 }
 
@@ -87,14 +85,14 @@ void shr16_set_ena_all(void)
 void shr16_clr_ena(int axis)
 {
   switch (axis) {
-  case 0:
-      shr16_write(shr16_v | SHR16_ENA_0);
+  case AX_PUL:
+      shr16_write(shr16_v | SHR16_ENA_PUL);
       break;
-  case 1:
-      shr16_write(shr16_v | SHR16_ENA_1);
+  case AX_SEL:
+      shr16_write(shr16_v | SHR16_ENA_SEL);
       break;
-  case 2:
-      shr16_write(shr16_v | SHR16_ENA_2);
+  case AX_IDL:
+      shr16_write(shr16_v | SHR16_ENA_IDL);
   }
 }
 

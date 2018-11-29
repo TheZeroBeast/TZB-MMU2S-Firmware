@@ -21,6 +21,7 @@ void fixTheProblem(bool showPrevious);
 
 extern uint8_t tmc2130_mode;
 extern bool fsensor_triggered;
+extern unsigned long startWakeTime;
 
 // get state of signal (main loop or interrupt)
 #define SIG_GET(id) (sys_signals & (1 << id))

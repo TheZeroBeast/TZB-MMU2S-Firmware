@@ -8,6 +8,7 @@
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
 //#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
 //#define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
+#define WAKE_TIMER            900000        //15m
 
 //#define green_board
 
@@ -33,14 +34,14 @@
 
 // TMC2130 Direction/Enable signals - hardcoded
 
- #define SHR16_DIR_0          0x0001
- #define SHR16_ENA_0          0x0002
- #define SHR16_DIR_1          0x0004
- #define SHR16_ENA_1          0x0008
- #define SHR16_DIR_2          0x0010
- #define SHR16_ENA_2          0x0020
- #define SHR16_DIR_MSK        (SHR16_DIR_0 + SHR16_DIR_1 + SHR16_DIR_2)
- #define SHR16_ENA_MSK        (SHR16_ENA_0 + SHR16_ENA_1 + SHR16_ENA_2)
+ #define SHR16_DIR_PUL          0x0001
+ #define SHR16_ENA_PUL          0x0002
+ #define SHR16_DIR_SEL          0x0004
+ #define SHR16_ENA_SEL          0x0008
+ #define SHR16_DIR_IDL          0x0010
+ #define SHR16_ENA_IDL          0x0020
+ #define SHR16_DIR_MSK        (SHR16_DIR_PUL + SHR16_DIR_SEL + SHR16_DIR_IDL)
+ #define SHR16_ENA_MSK        (SHR16_ENA_PUL + SHR16_ENA_SEL + SHR16_ENA_IDL)
 
 // UART0 (USB)
 #define UART0_BDR 115200
@@ -158,6 +159,3 @@
 
 // diagnostic functions
 #define _DIAG
-
-// testing motion controller
-//#define TESTING_STEALTH

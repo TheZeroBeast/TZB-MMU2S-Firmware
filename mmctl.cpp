@@ -36,11 +36,12 @@ bool feed_filament(void)
         if (moveSmooth(AX_PUL, 4000, filament_lookup_table[5][filament_type[active_extruder]], false, true, ACC_NORMAL, true) == MR_Success) {
             delay(5);
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL);
+            shr16_clr_led();
             shr16_set_led(1 << 2 * (4 - active_extruder));
             _loaded = true;
             break;
         } else {
-            if (_c < 2) {
+            if (_c < 1) {                     // Two attempt to load then give up
                 fixTheProblem(false);
                 engage_filament_pulley(true);
             } else {
@@ -50,7 +51,7 @@ bool feed_filament(void)
             _c++;
         }
     }
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
     return _loaded;
 }
@@ -60,6 +61,7 @@ bool toolChange(int new_extruder)
     bool _return = false;
     isPrinting = true;
 
+    shr16_clr_led();
     shr16_set_led(2 << 2 * (4 - active_extruder));
 
     previous_extruder = active_extruder;
@@ -67,6 +69,7 @@ bool toolChange(int new_extruder)
     
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
+            shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
             load_filament_at_toolChange = true;
             _return = true;
@@ -81,61 +84,27 @@ bool toolChange(int new_extruder)
         } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder);
         toolChanges++;
         trackToolChanges ++;
+        shr16_clr_led();
         shr16_set_led(2 << 2 * (4 - active_extruder));
         load_filament_at_toolChange = true;
         homedOnUnload = false;
         _return = true;
     }
 
-    shr16_clr_led(); //shr16_set_led(0x000);
-    shr16_set_led(1 << 2 * (4 - active_extruder));
-    return _return;
-}
-
-//! @brief select extruder
-//!
-//! Known limitation is, that if extruder 5 - service position was selected before
-//! it is not possible to select any other extruder than extruder 4.
-//!
-//! @param new_extruder Extruder to be selected
-//! @return
-bool select_extruder(int new_extruder)
-{
-    if (digitalRead(A1)) return false;
-
-    int previous_extruder = active_extruder;
-    active_extruder = new_extruder;
-
-    bool _return = false;
-    if (!isHomed) home(true);
-
-    shr16_set_led(2 << 2 * (4 - active_extruder));
-
-    if (previous_extruder == active_extruder) {
-        if (!isFilamentLoaded) {
-            _return = true;
-        }
-    } else {
-        set_positions(previous_extruder, active_extruder); // move idler and selector to new filament position
-        engage_filament_pulley(false);
-        _return = true;
-    }
-
-
-    shr16_clr_led(); //shr16_set_led(0x000);
+    shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;
 }
 
 void led_blink(int _no)
 {
+    shr16_clr_led();
     shr16_set_led(1 << 2 * _no);
     delay(40);
-    shr16_clr_led(); //shr16_set_led(0x000);
+    shr16_clr_led();
     delay(20);
     shr16_set_led(1 << 2 * _no);
     delay(40);
-
-    shr16_clr_led(); //shr16_set_led(0x000);
+    shr16_clr_led();
     delay(10);
 }

@@ -26,6 +26,7 @@ bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
 bool load_filament_at_toolChange = false;
+unsigned long startWakeTime, currentWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
 
@@ -70,7 +71,7 @@ void setup()
     shr16_set_ena_all();
     led_blink(0);
     delay(1000);  // wait for boot ok printer
-
+    startWakeTime = millis();
     uart0_init(); //uart0
     uart1_init(); //uart1
     led_blink(1);
@@ -91,14 +92,10 @@ void setup()
 
     spi_init();
     led_blink(2);
-
-    //tmc2130_init(HOMING_MODE); // trinamic, homing
     led_blink(3);
-
-
     adc_init(); // ADC
     led_blink(4);
-
+    
     init_Pulley();
 
     if (buttonClicked() == Btn::middle) {
@@ -114,7 +111,7 @@ void setup()
                 shr16_set_led(0x155);
             }
             delay(300);
-            shr16_clr_led(); //shr16_set_led(0x000);
+            shr16_clr_led();
             delay(300);
         }
     }
@@ -158,49 +155,28 @@ void setup()
 //! @n b - blinking
 void manual_extruder_selector()
 {
+    shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
-
-#ifdef TESTING_STEALTH
-    if (buttonClicked() != Btn::none) {
-        switch (buttonClicked()) {
-        case Btn::right:
-            if (active_extruder < EXTRUDERS) {
-                select_extruder(active_extruder + 1);
-            }
-            break;
-        case Btn::left:
-            if (active_extruder > 0) {
-                select_extruder(active_extruder - 1);
-            }
-            break;
-        default:
-            break;
-        }
-    }
-#else
+    
     if ((Btn::left | Btn::right) & buttonClicked()) {
         switch (buttonClicked()) {
         case Btn::right:
-            if (active_extruder < EXTRUDERS) {
-                select_extruder(active_extruder + 1);
-            }
+            if (active_extruder < EXTRUDERS) set_positions(active_extruder, active_extruder + 1, true);
             break;
         case Btn::left:
-            if (active_extruder > 0) {
-                select_extruder(active_extruder - 1);
-            }
+            if (active_extruder > 0) set_positions(active_extruder, active_extruder - 1, true);
             break;
         default:
             break;
         }
     }
-#endif
 
     if (active_extruder == 5) {
-        shr16_set_led(2 << 2 * 0);
-        delay(50);
-        shr16_set_led(1 << 2 * 0);
-        delay(50);
+        shr16_clr_led();
+        shr16_set_led(3 << 2 * 0);
+        delay(100);
+        shr16_clr_led();
+        delay(100);
     }
 }
 
@@ -220,15 +196,16 @@ void loop()
 
     if (!isPrinting) {
         manual_extruder_selector();
-#ifndef TESTING_STEALTH
         if (Btn::middle == buttonClicked() && active_extruder < 5) {
+            shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
             if (Btn::middle == buttonClicked()) {
                 feed_filament();
             }
         }
     }
-#endif
+    currentWakeTime = millis();
+    if ((currentWakeTime - startWakeTime) > WAKE_TIMER) disableAllSteppers();
 }
 
 extern "C" {
@@ -372,8 +349,7 @@ extern "C" {
             } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
                 // Load filament
                 if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded) {
-
-                    select_extruder(value);
+                    set_positions(active_extruder, value, true);
                     delay(10);
                     feed_filament();
                     delay(100);
@@ -399,13 +375,8 @@ extern "C" {
                 delay(200);
                 fprintf_P(inout, PSTR("ok\n"));
                 isPrinting = false;
-                /**
-                 * Disable steppers at end of print, reset toolChanges and clear homed status
-                 * 
-                 */
-                 trackToolChanges = 0;
-                 isHomed = false;
-                 shr16_clr_ena_all();
+                trackToolChanges = 0;
+                disableAllSteppers();
             } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
                 if (value == 0) { // MMU reset
                     wdt_enable(WDTO_15MS);
@@ -474,8 +445,8 @@ void fault_handler(Fault id)
 void fixTheProblem(bool showPrevious) {
 
     engage_filament_pulley(false);                    // park the idler stepper motor
-    tmc2130_disable_axis(AX_SEL, tmc2130_mode);       // turn OFF the selector stepper motor
-    tmc2130_disable_axis(AX_IDL, tmc2130_mode);       // turn OFF the idler stepper motor
+    shr16_clr_ena(AX_SEL);                            // turn OFF the selector stepper motor
+    shr16_clr_ena(AX_IDL);                            // turn OFF the idler stepper motor
 
     while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
@@ -544,6 +515,7 @@ loop:
         fixTheProblem(false);
         goto loop;
     }
+    startWakeTime = millis();  // Start/Reset wakeTimer
 }
 
 /**
@@ -565,7 +537,7 @@ bool unload_filament_withSensor(int extruder)
         } else if (digitalRead(A1)) { fixTheProblem(true); homedOnUnload = true; }                              // If -3000 steps didn't trigger FINDA
     }
     isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
-    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
+    shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
     return true;
 }

@@ -18,13 +18,14 @@ void reset_engage_filament_pulley(bool previouslyEngaged);
 
 void load_filament_into_extruder();
 
-void set_positions(int _current_extruder, int _next_extruder);
+void set_positions(int _current_extruder, int _next_extruder, bool update_extruders = false);
 
 void init_Pulley();
 
 void move_idler(int steps, uint16_t speed = MAX_SPEED_IDL);
 void move_selector(int steps, uint16_t speed = MAX_SPEED_SEL);
 void move_pulley(int steps, uint16_t speed = filament_lookup_table[0][0]);
+void disableAllSteppers(void);
 
 void eject_filament(int extruder);
 void recover_after_eject();

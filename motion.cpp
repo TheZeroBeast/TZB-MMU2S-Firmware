@@ -13,36 +13,12 @@
 #include "config.h"
 
 // public variables:
-int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
-const int filament_lookup_table[8][3] = 
-/*0*/ {{5000,   400, 2800},
-/*1*/  {2662,   100, 1500},
-/*2*/  { 385,   390,  385},
-/*3*/  {-610,  -610, -610},
-/*4*/  {5000, 10000, 6000},
-/*5*/  { 600,   300,  550},
-/*6*/  { 385,   200,  385},
-/*7*/  { 455,   200,  455}};
- /**
-  * [X] == variables based on type
-  * [Y] == filament types (0: default; 1:flex; 2: PVA)
-  *
-  * [X]
-  *  0   MAX_SPPED_PUL                  S/S
-  *  1   ACC_FEED_PUL                   S/S/S
-  *  2   STEPS_MK3FSensor_To_Bondtech   STEPS
-  *  3   FILAMENT_PARKING_STEPS         STEPS
-  *  4   FSensor TIMEOUT                MS
-  *  5   FEED_SPEED_PUL                 S/S
-  *  6   L2ExStageOne                   S/S
-  *  7   L2ExStageTwo                   S/S
-  *  
-  */
+int8_t filament_type[EXTRUDERS] = { -1, -1, -1, -1, -1};
 
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -142;
+static const int IDLER_STEPS_AFTER_HOMING = -138;
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -50,9 +26,11 @@ static const int IDLER_STEPS_AFTER_HOMING = -142;
 
 static const int SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60; // 237
+const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40; // 217
 
 const int BOWDEN_LENGTH = 8000;
+const int STEPS_MK3FSensor_To_Bondtech = 390;
+const int FILAMENT_PARKING_STEPS = -620;
 const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
 
 static const int EJECT_PULLEY_STEPS = 2500;
@@ -67,37 +45,29 @@ static int set_idler_direction(int steps);
 static int set_selector_direction(int steps);
 static int set_pulley_direction(int steps);
 
-void set_positions(int _current_extruder, int _next_extruder, bool update_extruders)
+void set_positions(int _current_extruder, int _next_extruder)
 {
-    if (update_extruders) {
-        previous_extruder = _current_extruder;
-        active_extruder = _next_extruder;
-    }
-    if (!isHomed) home(true);
-    else {
-        delay(50);
-        int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
-        if (_next_extruder == EXTRUDERS)    _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
-        if (_current_extruder == EXTRUDERS) _idler_steps = ((_current_extruder - 1) - _next_extruder) * IDLER_STEPS;
-        // steps to move to new position of idler and selector
-        move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
-    
-        if (_next_extruder > 0) {
-            int _selector_steps = ((_current_extruder - _next_extruder) * SELECTOR_STEPS) * -1;
-            if (_next_extruder == EXTRUDERS)    _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
-            if (_current_extruder == EXTRUDERS) _selector_steps -= EXTRA_STEPS_SELECTOR_SERVICE;
-            move_selector(_selector_steps);
-        } else {
-            moveSmooth(AX_SEL, 100, 2000, false);
-            for (int c = 2; c > 0; c--) { // touch end 2 times
-                moveSmooth(AX_SEL, -4000, 2000, false);
-                if (c > 1) {
-                    moveSmooth(AX_SEL, 100, 2000, false);
-                }
-            }
-            moveSmooth(AX_SEL, 33, 2000, false);
-        }
+    delay(50);
+    int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
+    if (_next_extruder == EXTRUDERS)    _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
+    if (_current_extruder == EXTRUDERS) _idler_steps = ((_current_extruder - 1) - _next_extruder) * IDLER_STEPS;
+    // steps to move to new position of idler and selector
+    move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
 
+    if (_next_extruder > 0) {
+        int _selector_steps = ((_current_extruder - _next_extruder) * SELECTOR_STEPS) * -1;
+        if (_next_extruder == EXTRUDERS)    _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
+        if (_current_extruder == EXTRUDERS) _selector_steps -= EXTRA_STEPS_SELECTOR_SERVICE;
+        move_selector(_selector_steps);
+    } else {
+        moveSmooth(AX_SEL, 100, 2000, false);
+        for (int c = 2; c > 0; c--) { // touch end 2 times
+            moveSmooth(AX_SEL, -4000, 2000, false);
+            if (c > 1) {
+                moveSmooth(AX_SEL, 100, 2000, false);
+            }
+        }
+        moveSmooth(AX_SEL, 33, 2000, false);
     }
 }
 
@@ -116,7 +86,7 @@ void eject_filament(int extruder)
 
     // if there is still filament detected by PINDA unload it first
     if (isFilamentLoaded) {
-        unload_filament_withSensor(active_extruder);
+        unload_filament_withSensor();
     }
 
 
@@ -150,13 +120,13 @@ void eject_filament(int extruder)
 
     // unpark idler so user can easily remove filament
     engage_filament_pulley(false);
-    shr16_clr_ena(AX_PUL);
+    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     isFilamentLoaded = false; // ensure MMU knows it doesn't have filament loaded so next T? command works
 }
 
 void recover_after_eject()
 {
-    while (digitalRead(A1)) fixTheProblem(false);
+    while (digitalRead(A1)) fixTheProblem();
     move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
     move_selector(-selector_steps_for_eject);
 }
@@ -181,17 +151,17 @@ void load_filament_into_extruder()
     engage_filament_pulley(true); // get in contact with filament
 
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-    move_pulley(150, filament_lookup_table[6][filament_type[active_extruder]]);
+    move_pulley(150, 385);
 
     // set current to 75%
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-        current_running_normal[AX_PUL] - (current_running_normal[AX_PUL] / 4) );
+                                         current_running_normal[AX_PUL] - (current_running_normal[AX_PUL] / 4) );
     } else {
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-        current_running_stealth[AX_PUL] - (current_running_stealth[AX_PUL] / 4) );
+                                          current_running_stealth[AX_PUL] - (current_running_stealth[AX_PUL] / 4) );
     }
-    move_pulley(170, filament_lookup_table[6][filament_type[active_extruder]]);
+    move_pulley(170, 385);
 
     // set current to 25%
     if (tmc2130_mode == NORMAL_MODE) {
@@ -201,8 +171,8 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL] / 4);
     }
-    move_pulley(452, filament_lookup_table[7][filament_type[active_extruder]]);
-    shr16_clr_ena(AX_PUL);
+    move_pulley(452, 455);
+    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
     engage_filament_pulley(false); // release contact with filament
 
     // reset currents
@@ -213,7 +183,7 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL]);
     }
-    shr16_clr_ena(AX_PUL);
+    tmc2130_disable_axis(AX_PUL, tmc2130_mode);
 }
 
 void init_Pulley()
@@ -225,14 +195,12 @@ void init_Pulley()
     for (int i = 50; i > 0; i--) {
         moveSmooth(AX_PUL, 1, 0, false);
         delayMicroseconds(_speed);
-        shr16_clr_led();
         shr16_set_led(1 << 2 * (int)(i / 50)); // TODO 2: What the heck?
     }
 
     for (int i = 50; i > 0; i--) {
         moveSmooth(AX_PUL, -1, 0, false);
         delayMicroseconds(_speed);
-        shr16_clr_led();
         shr16_set_led(1 << 2 * (4 - (int)(i / 50))); // TODO 2: What the heck?
     }
 }
@@ -273,21 +241,20 @@ void home(bool doToolSync)
     homeIdlerSmooth();
     homeSelectorSmooth();
     tmc2130_init(tmc2130_mode); // trinamic, normal
+    //tmc2130_init_axis(AX_IDL, tmc2130_mode);
+    //tmc2130_init_axis(AX_SEL, tmc2130_mode);
 
-    shr16_clr_led();
     shr16_set_led(0x155);       // All five red
 
     isIdlerParked = false;
     delay(50); // delay to release the stall detection
     engage_filament_pulley(false);
-    shr16_clr_led();            // All five off
+    shr16_set_led(0x000);       // All five off
 
     isFilamentLoaded = false;
-    shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
 
     isHomed = true;
-    startWakeTime = millis();
 
     if (doToolSync) {
         set_positions(0, active_extruder); // move idler and selector to new filament position
@@ -301,7 +268,6 @@ void move_idler(int steps, uint16_t speed)
     if (speed > MAX_SPEED_IDL) {
         speed = MAX_SPEED_IDL;
     }
-
     moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, ACC_IDL_NORMAL);
 }
 
@@ -340,9 +306,9 @@ int set_idler_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;
-        shr16_write(shr16_v & ~SHR16_DIR_IDL);
+        shr16_set_dir(shr16_get_dir() & ~4);
     } else {
-        shr16_write(shr16_v | SHR16_DIR_IDL);
+        shr16_set_dir(shr16_get_dir() | 4);
     }
     return steps;
 }
@@ -358,9 +324,9 @@ int set_selector_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;
-        shr16_write(shr16_v & ~SHR16_DIR_SEL);
+        shr16_set_dir(shr16_get_dir() & ~2);
     } else {
-        shr16_write(shr16_v | SHR16_DIR_SEL);
+        shr16_set_dir(shr16_get_dir() | 2);
     }
     return steps;
 }
@@ -374,9 +340,9 @@ int set_pulley_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;
-        shr16_write(shr16_v | SHR16_DIR_PUL);
+        shr16_set_dir(shr16_get_dir() | 1);
     } else {
-        shr16_write(shr16_v & ~SHR16_DIR_PUL);
+        shr16_set_dir(shr16_get_dir() & ~1);
     }
     return steps;
 }
@@ -405,15 +371,6 @@ MotReturn homeIdlerSmooth()
 }
 
 /**
- * @brief disableSteppers
- */
-void disableAllSteppers(void)
-{
-  shr16_clr_ena_all();
-  isHomed = false;
-}
-
-/**
  * @brief moveTest
  * @param axis, index of axis, use AX_PUL, AX_SEL or AX_IDL
  * @param steps, number of micro steps to move
@@ -425,7 +382,6 @@ void disableAllSteppers(void)
 // TODO 3: compensate delay for computation time, to get accurate speeds
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
-    startWakeTime = millis();
     MotReturn ret = MR_Success;
     if (withFindaDetection) ret = MR_Failed;
 
@@ -478,7 +434,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_IDL_LOW;
             if (withStallDetection && digitalRead(A5)) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) fixTheProblem(false);
+                if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
             break;
@@ -487,7 +443,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool
             PIN_STP_SEL_LOW;
             if (withStallDetection && digitalRead(A4)) { // stall detected
                 delay(50); // delay to release the stall detection
-                if (rehomeOnFail) fixTheProblem(false);
+                if (rehomeOnFail) fixTheProblem();
                 else return MR_Failed;
             }
             break;

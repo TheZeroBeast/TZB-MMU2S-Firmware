@@ -22,12 +22,11 @@ void settings_select_filament()
         manual_extruder_selector();
 
         if (Btn::middle == buttonClicked()) {
-            shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
             delay(500);
             if (Btn::middle == buttonClicked()) {
-                set_positions(active_extruder, 4, true);
-                set_positions(active_extruder, 0, true);
+                select_extruder(4);
+                select_extruder(0);
                 return;
             }
         }
@@ -55,11 +54,11 @@ void settings_select_filament()
 //!
 void setupMenu()
 {
-    shr16_clr_led();
+    shr16_set_led(0x000);
     delay(200);
     shr16_set_led(0x2aa);
     delay(1200);
-    shr16_clr_led();
+    shr16_set_led(0x000);
     delay(600);
 
     int _menu = 0;
@@ -69,13 +68,10 @@ void setupMenu()
 
 
     do {
-        shr16_clr_led();
         shr16_set_led(1 << 2 * 4);
         delay(1);
-        shr16_clr_led();
         shr16_set_led(2 << 2 * 4);
         delay(1);
-        shr16_clr_led();
         shr16_set_led(2 << 2 * _menu);
         delay(1);
 
@@ -120,14 +116,14 @@ void setupMenu()
     } while (!_exit);
 
 
-    shr16_clr_led();
+    shr16_set_led(0x000);
     delay(400);
     shr16_set_led(0x2aa);
     delay(400);
-    shr16_clr_led();
+    shr16_set_led(0x000);
     delay(400);
 
-    shr16_clr_led();
+    shr16_set_led(0x000);
     shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
@@ -153,3 +149,4 @@ Btn buttonClicked()
 
     return Btn::none;
 }
+

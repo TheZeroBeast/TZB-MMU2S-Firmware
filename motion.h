@@ -7,10 +7,12 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+
 extern int8_t filament_type[EXTRUDERS];
-extern const int filament_lookup_table[8][3]; // [X][Y]Two-dimensional Array of extruder and used variables
 extern const int IDLER_PARKING_STEPS;
 extern const int BOWDEN_LENGTH;
+extern const int STEPS_MK3FSensor_To_Bondtech;
+extern const int FILAMENT_PARKING_STEPS;
 
 void home(bool doToolSync = false);
 void engage_filament_pulley(bool engage);
@@ -18,14 +20,13 @@ void reset_engage_filament_pulley(bool previouslyEngaged);
 
 void load_filament_into_extruder();
 
-void set_positions(int _current_extruder, int _next_extruder, bool update_extruders = false);
+void set_positions(int _current_extruder, int _next_extruder);
 
 void init_Pulley();
 
 void move_idler(int steps, uint16_t speed = MAX_SPEED_IDL);
 void move_selector(int steps, uint16_t speed = MAX_SPEED_SEL);
-void move_pulley(int steps, uint16_t speed = filament_lookup_table[0][0]);
-void disableAllSteppers(void);
+void move_pulley(int steps, uint16_t speed = MAX_SPEED_PUL);
 
 void eject_filament(int extruder);
 void recover_after_eject();

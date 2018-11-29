@@ -2,16 +2,18 @@
 #ifndef _UART_H
 #define _UART_H
 
-#define USART_BAUDRATE 115200
-#define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
-
 #include <inttypes.h>
 #include <stdio.h>
-#include <avr/io.h>
-#include <avr/interrupt.h>
 #include "config.h"
 
-extern bool rxFlag;
-extern char rxBuf[BUFFER_SIZE];
+extern FILE _uart0io;
+#define uart0io (&_uart0io)
+
+extern FILE _uart1io;
+#define uart1io (&_uart1io)
+
+
+void uart0_init(void);
+void uart1_init(void);
 
 #endif //_UART_H

@@ -15,13 +15,11 @@ extern uint8_t sys_signals;
 extern bool load_filament_at_toolChange;
 void process_signals();
 bool load_filament_withSensor();
-bool unload_filament_withSensor(int extruder);
-
-void fixTheProblem(bool showPrevious);
+bool unload_filament_withSensor();
+void fixTheProblem();
 
 extern uint8_t tmc2130_mode;
 extern bool fsensor_triggered;
-extern unsigned long startWakeTime;
 
 // get state of signal (main loop or interrupt)
 #define SIG_GET(id) (sys_signals & (1 << id))

@@ -27,6 +27,8 @@ int8_t tmc2130_init(uint8_t mode);
 int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode);
 int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r);
 int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r);
+void tmc2130_disable_axis(uint8_t axis, uint8_t mode);
+
 
 #ifdef _DIAG
 uint8_t tmc2130_check_axis(uint8_t axis);

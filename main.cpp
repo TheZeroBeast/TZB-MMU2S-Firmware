@@ -26,19 +26,9 @@ bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool duplicateTCmd = false;
 bool load_filament_at_toolChange = false;
-unsigned long startWakeTime, currentWakeTime;
+long startWakeTime, currentWakeTime;
 
-uint8_t tmc2130_mode = NORMAL_MODE; // STEALTH_MODE;
-
-static char echo[32];
-
-#if (UART_COM == 0)
-FILE *uart_com = uart0io;
-#elif (UART_COM == 1)
-FILE *uart_com = uart1io;
-#endif //(UART_COM == 0)
-
-void process_commands(FILE *inout);
+uint8_t tmc2130_mode = NORMAL_MODE;
 
 //! @brief Initialization after reset
 //!
@@ -72,23 +62,24 @@ void setup()
     led_blink(0);
     delay(1000);  // wait for boot ok printer
     startWakeTime = millis();
-    uart0_init(); //uart0
-    uart1_init(); //uart1
     led_blink(1);
 
 
-#if (UART_STD == 0)
-    stdin = uart0io;  // stdin = uart0
-    stdout = uart0io; // stdout = uart0
-#elif(UART_STD == 1)
-    stdin = uart1io;  // stdin = uart1
-    stdout = uart1io; // stdout = uart1
-#endif //(UART_STD == 1)
+    UCSR1B = (1 << RXEN1) | (1 << TXEN1);   // Turn on the transmission and reception circuitry
+    UCSR1C = (0 << UMSEL11) | (0 << UMSEL10) | (0 << UCSZ12) | (1 << UCSZ11) | (1 << UCSZ10); // Use 8-bit character sizes
 
+    UBRR1H = (BAUD_PRESCALE >> 8); // Load upper 8-bits of the baud rate value into the high byte of the UBRR register
+    UBRR1L = BAUD_PRESCALE; // Load lower 8-bits of the baud rate value into the low byte of the UBRR register
 
+    UCSR1B |= (1 << RXCIE1);
+ 
+    sei();
+
+    process_commands();
+    
     bool requestMenu = false;
-
-    fprintf_P(uart_com, PSTR("start\n")); //startup message
+    char tempSTR[3] = {'S', 'T', 'R'};
+    txPayload(tempSTR);
 
     spi_init();
     led_blink(2);
@@ -192,7 +183,7 @@ void manual_extruder_selector()
 //! @copydoc manual_extruder_selector()
 void loop()
 {
-    process_commands(uart_com);
+    process_commands();
 
     if (!isPrinting) {
         manual_extruder_selector();
@@ -209,155 +200,68 @@ void loop()
 }
 
 
-    void process_commands(FILE *inout)
-    {
-        static char line[32];
-        static int count = 0;
-        int c = -1;
-        if (count < 32) {
-            if ((c = getc(inout)) >= 0) {
-                if (c == '\r') {
-                    c = 0;
-                }
-                if (c == '\n') {
-                    c = 0;
-                }
-                line[count++] = c;
-            }
-        } else {
-            count = 0;
-            //overflow
-        }
-        int value = 0;
-        int value0 = 0;
-
-        if ((count > 0) && (c == 0)) {
-            //line received
-            //printf_P(PSTR("line received: '%s' %d\n"), line, count);
-            if (strstr(line, "EE") != NULL) {
-                for (int i = 0; i < 32; i++) {
-                    line[i] = echo[i];
-                }
-                count = 0;
-            } else if (sscanf_P(line, PSTR("P%d"), &value) > 0) {
-                if (value == 0) { // Read finda
-                    fprintf_P(inout, PSTR("%dok\n"), digitalRead(A1));
-                }
-            } else { //if (strstr(line, "P0") == NULL) {
-                for (int i = 0; i < 32; i++) {
-                    echo[i] = line[i];
-                }
-                count = 0;
-                //delay(10); // delay so MK3 comms is not floaded
-                if (strstr(line, "T0") != NULL) {
-                    fprintf_P(inout, PSTR("T0\n"));
-                    return;
-                }
-                if (strstr(line, "T1") != NULL) {
-                    fprintf_P(inout, PSTR("T1\n"));
-                    return;
-                }
-                if (strstr(line, "T2") != NULL) {
-                    fprintf_P(inout, PSTR("T2\n"));
-                    return;
-                }
-                if (strstr(line, "T3") != NULL) {
-                    fprintf_P(inout, PSTR("T3\n"));
-                    return;
-                }
-                if (strstr(line, "T4") != NULL) {
-                    fprintf_P(inout, PSTR("T4\n"));
-                    return;
-                }
-                if (strstr(line, "L0") != NULL) {
-                    fprintf_P(inout, PSTR("L0\n"));
-                    return;
-                }
-                if (strstr(line, "L1") != NULL) {
-                    fprintf_P(inout, PSTR("L1\n"));
-                    return;
-                }
-                if (strstr(line, "L2") != NULL) {
-                    fprintf_P(inout, PSTR("L2\n"));
-                    return;
-                }
-                if (strstr(line, "L3") != NULL) {
-                    fprintf_P(inout, PSTR("L3\n"));
-                    return;
-                }
-                if (strstr(line, "L4") != NULL) {
-                    fprintf_P(inout, PSTR("L4\n"));
-                    return;
-                }
-                if (strstr(line, "C0") != NULL) {
-                    fprintf_P(inout, PSTR("C0\n"));
-                    return;
-                }
-                if (strstr(line, "U0") != NULL) {
-                    fprintf_P(inout, PSTR("U0\n"));
-                    return;
-                }
-                if (strstr(line, "E0") != NULL) {
-                    fprintf_P(inout, PSTR("E0\n"));
-                    return;
-                }
-                if (strstr(line, "E1") != NULL) {
-                    fprintf_P(inout, PSTR("E1\n"));
-                    return;
-                }
-                if (strstr(line, "E2") != NULL) {
-                    fprintf_P(inout, PSTR("E2\n"));
-                    return;
-                }
-                if (strstr(line, "E3") != NULL) {
-                    fprintf_P(inout, PSTR("E3\n"));
-                    return;
-                }
-                if (strstr(line, "E4") != NULL) {
-                    fprintf_P(inout, PSTR("E4\n"));
-                    return;
-                }
-                if (strstr(line, "R0") != NULL) {
-                    fprintf_P(inout, PSTR("R0\n"));
-                    return;
-                }
-                if (strstr(line, "FS") != NULL) {
-                    fprintf_P(inout, PSTR("FS\n"));
-                    return;
-                }
-            }
-            count = 0;
-
-            if (sscanf_P(line, PSTR("T%d"), &value) > 0x00) {
-                //T-code scanned
-                if ((value >= 0) && (value < EXTRUDERS)) {
-                    if ((active_extruder == value) & (isFilamentLoaded)) {
+void process_commands()
+{   // Always runs before Global Interrupts are re-enabled
+    if (txNACK) txPayload(NACK);          // Send NACK if it was requested
+    if (confirmedPayload) {
+        cli();
+        confirmedPayload = false;
+        char tData1 = rxData1;        // Copy volitale vars to local
+        char tData2 = rxData2;
+        char tData3 = rxData3;
+        char tCSUM =  rxCSUM;
+        sei();   // Re-enable Global Interrupts
+        if (tCSUM == (tData1 + tData2 + tData3)) {
+            if (tData1 == 'T') {
+                //Tx Tool Change CMD Received
+                if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) {
+                    if ((active_extruder == (int)tData2) & (isFilamentLoaded)) {
                         duplicateTCmd = true;
-                        fprintf_P(inout, PSTR("ok\n"));
+                        txPayload(OK);
                     } else {
                         mmuFSensorLoading = true;
                         duplicateTCmd = false;
-                        toolChange(value);
+                        toolChange((int)tData2);
                         if (load_filament_at_toolChange) {
-                            fprintf_P(inout, PSTR("fl\n"));
                             load_filament_withSensor();
                             load_filament_at_toolChange = false;
-                            fprintf_P(inout, PSTR("ok\n"));
-                        } //else fprintf_P(inout, PSTR("nk\n"));
+                            txPayload(OK);
+                        }
                     }
                 }
-            } else if (sscanf_P(line, PSTR("L%d"), &value) > 0) {
-                // Load filament
-                if ((value >= 0) && (value < EXTRUDERS) && !isFilamentLoaded) {
-                    set_positions(active_extruder, value, true);
+            } else if (tData1 == 'L') {
+                // Lx Load Filament CMD Received
+                if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS) && !isFilamentLoaded) {
+                    set_positions(active_extruder, (int)tData2, true);
                     delay(10);
                     feed_filament();
                     delay(100);
-                    fprintf_P(inout, PSTR("ok\n"));
+                    txPayload(OK);
                 }
-            } else if (sscanf_P(line, PSTR("M%d"), &value) > 0) {
+            } else if ((tData1 == 'U') && (tData2 == '0')) {
+                // Ux Unload filament CMD Received
+                unload_filament_withSensor(active_extruder);
+                txPayload(OK);
+                isPrinting = false;
+                trackToolChanges = 0;
+                disableAllSteppers();
+            } else if (tData1 == 'S') {
+                // Sx Starting CMD Received
+                switch ((int)tData2) {
+                  case 0: // Return OK
+                    txPayload(OK);
+                    break;
+                  case 1: // Read version
+                    txPayload((char)FW_VERSION);
+                  case 2:
+                    txPayload((char)FW_BUILDNR);
+                  default:
+                    return;
+                }
+            } else if (tData1 == 'M') {
+                // Mx Modes CMD Received
                 // M0: set to normal mode; M1: set to stealth mode
-                switch (value) {
+                switch ((int)tData2) {
                 case 0:
                     tmc2130_mode = NORMAL_MODE;
                     break;
@@ -369,59 +273,56 @@ void loop()
                 }
                 //init all axes
                 tmc2130_init(tmc2130_mode);
-                fprintf_P(inout, PSTR("ok\n"));
-            } else if (sscanf_P(line, PSTR("U%d"), &value) > 0) { // Unload filament
-                unload_filament_withSensor(active_extruder);
-                delay(200);
-                fprintf_P(inout, PSTR("ok\n"));
-                isPrinting = false;
-                trackToolChanges = 0;
-                disableAllSteppers();
-            } else if (sscanf_P(line, PSTR("X%d"), &value) > 0) {
-                if (value == 0) { // MMU reset
+                txPayload(OK);
+            } else if ((tData1 == 'F') && (tData2 == 'S')) {
+                // FS Filament Seen by MK3-FSensor CMD Received
+                fsensor_triggered = true;
+                // OK once filament @ Bondtech Gears
+            } else if (tData1 == 'F') {
+                // Fxy Filament Type Set CMD Received
+                if ((((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) && (((int)tData3 >= 0) && ((int)tData3 <= 2))) {
+                    filament_type[(int)tData2] = (int)tData3;
+                    txPayload(OK);
+                }
+            } else if (tData1 == 'X') {
+                // Xx RESET CMD Received
+                if ((int)tData2 == 0) {
                     wdt_enable(WDTO_15MS);
                 }
-            } else if (sscanf_P(line, PSTR("S%d"), &value) > 0) {
-                if (value == 0) { // return ok
-                    fprintf_P(inout, PSTR("ok\n"));
-                } else if (value == 1) { // Read version
-                    fprintf_P(inout, PSTR("%dok\n"), FW_VERSION);
-                } else if (value == 2) { // Read build nr
-                    fprintf_P(inout, PSTR("%dok\n"), FW_BUILDNR);
-                }
-            } else if (strstr(line, "FS") > 0) {
-                fsensor_triggered = true;
-                //fprintf_P(inout, PSTR("ok\n"));
-            } else if (sscanf_P(line, PSTR("F%d %d"), &value, &value0) > 0) {
-                if (((value >= 0) && (value < EXTRUDERS)) && ((value0 >= 0) && (value0 <= 2))) {
-                    filament_type[value] = value0;
-                    fprintf_P(inout, PSTR("ok\n"));
-                }
-            } else if (sscanf_P(line, PSTR("C%d"), &value) > 0) {
-                if (value == 0) // C0 continue loading current filament (used after T-code), maybe add different code for
-                    // each extruder (the same way as T-codes) in the future?
+            } else if ((tData1 == 'P') && ((int)tData2 == 0)) {
+                // P0 Read FINDA CMD Received
+                char txTemp[3] = {'O', 'K', (char)digitalRead(A1)};
+                txPayload(txTemp);
+            } else if (tData1 == 'C') {
+                // Cx Continue Load onto Bondtech Gears CMD Received
+                if ((int)tData2 == 0)
                 {
                     if (!duplicateTCmd) {
                         load_filament_into_extruder();
-                        fprintf_P(inout, PSTR("ok\n"));
-                    } else fprintf_P(inout, PSTR("ok\n"));
+                        txPayload(OK);
+                    } else txPayload(OK);
                 }
-            } else if (sscanf_P(line, PSTR("E%d"), &value) > 0) {
-                if ((value >= 0) && (value < EXTRUDERS)) { // Ex: eject filament
-                    eject_filament(value);
-                    fprintf_P(inout, PSTR("ok\n"));
+            } else if (tData1 == 'E') {
+                // Ex Eject Filament X CMD Received
+                if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) { // Ex: eject filament
+                    eject_filament((int)tData2);
+                    txPayload(OK);
                 }
-            } else if (sscanf_P(line, PSTR("R%d"), &value) > 0) {
-                if (value == 0) { // R0: recover after eject filament
+            } else if (tData1 == 'R') {
+                // Rx Recover Post-Eject Filament X CMD Received
+                if ((int)tData2 == 0) { // R0: recover after eject filament
                     recover_after_eject();
-                    fprintf_P(inout, PSTR("ok\n"));
+                    txPayload(OK);
                 }
+            } else if (tData1 == NACKCheck) {
+                txPayload(lastTxPayload);
             } else if (!mmuFSensorLoading && fsensor_triggered) {
                 fsensor_triggered = false;
-                fprintf_P(inout, PSTR("ok\n"));
-            }
-        }
+                txPayload(OK);  // "OK" + 0x00 for FS CMD
+            }            
+        } else txPayload(NACK);           // Send NACK if CSUM doesn't match
     }
+}
 
 
 void process_signals()
@@ -482,7 +383,7 @@ loop:
         engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
-        unsigned long startTime, currentTime;
+        long startTime, currentTime;
         bool tag = false;
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
@@ -492,8 +393,8 @@ loop:
             moveSmooth(AX_PUL, BOWDEN_LENGTH, filament_lookup_table[0][filament_type[active_extruder]], false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
 
             startTime = millis();
-            process_commands(uart_com);                                           // Run through serial read buffer so fsensor_triggered can be updated
-
+            char temp_txData[3] = {'F', 'L', BLK};
+            txPayload(temp_txData);
             while (tag == false) {
                 currentTime = millis();
                 if ((currentTime - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips
@@ -502,7 +403,8 @@ loop:
                 }
 
                 move_pulley(1,filament_lookup_table[0][filament_type[active_extruder]]);
-                process_commands(uart_com);
+                process_commands();
+                if (((currentTime - startTime) < 100) && fsensor_triggered) { fixTheProblem(false); goto loop; }
                 if (fsensor_triggered == true) tag = true;
             }
             moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]],false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command

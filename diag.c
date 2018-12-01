@@ -13,7 +13,7 @@
 #include "tmc2130.h"
 
 
-int8_t cmd_uart_bridge(FILE *inout)
+/*int8_t cmd_uart_bridge(FILE *inout)
 {
     fprintf_P(inout, PSTR("UART bridge started, press any button to stop\n"));
     int c0;
@@ -95,6 +95,6 @@ int8_t cmd_diag_tmc(FILE *inout, uint8_t axis)
     fprintf_P(inout, PSTR(" DIR: %S\n"), (check & TMC2130_CHECK_STP) ? _ok : _ng);
     fprintf_P(inout, PSTR(" ENA: %S\n"), (check & TMC2130_CHECK_STP) ? _ok : _ng);
     return 0;
-}
+}*/
 
 #endif //_DIAG

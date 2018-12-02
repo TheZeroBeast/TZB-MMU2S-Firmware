@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION 215 // example: 103 means version 1.0.3
-#define FW_BUILDNR 999 // number of commits in 'master'
+#define FW_BUILDNR 666 // number of commits in 'master'
 
 // timer0
 //#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
@@ -47,12 +47,7 @@
 #define UART0_BDR 115200
 
 // UART1 (fullduplex 5V UART to master, i.e. Prusa i3, MK3)
-#define UART1_BDR 115200
-
-// stdin & stdout uart0/1
-#define UART_STD 0
-// communication uart0/1
-#define UART_COM 1
+//#define UART1_BDR 115200
 
 // TMC2130 - Trinamic stepper driver
 // pinout - hardcoded
@@ -158,4 +153,4 @@
 
 
 // diagnostic functions
-#define _DIAG
+//#define _DIAG

@@ -2,9 +2,9 @@
 #ifndef _UART_H
 #define _UART_H
 
-#define USART_BAUDRATE  115200
+#define USART1_BAUDRATE  115200UL
 #define MMU_F_CPU       16000000UL
-#define BAUD_PRESCALE (((MMU_F_CPU / (USART_BAUDRATE * 8UL))) - 1)
+#define BAUD_PRESCALE (((MMU_F_CPU / (USART1_BAUDRATE * 16UL))) - 1)
 #define ACK           "ACK"
 #define NAK           "NAK"
 //#define NACKCheck     (char)0x15     // ASCII for NACK Checking

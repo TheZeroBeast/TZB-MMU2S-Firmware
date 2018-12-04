@@ -227,11 +227,11 @@ void process_commands()
         startRxFlag      = false;
         txACK();      // Send  ACK Byte
 
-        //if (tData1 == 'S') 
+
         if (tData1 == 'T') {
             //Tx Tool Change CMD Received
             if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) {
-                if ((active_extruder == (int)tData2) & (isFilamentLoaded)) {
+                if ((active_extruder == (int)tData2) && (isFilamentLoaded)) {
                     duplicateTCmd = true;
                     txPayload(OK);
                 } else {
@@ -266,67 +266,53 @@ void process_commands()
             if (tData2 == '0') {
                 txPayload(OK);
             } else if (tData2 == '1') {
-                txPayload(FW_VERSION);
-                diagLEDS = true;
+                unsigned char tempS1[3] = {(FW_VERSION >> 8), FW_VERSION, BLK};
+                txPayload(tempS1);
             } else if (tData2 == '2') {
-                txPayload(FW_BUILDNR);
+                unsigned char tempS2[3] = {(FW_BUILDNR >> 8), FW_BUILDNR, BLK};
+                txPayload(tempS2);
             }
         } else if (tData1 == 'M') {
             // Mx Modes CMD Received
             // M0: set to normal mode; M1: set to stealth mode
-            switch ((int)tData2) {
-            case 0:
-                tmc2130_mode = NORMAL_MODE;
-                break;
-            case 1:
-                tmc2130_mode = STEALTH_MODE;
-                break;
-            default:
-                return;
-            }
+            if (tData2 == '0') tmc2130_mode =  NORMAL_MODE;
+            if (tData2 == '1') tmc2130_mode = STEALTH_MODE;
             //init all axes
             tmc2130_init(tmc2130_mode);
             txPayload(OK);
         } else if ((tData1 == 'F') && (tData2 == 'S')) {
             // FS Filament Seen by MK3-FSensor CMD Received
             fsensor_triggered = true;
-            // OK once filament @ Bondtech Gears
+            // OK is sent once filament @ Bondtech Gears
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
             if ((((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) && (((int)tData3 >= 0) && ((int)tData3 <= 2))) {
                 filament_type[(int)tData2] = (int)tData3;
                 txPayload(OK);
             }
-        } else if (tData1 == 'X') {
+        } else if ((tData1 == 'X') && (tData2 == '0')) {
             // Xx RESET CMD Received
-            if ((int)tData2 == 0) {
-                wdt_enable(WDTO_15MS);
-            }
-        } else if ((tData1 == 'P') && ((int)tData2 == 0)) {
+            wdt_enable(WDTO_15MS);
+        } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
-            byte txTemp[3] = {'O', 'K', (byte)digitalRead(A1)};
+            byte txTemp[3] = {'O', 'K', (int)digitalRead(A1)};
             txPayload(txTemp);
-        } else if (tData1 == 'C') {
+        } else if ((tData1 == 'C') && (tData2 == '0')) {
             // Cx Continue Load onto Bondtech Gears CMD Received
-            if ((int)tData2 == 0)
-            {
-                if (!duplicateTCmd) {
-                    load_filament_into_extruder();
-                    txPayload(OK);
-                } else txPayload(OK);
-            }
+            if (!duplicateTCmd) {
+                load_filament_into_extruder();
+                txPayload(OK);
+            } else txPayload(OK);
         } else if (tData1 == 'E') {
             // Ex Eject Filament X CMD Received
             if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) { // Ex: eject filament
                 eject_filament((int)tData2);
                 txPayload(OK);
             }
-        } else if (tData1 == 'R') {
+        } else if ((tData1 == 'R') && (tData2 == '0')) {
             // Rx Recover Post-Eject Filament X CMD Received
-            if ((int)tData2 == 0) { // R0: recover after eject filament
-                recover_after_eject();
-                txPayload(OK);
-            }
+            recover_after_eject();
+            txPayload(OK);
         } else if (!mmuFSensorLoading && fsensor_triggered) {
             fsensor_triggered = false;
             txPayload(OK);

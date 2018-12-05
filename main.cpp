@@ -28,11 +28,6 @@ bool duplicateTCmd = false;
 bool load_filament_at_toolChange = false;
 long startWakeTime, currentWakeTime;
 
-
-bool diagLEDS = false;
-
-
-
 uint8_t tmc2130_mode = NORMAL_MODE;
 
 //! @brief Initialization after reset
@@ -65,7 +60,7 @@ void setup()
     shr16_init(); // shift register
     shr16_set_ena_all();
     led_blink(0);
-    //delay(800);  // wait for boot ok printer
+    //delay(1000);  // wait for boot ok printer
     startWakeTime = millis();
     led_blink(1);
 
@@ -110,7 +105,7 @@ void setup()
         }
     }
 
-    //home();
+    home();
     
     // TODO 2: add reading previously stored mode (stealth/normal) from eeprom
 
@@ -118,6 +113,7 @@ void setup()
     if (requestMenu) {
         setupMenu();
     }
+    
     txPayload("STR");
 }
 
@@ -186,9 +182,6 @@ void manual_extruder_selector()
 void loop()
 {
     process_commands();
-    shr16_clr_led();
-    if (diagLEDS) shr16_set_led(0x00FF);
-    delay(200);
 
     if (!isPrinting) {
         manual_extruder_selector();
@@ -218,7 +211,7 @@ void process_commands()
         txPayload(lastTxPayload);
         return;
     }
-    if ((confPayload && !(tCSUM = 0x2D)) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
+    if ((confPayload && !(tCSUM == 0x2D)) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
         confirmedPayload = false;
         startRxFlag      = false;
         txACK(false); // Send NACK Byte
@@ -266,10 +259,10 @@ void process_commands()
             if (tData2 == '0') {
                 txPayload(OK);
             } else if (tData2 == '1') {
-                unsigned char tempS1[3] = {(FW_VERSION >> 8), FW_VERSION, BLK};
+                unsigned char tempS1[3] = {(FW_VERSION >> 8), (0xFF & FW_VERSION), BLK};
                 txPayload(tempS1);
             } else if (tData2 == '2') {
-                unsigned char tempS2[3] = {(FW_BUILDNR >> 8), FW_BUILDNR, BLK};
+                unsigned char tempS2[3] = {(FW_BUILDNR >> 8), (0xFF & FW_BUILDNR), BLK};
                 txPayload(tempS2);
             }
         } else if (tData1 == 'M') {
@@ -295,7 +288,7 @@ void process_commands()
             wdt_enable(WDTO_15MS);
         } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
-            byte txTemp[3] = {'O', 'K', (int)digitalRead(A1)};
+            byte txTemp[3] = {'O', 'K', digitalRead(A1)};
             txPayload(txTemp);
         } else if ((tData1 == 'C') && (tData2 == '0')) {
             // Cx Continue Load onto Bondtech Gears CMD Received

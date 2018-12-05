@@ -5,7 +5,7 @@
 #define USART1_BAUDRATE  115200UL
 #define MMU_F_CPU       16000000UL
 #define BAUD_PRESCALE (((MMU_F_CPU / (USART1_BAUDRATE * 16UL))) - 1)
-#define OK            (byte)0x4F4B00 // ASCII for  OK CMD tx
+#define OK            (byte)0x4F4B2D // ASCII for  OK CMD tx
 #define BLK           (byte)0x2D     // Blank data filler
 
 #include <inttypes.h>

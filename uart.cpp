@@ -53,20 +53,20 @@ void txPayload(unsigned char payload[3])
   unsigned char csum = 0;
   loop_until_bit_is_set(UCSR1A, UDRE1);   // Do nothing until UDR is ready for more data to be written to it
   UDR1 = 0x7F;                            // Start byte 0x7F
-  delay(3);
+  //delay(3);
   for (int i = 0; i < 3; i++) {           // Send data
     loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
     UDR1 = (0xFF & payload[i]);
-    delay(3);
+    //delay(3);
     csum += (0xFF & payload[i]);
   }
   csum = 0x2D; //(csum/3);
   loop_until_bit_is_set(UCSR1A, UDRE1);   // Do nothing until UDR is ready for more data to be written to it
   UDR1 = (0xFF & csum);
-  delay(3);// Send Checksum
+  //delay(3);// Send Checksum
   loop_until_bit_is_set(UCSR1A, UDRE1);   // Do nothing until UDR is ready for more data to be written to it
   UDR1 = 0x7F;
-  delay(3);// End byte
+  //delay(3);// End byte
   pendingACK = true;                      // Set flag to wait for ACK
 }
 

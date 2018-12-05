@@ -60,7 +60,7 @@ void setup()
     shr16_init(); // shift register
     shr16_set_ena_all();
     led_blink(0);
-    //delay(1000);  // wait for boot ok printer
+    delay(1000);  // wait for boot ok printer
     startWakeTime = millis();
     led_blink(1);
 
@@ -382,8 +382,7 @@ loop:
             moveSmooth(AX_PUL, BOWDEN_LENGTH, filament_lookup_table[0][filament_type[active_extruder]], false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
 
             startTime = millis();
-            char temp_txData[3] = {'F', 'L', BLK};
-            txPayload(temp_txData);
+            txPayload("FS-");
             while (tag == false) {
                 currentTime = millis();
                 if ((currentTime - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips

@@ -19,6 +19,7 @@ void reset_engage_filament_pulley(bool previouslyEngaged);
 void load_filament_into_extruder();
 
 void set_positions(int _current_extruder, int _next_extruder, bool update_extruders = false);
+void set_position_eject(bool setTrueForEject = false);
 
 void init_Pulley();
 

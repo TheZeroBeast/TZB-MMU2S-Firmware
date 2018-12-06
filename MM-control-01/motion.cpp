@@ -42,7 +42,7 @@ const int filament_lookup_table[8][3] =
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -142;
+static const int IDLER_STEPS_AFTER_HOMING = -138;  //142
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -80,7 +80,7 @@ void set_positions(int _current_extruder, int _next_extruder, bool update_extrud
         if (_next_extruder == EXTRUDERS)    _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
         if (_current_extruder == EXTRUDERS) _idler_steps = ((_current_extruder - 1) - _next_extruder) * IDLER_STEPS;
         // steps to move to new position of idler and selector
-        move_idler(_idler_steps); // remove this, when abs coordinates are implemented!
+        move_idler(_idler_steps);
     
         if (_next_extruder > 0) {
             int _selector_steps = ((_current_extruder - _next_extruder) * SELECTOR_STEPS) * -1;
@@ -101,6 +101,30 @@ void set_positions(int _current_extruder, int _next_extruder, bool update_extrud
     }
 }
 
+void set_position_eject(bool setTrueForEject)
+{
+    if (setTrueForEject) {
+        int _selector_steps = ((active_extruder - EXTRUDERS) * SELECTOR_STEPS) * -1;
+        _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
+        move_selector(_selector_steps);
+    } else {
+        if (active_extruder > 0) {
+            int _selector_steps = ((EXTRUDERS - active_extruder) * SELECTOR_STEPS) * -1;
+            _selector_steps -= EXTRA_STEPS_SELECTOR_SERVICE;
+            move_selector(_selector_steps);
+        } else {
+            moveSmooth(AX_SEL, 100, 2000, false);
+            for (int c = 2; c > 0; c--) { // touch end 2 times
+                moveSmooth(AX_SEL, -4000, 2000, false);
+                if (c > 1) {
+                    moveSmooth(AX_SEL, 100, 2000, false);
+                }
+            }
+            moveSmooth(AX_SEL, 33, 2000, false);
+        }
+    }
+}
+
 /**
  * @brief Eject Filament
  * move selector sideways and push filament forward little bit, so user can catch it,
@@ -109,42 +133,20 @@ void set_positions(int _current_extruder, int _next_extruder, bool update_extrud
  */
 void eject_filament(int extruder)
 {
-    int selector_position = 0;
-
-    int8_t selector_offset_for_eject = 0;
-    int8_t idler_offset_for_eject = 0;
-
+    if (!isHomed) home(true);
+    
     // if there is still filament detected by PINDA unload it first
     if (isFilamentLoaded) {
         unload_filament_withSensor(active_extruder);
     }
 
+    set_positions(active_extruder, extruder, true);
+
+    set_position_eject(true);
 
     engage_filament_pulley(true);
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
-
-
-    // if we are want to eject fil 0-2, move seelctor to position 4 (right), if we want to eject filament 3 - 4, move
-    // selector to position 0 (left)
-    // maybe we can also move selector to service position in the future?
-    if (extruder <= 2) {
-        selector_position = 4;
-    } else {
-        selector_position = 0;
-    }
-
-    // count offset (number of positions) for desired selector and idler position for ejecting
-    selector_offset_for_eject = active_extruder - selector_position;
-    idler_offset_for_eject = active_extruder - extruder;
-
-    // count number of desired steps for selector and idler and store it in static variable
-    selector_steps_for_eject = (selector_offset_for_eject * SELECTOR_STEPS) * -1;
-    idler_steps_for_eject = idler_offset_for_eject * IDLER_STEPS;
-
-    // move selector and idler to new position
-    move_idler(idler_steps_for_eject); // remove this, with when abs coordinates are implemented!
-    move_selector(selector_steps_for_eject);
-
+    
     // push filament forward
     move_pulley(EJECT_PULLEY_STEPS, 666);
 
@@ -157,8 +159,7 @@ void eject_filament(int extruder)
 void recover_after_eject()
 {
     while (digitalRead(A1)) fixTheProblem(false);
-    move_idler(-idler_steps_for_eject); // TODO 1: remove this, when abs coordinates are implemented!
-    move_selector(-selector_steps_for_eject);
+    set_position_eject();
 }
 
 /**

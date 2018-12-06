@@ -105,6 +105,8 @@ void setup()
         }
     }
 
+    txPayload("STR");
+
     home();
     
     // TODO 2: add reading previously stored mode (stealth/normal) from eeprom
@@ -113,8 +115,6 @@ void setup()
     if (requestMenu) {
         setupMenu();
     }
-    
-    txPayload("STR");
 }
 
 //! @brief Select filament menu
@@ -202,7 +202,9 @@ void process_commands()
     unsigned char tData1 = rxData1;                  // Copy volitale vars as local
     unsigned char tData2 = rxData2;
     unsigned char tData3 = rxData3;
-    unsigned char  tCSUM =  rxCSUM;
+    unsigned char tCSUM1 = rxCSUM1;
+    unsigned char tCSUM2 = rxCSUM2;
+    int16_t  tCSUM = ((tCSUM1 << 8) | tCSUM2);
     bool     confPayload = confirmedPayload;
     if (txRESEND) {
         txRESEND         = false;
@@ -211,26 +213,22 @@ void process_commands()
         txPayload(lastTxPayload);
         return;
     }
-    if ((confPayload && !(tCSUM == 0x2D)) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
-        confirmedPayload = false;
-        startRxFlag      = false;
+    if ((confPayload && !(tCSUM == (tData1 + tData2 + tData3))) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
         txACK(false); // Send NACK Byte
     } else if (confPayload) {
-        confirmedPayload = false;
-        startRxFlag      = false;
         txACK();      // Send  ACK Byte
 
 
         if (tData1 == 'T') {
             //Tx Tool Change CMD Received
-            if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) {
-                if ((active_extruder == (int)tData2) && (isFilamentLoaded)) {
+            if ((tData2 >= 0) && (tData2 < EXTRUDERS)) {
+                if ((active_extruder == tData2) && (isFilamentLoaded)) {
                     duplicateTCmd = true;
                     txPayload(OK);
                 } else {
                     mmuFSensorLoading = true;
                     duplicateTCmd = false;
-                    toolChange((int)tData2);
+                    toolChange(tData2);
                     if (load_filament_at_toolChange) {
                         load_filament_withSensor();
                         load_filament_at_toolChange = false;
@@ -240,8 +238,8 @@ void process_commands()
             }
         } else if (tData1 == 'L') {
             // Lx Load Filament CMD Received
-            if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS) && !isFilamentLoaded) {
-                set_positions(active_extruder, (int)tData2, true);
+            if ((tData2 >= 0) && (tData2 < EXTRUDERS) && !isFilamentLoaded) {
+                set_positions(active_extruder, tData2, true);
                 delay(10);
                 feed_filament();
                 delay(100);
@@ -279,7 +277,7 @@ void process_commands()
             // OK is sent once filament @ Bondtech Gears
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
-            if ((((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) && (((int)tData3 >= 0) && ((int)tData3 <= 2))) {
+            if (((tData2 >= 0) && (tData2 < EXTRUDERS)) && ((tData3 >= 0) && (tData3 <= 2))) {
                 filament_type[(int)tData2] = (int)tData3;
                 txPayload(OK);
             }
@@ -298,8 +296,8 @@ void process_commands()
             } else txPayload(OK);
         } else if (tData1 == 'E') {
             // Ex Eject Filament X CMD Received
-            if (((int)tData2 >= 0) && ((int)tData2 < EXTRUDERS)) { // Ex: eject filament
-                eject_filament((int)tData2);
+            if ((tData2 >= 0) && (tData2 < EXTRUDERS)) { // Ex: eject filament
+                eject_filament(tData2);
                 txPayload(OK);
             }
         } else if ((tData1 == 'R') && (tData2 == '0')) {

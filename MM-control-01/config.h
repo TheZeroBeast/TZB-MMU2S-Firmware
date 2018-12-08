@@ -34,20 +34,17 @@
 
 // TMC2130 Direction/Enable signals - hardcoded
 
- #define SHR16_DIR_PUL          0x0001
- #define SHR16_ENA_PUL          0x0002
- #define SHR16_DIR_SEL          0x0004
- #define SHR16_ENA_SEL          0x0008
- #define SHR16_DIR_IDL          0x0010
- #define SHR16_ENA_IDL          0x0020
- #define SHR16_DIR_MSK        (SHR16_DIR_PUL + SHR16_DIR_SEL + SHR16_DIR_IDL)
- #define SHR16_ENA_MSK        (SHR16_ENA_PUL + SHR16_ENA_SEL + SHR16_ENA_IDL)
+#define SHR16_DIR_PUL          0x0001
+#define SHR16_ENA_PUL          0x0002
+#define SHR16_DIR_SEL          0x0004
+#define SHR16_ENA_SEL          0x0008
+#define SHR16_DIR_IDL          0x0010
+#define SHR16_ENA_IDL          0x0020
+#define SHR16_DIR_MSK        (SHR16_DIR_PUL + SHR16_DIR_SEL + SHR16_DIR_IDL)
+#define SHR16_ENA_MSK        (SHR16_ENA_PUL + SHR16_ENA_SEL + SHR16_ENA_IDL)
 
 // UART0 (USB)
 #define UART0_BDR 115200
-
-// UART1 (fullduplex 5V UART to master, i.e. Prusa i3, MK3)
-//#define UART1_BDR 115200
 
 // TMC2130 - Trinamic stepper driver
 // pinout - hardcoded
@@ -84,7 +81,7 @@
 #define CURRENT_HOMING              { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_SEL 8000 // micro steps
+#define MAX_SPEED_SEL 6000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
 #define ACC_NORMAL 80000 // micro steps / s²

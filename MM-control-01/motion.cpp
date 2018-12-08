@@ -42,7 +42,7 @@ const int filament_lookup_table[8][3] =
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -138;  //142
+static const int IDLER_STEPS_AFTER_HOMING = -135;  //142
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -52,26 +52,22 @@ static const int SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60; // 237
 
-const int BOWDEN_LENGTH = 8000;
+uint16_t BOWDEN_LENGTH = BowdenLength::get();
 const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
 
 static const int EJECT_PULLEY_STEPS = 2500;
-
-// private variables:
-
-static int selector_steps_for_eject = 0;
-static int idler_steps_for_eject = 0;
 
 // private functions:
 static int set_idler_direction(int steps);
 static int set_selector_direction(int steps);
 static int set_pulley_direction(int steps);
 
-void set_positions(int _current_extruder, int _next_extruder, bool update_extruders)
+void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool update_extruders)
 {
     if (update_extruders) {
         previous_extruder = _current_extruder;
         active_extruder = _next_extruder;
+        FilamentLoaded::set(active_extruder);
     }
     if (!isHomed) home(true);
     else {
@@ -125,6 +121,17 @@ void set_position_eject(bool setTrueForEject)
     }
 }
 
+void set_idler_toLast_positions(int _next_extruder)
+{
+    active_extruder = _next_extruder;
+    FilamentLoaded::set(active_extruder);
+    int _idler_steps = (0 - _next_extruder) * IDLER_STEPS;
+    if (_next_extruder == EXTRUDERS)    _idler_steps = (0 - (_next_extruder - 1)) * IDLER_STEPS;
+    if (0 == EXTRUDERS) _idler_steps = ((0 - 1) - _next_extruder) * IDLER_STEPS;
+    // steps to move to new position of idler and selector
+    move_idler(_idler_steps);
+}
+
 /**
  * @brief Eject Filament
  * move selector sideways and push filament forward little bit, so user can catch it,
@@ -160,6 +167,82 @@ void recover_after_eject()
 {
     while (digitalRead(A1)) fixTheProblem(false);
     set_position_eject();
+}
+
+bool load_filament_withSensor(uint16_t setupBowLen)
+{
+    fsensor_triggered = false;
+loop:
+    {
+        if (!isHomed && (setupBowLen == 0)) home(true);
+        engage_filament_pulley(true); // get in contact with filament
+        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+
+        long startTime, currentTime;
+        bool tag = false;
+
+        // load filament until FINDA senses end of the filament, means correctly loaded into the selector
+        // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
+
+        if (moveSmooth(AX_PUL, 2000, filament_lookup_table[5][filament_type[active_extruder]],
+          false, false, ACC_NORMAL, true) == MR_Success) { // Move to Pulley
+            if (setupBowLen != 0) moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
+              false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
+            else {
+                moveSmooth(AX_PUL, BOWDEN_LENGTH, filament_lookup_table[0][filament_type[active_extruder]],
+              false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
+                startTime = millis();
+                txPayload("FS-");
+                while (tag == false) {
+                    currentTime = millis();
+                    if ((currentTime - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips
+                        fixTheProblem(false);
+                        goto loop;
+                    }
+    
+                    move_pulley(1,filament_lookup_table[0][filament_type[active_extruder]]);
+                    process_commands();
+                    if (((currentTime - startTime) < 100) && fsensor_triggered) { fixTheProblem(false); goto loop; }
+                    if (fsensor_triggered == true) tag = true;
+                }
+                moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]],false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
+            }
+            shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
+            shr16_set_led(1 << 2 * (4 - active_extruder));
+            isFilamentLoaded = true;  // filament loaded
+            mmuFSensorLoading = false;
+            return true;
+        }
+        fixTheProblem(false);
+        goto loop;
+    }
+    startWakeTime = millis();  // Start/Reset wakeTimer
+}
+
+/**
+ * @brief unload_filament_withSensor
+ * unloads filament from extruder - filament is above Bondtech gears
+ */
+bool unload_filament_withSensor(int extruder)
+{
+    if (digitalRead(A1)) {
+        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        tmc2130_init_axis(AX_IDL, tmc2130_mode);
+        engage_filament_pulley(true); // get in contact with filament
+        moveSmooth(AX_PUL, ((BOWDEN_LENGTH + filament_lookup_table[2][filament_type[extruder]]) * -1),
+        filament_lookup_table[0][filament_type[extruder]], false, false, filament_lookup_table[1][filament_type[extruder]]);
+        if (moveSmooth(AX_PUL, -3000, filament_lookup_table[5][filament_type[extruder]],
+          false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+            moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]], 
+              filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+        } //else if (digitalRead(A1)) { fixTheProblem(true); homedOnUnload = true; }                              // If -3000 steps didn't trigger FINDA
+    }
+    if (digitalRead(A1)) { fixTheProblem(true); homedOnUnload = true; }
+    if (!homedOnUnload && !isHomed) { home(true); homedOnUnload = true; }
+    isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
+    shr16_clr_ena(AX_PUL);
+    engage_filament_pulley(false);
+    return true;
 }
 
 /**
@@ -394,15 +477,26 @@ MotReturn homeSelectorSmooth()
     return moveSmooth(AX_SEL, SELECTOR_STEPS_AFTER_HOMING, MAX_SPEED_SEL, false);
 }
 
-MotReturn homeIdlerSmooth()
+MotReturn homeIdlerSmooth(bool toLastFilament)
 {
+    uint8_t filament = 0;
     for (int c = 2; c > 0; c--) { // touch end 3 times
         moveSmooth(AX_IDL, 2000, 3000, false);
         if (c > 1) {
             moveSmooth(AX_IDL, -350, MAX_SPEED_IDL, false);
         }
     }
-    return moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
+    
+    moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
+
+    if (toLastFilament) {
+        FilamentLoaded::get(filament);
+        active_extruder = filament;
+        set_idler_toLast_positions(filament);
+        isIdlerParked = false;
+        delay(50); // delay to release the stall detection
+        engage_filament_pulley(false);
+    }
 }
 
 /**
@@ -426,6 +520,7 @@ void disableAllSteppers(void)
 // TODO 3: compensate delay for computation time, to get accurate speeds
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail, bool withStallDetection, float acc, bool withFindaDetection)
 {
+    shr16_set_ena(axis);
     startWakeTime = millis();
     MotReturn ret = MR_Success;
     if (withFindaDetection) ret = MR_Failed;

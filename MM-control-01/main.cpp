@@ -56,9 +56,8 @@ uint8_t tmc2130_mode = NORMAL_MODE;
 //! @n b - blinking
 void setup()
 {
-
+    permanentStorageInit();
     shr16_init(); // shift register
-    shr16_set_ena_all();
     led_blink(0);
     delay(1000);  // wait for boot ok printer
     startWakeTime = millis();
@@ -76,45 +75,33 @@ void setup()
     UCSR1B |= (1 << RXCIE1);
  
     sei();
+
+    txPayload("STR");
         
     bool requestMenu = false;
+    if (buttonClicked() == Btn::middle) requestMenu = true;
 
     spi_init();
     led_blink(2);
+    tmc2130_init(HOMING_MODE); // trinamic, homing  
     led_blink(3);
     adc_init(); // ADC
     led_blink(4);
+
+    shr16_clr_led();
     
     init_Pulley();
+    homeIdlerSmooth(true);
 
-    if (buttonClicked() == Btn::middle) {
-        requestMenu = true;
-    }
-
-    // if FINDA is sensing filament do not home
-    while (digitalRead(A1)) {
-        while (Btn::right != buttonClicked()) {
-            if (digitalRead(A1)) {
-                shr16_set_led(0x2aa);
-            } else {
-                shr16_set_led(0x155);
-            }
-            delay(300);
-            shr16_clr_led();
-            delay(300);
-        }
-    }
-
-    txPayload("STR");
-
-    home();
-    
-    // TODO 2: add reading previously stored mode (stealth/normal) from eeprom
+    //add reading previously stored mode (stealth/normal) from eeprom
+    tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 
     // check if to goto the settings menu
     if (requestMenu) {
         setupMenu();
     }
+    
+    if (digitalRead(A1)) isFilamentLoaded = true;
 }
 
 //! @brief Select filament menu
@@ -147,7 +134,7 @@ void manual_extruder_selector()
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
     
-    if ((Btn::left | Btn::right) & buttonClicked()) {
+    if (((Btn::left | Btn::right) & buttonClicked()) && !digitalRead(A1)) {
         switch (buttonClicked()) {
         case Btn::right:
             if (active_extruder < EXTRUDERS) set_positions(active_extruder, active_extruder + 1, true);
@@ -185,12 +172,14 @@ void loop()
 
     if (!isPrinting) {
         manual_extruder_selector();
-        if (Btn::middle == buttonClicked() && active_extruder < 5) {
-            shr16_clr_led();
-            shr16_set_led(2 << 2 * (4 - active_extruder));
-            if (Btn::middle == buttonClicked()) {
-                feed_filament();
-            }
+        if (Btn::middle == buttonClicked()) {
+            if (active_extruder < EXTRUDERS) {
+                shr16_clr_led();
+                shr16_set_led(2 << 2 * (4 - active_extruder));
+                if (Btn::middle == buttonClicked()) {
+                    feed_filament();
+                }
+            } else if (active_extruder == EXTRUDERS) setupMenu();
         }
     }
     currentWakeTime = millis();
@@ -359,73 +348,4 @@ void fixTheProblem(bool showPrevious) {
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
     tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
     home(true); // Home and return to previous active extruder
-}
-
-bool load_filament_withSensor()
-{
-    fsensor_triggered = false;
-loop:
-    {
-        if (!isHomed) home(true);
-        engage_filament_pulley(true); // get in contact with filament
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
-
-        long startTime, currentTime;
-        bool tag = false;
-
-        // load filament until FINDA senses end of the filament, means correctly loaded into the selector
-        // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
-
-        if (moveSmooth(AX_PUL, 2000, filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL, true) == MR_Success) {        // Check if filament makes it to the FINDA
-            moveSmooth(AX_PUL, BOWDEN_LENGTH, filament_lookup_table[0][filament_type[active_extruder]], false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
-
-            startTime = millis();
-            txPayload("FS-");
-            while (tag == false) {
-                currentTime = millis();
-                if ((currentTime - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips
-                    fixTheProblem(false);
-                    goto loop;
-                }
-
-                move_pulley(1,filament_lookup_table[0][filament_type[active_extruder]]);
-                process_commands();
-                if (((currentTime - startTime) < 100) && fsensor_triggered) { fixTheProblem(false); goto loop; }
-                if (fsensor_triggered == true) tag = true;
-            }
-            moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]],false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
-            shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
-            shr16_set_led(1 << 2 * (4 - active_extruder));
-            isFilamentLoaded = true;  // filament loaded
-            mmuFSensorLoading = false;
-            return true;
-        }
-        fixTheProblem(false);
-        goto loop;
-    }
-    startWakeTime = millis();  // Start/Reset wakeTimer
-}
-
-/**
- * @brief unload_filament_withSensor
- * unloads filament from extruder - filament is above Bondtech gears
- */
-bool unload_filament_withSensor(int extruder)
-{
-    if (digitalRead(A1)) {
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
-        tmc2130_init_axis(AX_IDL, tmc2130_mode);
-        engage_filament_pulley(true); // get in contact with filament
-        moveSmooth(AX_PUL, ((BOWDEN_LENGTH + filament_lookup_table[2][filament_type[extruder]]) * -1),
-        filament_lookup_table[0][filament_type[extruder]], false, false, filament_lookup_table[1][filament_type[extruder]]);
-        if (moveSmooth(AX_PUL, -3000, filament_lookup_table[5][filament_type[extruder]],
-          false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
-            moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]], 
-              filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
-        } else if (digitalRead(A1)) { fixTheProblem(true); homedOnUnload = true; }                              // If -3000 steps didn't trigger FINDA
-    }
-    isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
-    shr16_clr_ena(AX_PUL);
-    engage_filament_pulley(false);
-    return true;
 }

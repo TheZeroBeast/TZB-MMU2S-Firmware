@@ -13,9 +13,8 @@ extern int8_t sys_state;
 // signals from interrupt to main loop
 extern uint8_t sys_signals;
 extern bool load_filament_at_toolChange;
+extern bool mmuFSensorLoading;
 void process_signals();
-bool load_filament_withSensor();
-bool unload_filament_withSensor(int extruder);
 void process_commands(void);
 void fixTheProblem(bool showPrevious);
 

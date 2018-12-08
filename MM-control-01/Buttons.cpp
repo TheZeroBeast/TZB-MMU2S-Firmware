@@ -10,29 +10,7 @@
 
 const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 
-//! @brief Select filament for bowden length calibration
-//!
-//! Filaments are selected by left and right buttons, calibration is activated by middle button.
-//! Park position (one behind last filament) can be also selected.
-//! Activating calibration in park position exits selector.
-//!
-void settings_select_filament()
-{
-    while (1) {
-        manual_extruder_selector();
-
-        if (Btn::middle == buttonClicked()) {
-            shr16_clr_led();
-            shr16_set_led(2 << 2 * (4 - active_extruder));
-            delay(500);
-            if (Btn::middle == buttonClicked()) {
-                set_positions(active_extruder, 4, true);
-                set_positions(active_extruder, 0, true);
-                return;
-            }
-        }
-    }
-}
+void settings_bowden_length();
 
 //! @brief Show setup menu
 //!
@@ -90,13 +68,14 @@ void setupMenu()
 
             switch (_menu) {
             case 1:
-                settings_select_filament();
+                settings_bowden_length();
                 _exit = true;
                 break;
             case 2:
-                if (!eraseLocked) {
-                    //BowdenLength::eraseAll();
-                    _exit = true;
+                if (!eraseLocked)
+                {
+                  eepromEraseAll();
+                  _exit = true;
                 }
                 break;
             case 3: //unlock erase
@@ -129,6 +108,87 @@ void setupMenu()
 
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
+}
+
+//! @brief Set bowden length
+//!
+//! button | action
+//! ------ | ------
+//! left   | increase bowden length / feed more filament
+//! right  | decrease bowden length / feed less filament
+//! middle | store bowden length to EEPROM and exit
+//!
+//! This state is indicated by following LED pattern:
+//!
+//! RG | RG | RG | RG | RG
+//! -- | -- | -- | -- | --
+//! bb | 00 | 00 | 0b | 00
+//!
+//! @n R - Red LED
+//! @n G - Green LED
+//! @n 1 - active
+//! @n 0 - inactive
+//! @n b - blinking
+//!
+void settings_bowden_length()
+{
+    // load filament above Bondtech gears to check correct length of bowden tube
+    if (!isFilamentLoaded) home();
+    BowdenLength bowdenLength;
+    uint16_t localLength = bowdenLength.get();
+    loop:
+        load_filament_withSensor(localLength);
+    
+        tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
+        do
+        {
+          switch (buttonClicked())
+          {
+          case Btn::right:
+            if (bowdenLength.decrease())
+            {
+              move_pulley(-bowdenLength.stepSize);
+              localLength -= bowdenLength.stepSize;
+              delay(400);
+            }
+            break;
+    
+          case Btn::left:
+            if (bowdenLength.increase())
+            {
+              move_pulley(bowdenLength.stepSize);
+              localLength += bowdenLength.stepSize;
+              delay(400);
+            }
+            break;
+          default:
+            break;
+          }
+    
+          shr16_set_led(1 << 2 * 4);
+          delay(10);
+          shr16_set_led(2 << 2 * 4);
+          delay(10);
+          shr16_set_led(2 << 2 * 1);
+          delay(50);
+    
+    
+        } while (buttonClicked() != Btn::middle);
+        unload_filament_withSensor(active_extruder);
+        loop2:
+                switch (buttonClicked()) {
+                case Btn::middle:
+                    goto loop;
+                    break;
+                case Btn::left:
+                    goto loop3;
+                    break;
+                default:
+                    goto loop2;
+                }
+        loop3:
+        bowdenLength.~BowdenLength();
+        BOWDEN_LENGTH = BowdenLength::get();
 }
 
 //! @brief Is button pushed?

@@ -68,8 +68,10 @@ void setupMenu()
 
             switch (_menu) {
             case 1:
-                settings_bowden_length();
-                _exit = true;
+                if (!isFilamentLoaded) {
+                    settings_bowden_length();
+                    _exit = true;
+                }
                 break;
             case 2:
                 if (!eraseLocked)
@@ -112,11 +114,12 @@ void setupMenu()
 
 //! @brief Set bowden length
 //!
-//! button | action
-//! ------ | ------
-//! left   | increase bowden length / feed more filament
-//! right  | decrease bowden length / feed less filament
-//! middle | store bowden length to EEPROM and exit
+//! button         | action
+//! -------------- | ------
+//! Left   LOADED  | increase bowden length / feed more filament
+//! Left UNLOADED  | store bowden length to EEPROM and exit
+//! Right          | decrease bowden length / feed less filament
+//! Middle         | Load/Unload to recheck length
 //!
 //! This state is indicated by following LED pattern:
 //!
@@ -132,8 +135,9 @@ void setupMenu()
 //!
 void settings_bowden_length()
 {
-    // load filament above Bondtech gears to check correct length of bowden tube
-    if (!isFilamentLoaded) home();
+    // load filament to end of detached bowden tube to check correct length
+    if (!isHomed) home();
+    else set_positions(active_extruder, 0, true);
     BowdenLength bowdenLength;
     uint16_t localLength = bowdenLength.get();
     loop:

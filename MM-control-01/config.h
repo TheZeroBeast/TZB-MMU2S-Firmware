@@ -88,8 +88,6 @@
 #define ACC_STEALTH 15000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
 
-
-
 //mode
 #define HOMING_MODE 0
 #define NORMAL_MODE 1

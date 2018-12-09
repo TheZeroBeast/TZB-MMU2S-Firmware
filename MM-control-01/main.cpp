@@ -24,6 +24,7 @@ uint8_t sys_signals = 0;
 bool fsensor_triggered = false;
 bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
+bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool load_filament_at_toolChange = false;
 long startWakeTime, currentWakeTime;
@@ -211,10 +212,11 @@ void process_commands()
         if (tData1 == 'T') {
             //Tx Tool Change CMD Received
             if ((tData2 >= 0) && (tData2 < EXTRUDERS)) {
-                if ((active_extruder == tData2) && (isFilamentLoaded)) {
+                if ((active_extruder == tData2) && isFilamentLoaded && !m600RunoutChanging) {
                     duplicateTCmd = true;
                     txPayload(OK);
                 } else {
+                    m600RunoutChanging = false;
                     mmuFSensorLoading = true;
                     duplicateTCmd = false;
                     toolChange(tData2);
@@ -286,6 +288,7 @@ void process_commands()
         } else if (tData1 == 'E') {
             // Ex Eject Filament X CMD Received
             if ((tData2 >= 0) && (tData2 < EXTRUDERS)) { // Ex: eject filament
+                m600RunoutChanging = true;
                 eject_filament(tData2);
                 txPayload(OK);
             }

@@ -15,11 +15,11 @@
 // public variables:
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 const int filament_lookup_table[8][3] = 
-/*0*/ {{4600,   400, 2800},
-/*1*/  {2333,   100, 1500},
-/*2*/  { 385,   390,  385},
+/*0*/ {{5000,   400, 2800},
+/*1*/  {3000,   100, 1500},
+/*2*/  { 380,   390,  385},
 /*3*/  {-610,  -610, -610},
-/*4*/  {5000, 10000, 6000},
+/*4*/  {6000, 10000, 6500},
 /*5*/  { 600,   300,  550},
 /*6*/  { 385,   200,  385},
 /*7*/  { 455,   200,  455}};
@@ -42,25 +42,24 @@ const int filament_lookup_table[8][3] =
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -135;  //142
+static const int IDLER_STEPS_AFTER_HOMING = -130;
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const int SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
-static const int IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
+static const uint16_t SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
+static const uint16_t IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60; // 237
+static const uint8_t EXTRA_STEPS_SELECTOR_SERVICE = 100;
+static const uint16_t EJECT_PULLEY_STEPS = 2500;
 
 uint16_t BOWDEN_LENGTH = BowdenLength::get();
-const int EXTRA_STEPS_SELECTOR_SERVICE = 100;
-
-static const int EJECT_PULLEY_STEPS = 2500;
 
 // private functions:
-static int set_idler_direction(int steps);
-static int set_selector_direction(int steps);
-static int set_pulley_direction(int steps);
+static uint16_t set_idler_direction(int steps);
+static uint16_t set_selector_direction(int steps);
+static uint16_t set_pulley_direction(int steps);
 
 void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool update_extruders)
 {
@@ -420,7 +419,7 @@ void move_pulley(int steps, uint16_t speed)
  * negative = towards engaging filament nr 5.
  * @return abs(steps)
  */
-int set_idler_direction(int steps)
+uint16_t set_idler_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;
@@ -438,7 +437,7 @@ int set_idler_direction(int steps)
  * negative = to the left (towards filament 1)
  * @return abs(steps)
  */
-int set_selector_direction(int steps)
+uint16_t set_selector_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;
@@ -454,7 +453,7 @@ int set_selector_direction(int steps)
  * @param steps, positive (push) or negative (pull)
  * @return abs(steps)
  */
-int set_pulley_direction(int steps)
+uint16_t set_pulley_direction(int steps)
 {
     if (steps < 0) {
         steps = steps * -1;

@@ -27,6 +27,7 @@ bool mmuFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool load_filament_at_toolChange = false;
+//bool fixingTheProblems = false;
 long startWakeTime, currentWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
@@ -242,7 +243,7 @@ void process_commands()
             txPayload(OK);
             isPrinting = false;
             trackToolChanges = 0;
-            disableAllSteppers();
+            //disableAllSteppers();
         } else if (tData1 == 'S') {
             // Sx Starting CMD Received
             if (tData2 == '0') {
@@ -327,8 +328,10 @@ void fixTheProblem(bool showPrevious) {
     engage_filament_pulley(false);                    // park the idler stepper motor
     shr16_clr_ena(AX_SEL);                            // turn OFF the selector stepper motor
     shr16_clr_ena(AX_IDL);                            // turn OFF the idler stepper motor
+    //fixingTheProblems = true;
 
     while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
+        //process_commands();
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         if (!showPrevious) {
             delay(100);
@@ -347,7 +350,7 @@ void fixTheProblem(bool showPrevious) {
             } else shr16_set_led(1 << 2 * (4 - previous_extruder));
         }
     }
-
+    //fixingTheProblems = false;
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
     tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
     home(true); // Home and return to previous active extruder

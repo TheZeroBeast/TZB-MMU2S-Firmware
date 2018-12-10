@@ -15,14 +15,14 @@
 // public variables:
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 const int filament_lookup_table[8][3] = 
-/*0*/ {{5000,   400, 2800},
-/*1*/  {3000,   100, 1500},
-/*2*/  { 380,   390,  385},
+/*0*/ {{3600,   400, 2800},
+/*1*/  {4000,   100, 1500},
+/*2*/  { 300,   330,  330},
 /*3*/  {-610,  -610, -610},
 /*4*/  {6000, 10000, 6500},
 /*5*/  { 600,   300,  550},
-/*6*/  { 385,   200,  385},
-/*7*/  { 455,   200,  455}};
+/*6*/  { 350,   200,  385},
+/*7*/  { 400,   200,  455}};
  /**
   * [X] == variables based on type
   * [Y] == filament types (0: default; 1:flex; 2: PVA)
@@ -480,7 +480,7 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
 {
     uint8_t filament = 0;
     for (int c = 2; c > 0; c--) { // touch end 3 times
-        moveSmooth(AX_IDL, 2000, 3000, false);
+        moveSmooth(AX_IDL, 2000, 2600, false);
         if (c > 1) {
             moveSmooth(AX_IDL, -350, MAX_SPEED_IDL, false);
         }

@@ -3,7 +3,7 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.5 RC	B#:  255**
+**MMU: V#: 2.1.5 RC	B#:  256**
 
 **MK3: V#: 5.0.4 RC	B#: 2324**
 
@@ -18,16 +18,17 @@ MMU 3-axis stepper control
   MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
   **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**
 * Value will be off if previously adjusted in STOCK FW. Adjust **BOWDEN_LENGTH** in **SETUP** menu,  
-  this is to be just appearing at end of detatched BOWDEN tube.
+  this is to be just appearing at end of detatched BOWDEN tube**(NOTE ONLY F1 IS CALIBRATED)**
     1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector.
     2. As per STOCK FW, use **LEFT** button to move LED to fourth position.
     3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length.
     4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
 * Distance to BONDTECH is set for factory R3 extruder configuration.
-  1. Adjust type values with array on line 20 in file MOTION.CPP if custom value desired.
+  1. Adjust type values with array on **line 20 in file MOTION.CPP** if custom value desired.
 * Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 * Blade isn't being used and can be removed. It has been known to add resistance to selector.
-* Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**.
+* Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**  
+  as depicted in images bellow from respective areas in Slic3r.
 * **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing
 
 ## When in error state Active Extruder & or Previous Extruder LED/s will blink

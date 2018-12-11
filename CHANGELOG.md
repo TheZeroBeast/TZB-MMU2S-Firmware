@@ -1,14 +1,6 @@
 Changelog of MMU 2.0 Firmware
 =============================
-# V2.1.3 RMM
-* toolChanges every 25
-* Tuned Bowden length for less destructive failed load situation
-* Re-written home on fail to optimise fail recovery
-* Re-written unload sequence for vastly more reliable unloads
-* Load to Extruder start now synced with MMU2 instead of an arbitrary 1.5s wait
-* Tuned load/unload speeds for PLA, tension bolts must be 2-3 full turns past flush to stop grinding
-
-# V2.1.3 RMM
+# V2.1.4 RMM
 * Added Bowden Length Cal off service menu or holding middle @ boot (you need to cal first filament to end of tube. This is used as a ballpark for those with different length tubes.
 * Implemented entire serial communication re-write. using ISR either side with modbus inspired payload ack-nack.
 * Fully implemented shr16 methods to utilise stepper enable lines and leds are now better handled.
@@ -19,6 +11,14 @@ Changelog of MMU 2.0 Firmware
 * MK3 Serial Log now idicates tool change count per print. i.e. first T? cmd to U0 cmd.
 * SELECTOR MAX SPEED Reduced to help those with a bit more resistance
 * Idler homing improved further for wider variances in setup. Please ensure no contact with case as this will still present an issue.
+
+# V2.1.3 RMM
+* toolChanges every 25
+* Tuned Bowden length for less destructive failed load situation
+* Re-written home on fail to optimise fail recovery
+* Re-written unload sequence for vastly more reliable unloads
+* Load to Extruder start now synced with MMU2 instead of an arbitrary 1.5s wait
+* Tuned load/unload speeds for PLA, tension bolts must be 2-3 full turns past flush to stop grinding
 
 # V2.1.2 RMM
 * corrected bug in 20 toolChange rehome resulting in extruder 0 being used for that change instead of intended filament. Eventually results in incorrect execution of T? command as MK3 thinks a different extruder is being used.

@@ -16,11 +16,12 @@
 //! needs to be changed to force EEPROM erase.
 typedef struct __attribute__ ((packed))
 {
-  uint8_t eepromLengthCorrection; //!< legacy bowden length correction
-  uint16_t eepromBowdenLen[5];    //!< Bowden length for each filament
-  uint8_t eepromFilamentStatus[3];//!< Majority vote status of eepromFilament wear leveling
-  uint8_t eepromFilament[800];    //!< Top nibble status, bottom nibble last filament loaded
-}eeprom_t;
+    uint8_t eepromLengthCorrection; //!< legacy bowden length correction
+    uint16_t eepromBowdenLen[5];    //!< Bowden length for each filament
+    uint8_t eepromFilamentStatus[3];//!< Majority vote status of eepromFilament wear leveling
+    uint8_t eepromFilament[800];    //!< Top nibble status, bottom nibble last filament loaded
+}
+eeprom_t;
 static_assert(sizeof(eeprom_t) - 2 <= E2END, "eeprom_t doesn't fit into EEPROM available.");
 //! @brief EEPROM layout version
 static const uint8_t layoutVersion = 0xff;
@@ -52,8 +53,8 @@ void eepromEraseAll()
 //! @retval false invalid
 static bool validFilament(uint8_t filament)
 {
-  if (filament < ARR_SIZE(eeprom_t::eepromBowdenLen)) return true;
-  else return false;
+    if (filament < ARR_SIZE(eeprom_t::eepromBowdenLen)) return true;
+    else return false;
 }
 
 //! @brief Is bowden length in valid range?
@@ -62,9 +63,9 @@ static bool validFilament(uint8_t filament)
 //! @retval false invalid
 static bool validBowdenLen (const uint16_t BowdenLength)
 {
-  if ((BowdenLength >= eepromBowdenLenMinimum)
-      && BowdenLength <= eepromBowdenLenMaximum) return true;
-  return false;
+    if ((BowdenLength >= eepromBowdenLenMinimum)
+            && BowdenLength <= eepromBowdenLenMaximum) return true;
+    return false;
 }
 
 //! @brief Get bowden length for active filament
@@ -73,23 +74,23 @@ static bool validBowdenLen (const uint16_t BowdenLength)
 //! @return stored bowden length
 uint16_t BowdenLength::get()
 {
-  uint8_t filament = 0;
-  if (validFilament(filament))
-  {
-    uint16_t bowdenLength = eeprom_read_word(&(eepromBase->eepromBowdenLen[filament]));
-
-    if (eepromEmpty == bowdenLength)
+    uint8_t filament = 0;
+    if (validFilament(filament))
     {
-      const uint8_t LengthCorrectionLegacy = eeprom_read_byte(&(eepromBase->eepromLengthCorrection));
-      if (LengthCorrectionLegacy <= 200)
-      {
-        bowdenLength = eepromLengthCorrectionBase + LengthCorrectionLegacy * 10;
-      }
-    }
-    if (validBowdenLen(bowdenLength)) return bowdenLength;
-  }
+        uint16_t bowdenLength = eeprom_read_word(&(eepromBase->eepromBowdenLen[filament]));
 
-  return eepromBowdenLenDefault;
+        if (eepromEmpty == bowdenLength)
+        {
+            const uint8_t LengthCorrectionLegacy = eeprom_read_byte(&(eepromBase->eepromLengthCorrection));
+            if (LengthCorrectionLegacy <= 200)
+            {
+                bowdenLength = eepromLengthCorrectionBase + LengthCorrectionLegacy * 10;
+            }
+        }
+        if (validBowdenLen(bowdenLength)) return bowdenLength;
+    }
+
+    return eepromBowdenLenDefault;
 }
 
 
@@ -108,12 +109,12 @@ BowdenLength::BowdenLength() : m_filament(0), m_length(BowdenLength::get())
 //! @retval false failed, it is not possible to increase, new bowden length would be out of range
 bool BowdenLength::increase()
 {
-  if ( validBowdenLen(m_length + stepSize))
-  {
-    m_length += stepSize;
-    return true;
-  }
-  return false;
+    if ( validBowdenLen(m_length + stepSize))
+    {
+        m_length += stepSize;
+        return true;
+    }
+    return false;
 }
 
 //! @brief Decrease bowden length
@@ -123,18 +124,18 @@ bool BowdenLength::increase()
 //! @retval false failed, it is not possible to decrease, new bowden length would be out of range
 bool BowdenLength::decrease()
 {
-  if ( validBowdenLen(m_length - stepSize))
-  {
-    m_length -= stepSize;
-    return true;
-  }
-  return false;
+    if ( validBowdenLen(m_length - stepSize))
+    {
+        m_length -= stepSize;
+        return true;
+    }
+    return false;
 }
 
 //! @brief Store bowden length permanently.
 BowdenLength::~BowdenLength()
 {
-  if (validFilament(m_filament))eeprom_update_word(&(eepromBase->eepromBowdenLen[m_filament]), m_length);
+    if (validFilament(m_filament))eeprom_update_word(&(eepromBase->eepromBowdenLen[m_filament]), m_length);
 }
 
 
@@ -189,7 +190,7 @@ int16_t FilamentLoaded::getIndex()
     case KeyFront1:
     case KeyFront2:
         index = ARR_SIZE(eeprom_t::eepromFilament) - 1; // It is the last one, if no dirty index found
-        for(uint16_t i = 0; i < ARR_SIZE(eeprom_t::eepromFilament);++i)
+        for(uint16_t i = 0; i < ARR_SIZE(eeprom_t::eepromFilament); ++i)
         {
             if (status != (eeprom_read_byte(&(eepromBase->eepromFilament[i])) >> 4 ))
             {
@@ -229,9 +230,9 @@ bool FilamentLoaded::get(uint8_t& filament)
     if (filament > 4) return false;
     const uint8_t status = getStatus();
     if (!(status == KeyFront1
-        || status == KeyReverse1
-        || status == KeyFront2
-        || status == KeyReverse2)) return false;
+            || status == KeyReverse1
+            || status == KeyFront2
+            || status == KeyReverse2)) return false;
     if ((rawFilament >> 4) != status) return false;
     return true;
 }

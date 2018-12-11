@@ -68,30 +68,30 @@ void setup()
     UCSR1A = (0 << U2X1); // baudrate multiplier
     UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (0 << UCSZ12);   // Turn on the transmission and reception circuitry
     UCSR1C = (0 << UMSEL11) | (0 << UMSEL10)| (0 << UPM11)
-    | (0 << UPM10) | (1 << USBS1) | (1 << UCSZ11) | (1 << UCSZ10); // Use 8-bit character sizes
+             | (0 << UPM10) | (1 << USBS1) | (1 << UCSZ11) | (1 << UCSZ10); // Use 8-bit character sizes
     UCSR1D = (0 << CTSEN) | (0 << RTSEN); // Disable flow control
 
     UBRR1H = (BAUD_PRESCALE >> 8); // Load upper 8-bits of the baud rate value into the high byte of the UBRR register
     UBRR1L = BAUD_PRESCALE; // Load lower 8-bits of the baud rate value into the low byte of the UBRR register
 
     UCSR1B |= (1 << RXCIE1);
- 
+
     sei();
 
     txPayload("STR");
-        
+
     bool requestMenu = false;
     if (buttonClicked() == Btn::middle) requestMenu = true;
 
     spi_init();
     led_blink(2);
-    tmc2130_init(HOMING_MODE); // trinamic, homing  
+    tmc2130_init(HOMING_MODE); // trinamic, homing
     led_blink(3);
     adc_init(); // ADC
     led_blink(4);
 
     shr16_clr_led();
-    
+
     init_Pulley();
     homeIdlerSmooth(true);
 
@@ -102,7 +102,7 @@ void setup()
     if (requestMenu) {
         setupMenu();
     }
-    
+
     if (digitalRead(A1)) isFilamentLoaded = true;
 }
 
@@ -135,7 +135,7 @@ void manual_extruder_selector()
 {
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
-    
+
     if (((Btn::left | Btn::right) & buttonClicked()) && !digitalRead(A1)) {
         switch (buttonClicked()) {
         case Btn::right:

@@ -76,8 +76,8 @@ void setupMenu()
             case 2:
                 if (!eraseLocked)
                 {
-                  eepromEraseAll();
-                  _exit = true;
+                    eepromEraseAll();
+                    _exit = true;
                 }
                 break;
             case 3: //unlock erase
@@ -140,59 +140,59 @@ void settings_bowden_length()
     else set_positions(active_extruder, 0, true);
     BowdenLength bowdenLength;
     uint16_t localLength = bowdenLength.get();
-    loop:
-        load_filament_withSensor(localLength);
-    
-        tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
-        do
+loop:
+    load_filament_withSensor(localLength);
+
+    tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
+    do
+    {
+        switch (buttonClicked())
         {
-          switch (buttonClicked())
-          {
-          case Btn::right:
+        case Btn::right:
             if (bowdenLength.decrease())
             {
-              move_pulley(-bowdenLength.stepSize);
-              localLength -= bowdenLength.stepSize;
-              delay(400);
+                move_pulley(-bowdenLength.stepSize);
+                localLength -= bowdenLength.stepSize;
+                delay(400);
             }
             break;
-    
-          case Btn::left:
+
+        case Btn::left:
             if (bowdenLength.increase())
             {
-              move_pulley(bowdenLength.stepSize);
-              localLength += bowdenLength.stepSize;
-              delay(400);
+                move_pulley(bowdenLength.stepSize);
+                localLength += bowdenLength.stepSize;
+                delay(400);
             }
             break;
-          default:
+        default:
             break;
-          }
-    
-          shr16_set_led(1 << 2 * 4);
-          delay(10);
-          shr16_set_led(2 << 2 * 4);
-          delay(10);
-          shr16_set_led(2 << 2 * 1);
-          delay(50);
-    
-    
-        } while (buttonClicked() != Btn::middle);
-        unload_filament_withSensor(active_extruder);
-        loop2:
-                switch (buttonClicked()) {
-                case Btn::middle:
-                    goto loop;
-                    break;
-                case Btn::left:
-                    goto loop3;
-                    break;
-                default:
-                    goto loop2;
-                }
-        loop3:
-        bowdenLength.~BowdenLength();
-        BOWDEN_LENGTH = BowdenLength::get();
+        }
+
+        shr16_set_led(1 << 2 * 4);
+        delay(10);
+        shr16_set_led(2 << 2 * 4);
+        delay(10);
+        shr16_set_led(2 << 2 * 1);
+        delay(50);
+
+
+    } while (buttonClicked() != Btn::middle);
+    unload_filament_withSensor(active_extruder);
+loop2:
+    switch (buttonClicked()) {
+    case Btn::middle:
+        goto loop;
+        break;
+    case Btn::left:
+        goto loop3;
+        break;
+    default:
+        goto loop2;
+    }
+loop3:
+    bowdenLength.~BowdenLength();
+    BOWDEN_LENGTH = BowdenLength::get();
 }
 
 //! @brief Is button pushed?

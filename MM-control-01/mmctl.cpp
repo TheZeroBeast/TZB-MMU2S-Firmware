@@ -66,7 +66,7 @@ bool toolChange(int new_extruder)
 
     previous_extruder = active_extruder;
     active_extruder = new_extruder;
-    
+
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
             shr16_clr_led();
@@ -78,7 +78,7 @@ bool toolChange(int new_extruder)
         }
     } else {
         if (isFilamentLoaded) unload_filament_withSensor(previous_extruder); //unload filament if you need to
-        if (trackToolChanges == TOOLSYNC) { // Home every period TOOLSYNC
+        if ((trackToolChanges == TOOLSYNC) || !isHomed) { // Home every period TOOLSYNC
             home(true);
             // move idler and selector to new filament position
         } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder, true);

@@ -64,16 +64,16 @@ void shr16_clr_led(void)
 
 void shr16_set_ena(int axis)
 {
-  switch (axis) {
-  case AX_PUL:
-      shr16_write(shr16_v & ~SHR16_ENA_PUL);
-      break;
-  case AX_SEL:
-      shr16_write(shr16_v & ~SHR16_ENA_SEL);
-      break;
-  case AX_IDL:
-      shr16_write(shr16_v & ~SHR16_ENA_IDL);
-  }
+    switch (axis) {
+    case AX_PUL:
+        shr16_write(shr16_v & ~SHR16_ENA_PUL);
+        break;
+    case AX_SEL:
+        shr16_write(shr16_v & ~SHR16_ENA_SEL);
+        break;
+    case AX_IDL:
+        shr16_write(shr16_v & ~SHR16_ENA_IDL);
+    }
 }
 
 void shr16_set_ena_all(void)
@@ -84,16 +84,16 @@ void shr16_set_ena_all(void)
 
 void shr16_clr_ena(int axis)
 {
-  switch (axis) {
-  case AX_PUL:
-      shr16_write(shr16_v | SHR16_ENA_PUL);
-      break;
-  case AX_SEL:
-      shr16_write(shr16_v | SHR16_ENA_SEL);
-      break;
-  case AX_IDL:
-      shr16_write(shr16_v | SHR16_ENA_IDL);
-  }
+    switch (axis) {
+    case AX_PUL:
+        shr16_write(shr16_v | SHR16_ENA_PUL);
+        break;
+    case AX_SEL:
+        shr16_write(shr16_v | SHR16_ENA_SEL);
+        break;
+    case AX_IDL:
+        shr16_write(shr16_v | SHR16_ENA_IDL);
+    }
 }
 
 void shr16_clr_ena_all(void)

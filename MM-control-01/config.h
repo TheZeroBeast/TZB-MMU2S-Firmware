@@ -4,10 +4,6 @@
 #define FW_VERSION  215 // example: 103 means version 1.0.3
 #define FW_BUILDNR  999 // number of commits in 'master'
 
-// timer0
-//#define TIMER0_EVERY_1ms    _every_1ms    //1ms callback
-//#define TIMER0_EVERY_10ms   _every_10ms   //10ms callback
-//#define TIMER0_EVERY_100ms  _every_100ms  //100ms callback
 #define WAKE_TIMER            900000        //15m
 
 //#define green_board
@@ -31,9 +27,7 @@
 #define SHR16_LEDG4           0x0040
 #define SHR16_LEDR4           0x0080
 #define SHR16_LED_MSK         0xffc0
-
 // TMC2130 Direction/Enable signals - hardcoded
-
 #define SHR16_DIR_PUL          0x0001
 #define SHR16_ENA_PUL          0x0002
 #define SHR16_DIR_SEL          0x0004
@@ -53,7 +47,6 @@
 #define TMC2130_SPCR SPI_SPCR(TMC2130_SPI_RATE, 1, 1, 1, 0)
 #define TMC2130_SPSR SPI_SPSR(TMC2130_SPI_RATE)
 
-
 // params:
 // SG_THR stallguard treshold (sensitivity), range -64..63
 // the stall guard value represents the load angle. if it reaches 0,
@@ -65,7 +58,6 @@
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 6
 #define TMC2130_SG_THR_IDL 6
-
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
@@ -99,7 +91,6 @@
 #define ADC_OVRSAMPL      1          //oversampling multiplier
 #define ADC_READY         _adc_ready //ready callback
 
-
 #define AX_PUL 0 // Pulley (Filament Drive)
 #define AX_SEL 1 // Selector
 #define AX_IDL 2 // Idler
@@ -112,7 +103,6 @@
 #define PIN_STP_PUL_LOW (PORTB &= ~0x10)
 
 #define TOOLSYNC 100                         // number of tool change (T) commands before a selector resync is performed
-
 
 // signals (from interrupts to main loop)
 #define SIG_ID_BTN 1 // any button changed
@@ -146,6 +136,5 @@
 // number of extruders
 #define EXTRUDERS 5
 
-
-// diagnostic functions
-//#define _DIAG
+// CONFIG
+//#define _CONFIG_H

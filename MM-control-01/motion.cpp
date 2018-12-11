@@ -124,7 +124,6 @@ void set_position_eject(bool setTrueForEject)
 void set_idler_toLast_positions(int _next_extruder)
 {
     active_extruder = _next_extruder;
-    FilamentLoaded::set(active_extruder);
     int _idler_steps = (0 - _next_extruder) * IDLER_STEPS;
     if (_next_extruder == EXTRUDERS)    _idler_steps = (0 - (_next_extruder - 1)) * IDLER_STEPS;
     if (0 == EXTRUDERS) _idler_steps = ((0 - 1) - _next_extruder) * IDLER_STEPS;
@@ -383,6 +382,7 @@ void home(bool doToolSync)
 
     if (doToolSync) {
         set_positions(0, active_extruder); // move idler and selector to new filament position
+        FilamentLoaded::set(active_extruder);
         reset_engage_filament_pulley(previouslyEngaged);
         trackToolChanges = 0;
     } else active_extruder = 0;

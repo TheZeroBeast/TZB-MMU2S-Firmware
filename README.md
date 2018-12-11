@@ -3,9 +3,9 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.5 RC	B#:  **
+**MMU: V#: 2.1.5 RC	B#:  253**
 
-**MK3: V#: 5.0.4 RC	B#: **
+**MK3: V#: 5.0.4 RC	B#: 2323**
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
@@ -13,26 +13,26 @@ MMU 3-axis stepper control
 
 ## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU
 
-* You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW
-* Bowden Length is still important as load is optimised to minimise the posibility of
-grinding in the event of the MK3-FSensor not triggering, rare if setup correct,
-dust/particles still build up over time. **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**
-  * Value will be off if previously adjusted in STOCK FW
-  * Adjust **BOWDEN_LENGTH** in **SETUP** menu, this is to be just appearing at end of detatched BOWDEN tube.
-    * Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector.
-    1 As per STOCK FW, use **LEFT** button to move LED to fourth position.
-    2 Use **MIDDLE** to send Filament 1 in and out until satisfied of length.
-    3 Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
+* You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW.
+* Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
+  MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
+  **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**
+* Value will be off if previously adjusted in STOCK FW. Adjust **BOWDEN_LENGTH** in **SETUP** menu,  
+  this is to be just appearing at end of detatched BOWDEN tube.
+    1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector.
+    2. As per STOCK FW, use **LEFT** button to move LED to fourth position.
+    3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length.
+    4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
 * Distance to BONDTECH is set for factory R3 extruder configuration.
-  * Adjust type values with array on line 20 in file MOTION.CPP if custom value desired.
+  1. Adjust type values with array on line 20 in file MOTION.CPP if custom value desired.
 * Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 * Blade isn't being used and can be removed. It has been known to add resistance to selector.
 * Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**.
 * **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing
 
 ## When in error state Active Extruder & or Previous Extruder LED/s will blink
-### **  RED LED if FINDA sees Filament**
-### **GREEN LED if FINDA is clear**
+
+###   RED and GREEEN Idicate F.I.N.D.A. State @ Load Failure
 * Troubleshoot issue, usually was due to being caught on an edge or ground section of filament
   * Note: Failed **LOAD** where filament is found partly in Extruder requires a burst of air to clean MK3-FSensor
 * If printer has shut down heaters, click MK3 wheel before clearing MMU2 issue with middle button
@@ -41,9 +41,7 @@ dust/particles still build up over time. **DEFAULT FACTORY BOWDEN LENGETH OF 350
   * If nothing happens, filament is in FINDA, check again
   * If load fails again, give MK3-FSensor another burst of air and try again
 
-###        **FROM FILAMENT**                   **TO FILAMENT**
-### **  RED LED if FINDA sees Filament**        **GREEN LED**
-### **GREEN LED if FINDA is clear**
+###   RED and GREEEN Idicate F.I.N.D.A. State pluss GREEN for next extruder @ Unload Failure
 * Troubleshoot issue, usually was due to ground section of filament
   * Note: If fail on **UNLOAD** the LED will show on the next extruder instead of current
 * If printer has shut down heaters, click MK3 wheel before clearing MMU2 issue with middle button

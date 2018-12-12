@@ -38,7 +38,6 @@ void setupMenu()
     shr16_set_led(0x2aa);
     delay(1200);
     shr16_clr_led();
-    delay(600);
 
     int _menu = 0;
     bool _exit = false;
@@ -48,14 +47,7 @@ void setupMenu()
 
     do {
         shr16_clr_led();
-        shr16_set_led(1 << 2 * 4);
-        delay(1);
-        shr16_clr_led();
-        shr16_set_led(2 << 2 * 4);
-        delay(1);
-        shr16_clr_led();
-        shr16_set_led(2 << 2 * _menu);
-        delay(1);
+        shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * _menu));
 
         switch (buttonClicked()) {
         case Btn::right:
@@ -106,9 +98,6 @@ void setupMenu()
     shr16_set_led(0x2aa);
     delay(400);
     shr16_clr_led();
-    delay(400);
-
-    shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
@@ -153,7 +142,7 @@ loop:
             {
                 move_pulley(-bowdenLength.stepSize);
                 localLength -= bowdenLength.stepSize;
-                delay(400);
+                delay(200);
             }
             break;
 
@@ -162,20 +151,14 @@ loop:
             {
                 move_pulley(bowdenLength.stepSize);
                 localLength += bowdenLength.stepSize;
-                delay(400);
+                delay(200);
             }
             break;
         default:
             break;
         }
 
-        shr16_set_led(1 << 2 * 4);
-        delay(10);
-        shr16_set_led(2 << 2 * 4);
-        delay(10);
-        shr16_set_led(2 << 2 * 1);
-        delay(50);
-
+        shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
 
     } while (buttonClicked() != Btn::middle);
     unload_filament_withSensor(active_extruder);

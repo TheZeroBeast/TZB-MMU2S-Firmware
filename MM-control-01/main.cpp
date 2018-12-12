@@ -1,33 +1,14 @@
 //! @file
 
 #include "main.h"
-#include <Arduino.h>
-#include <stdio.h>
-#include <string.h>
-#include <avr/io.h>
-#include "shr16.h"
-#include "adc.h"
-#include "uart.h"
-#include "spi.h"
-#include "tmc2130.h"
-#include "abtn3.h"
-#include "mmctl.h"
-#include "motion.h"
-#include "Buttons.h"
-#include <avr/wdt.h>
-#include "permanent_storage.h"
-
 
 // public variables:
-int8_t sys_state = 0;
-uint8_t sys_signals = 0;
 bool fsensor_triggered = false;
 bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool load_filament_at_toolChange = false;
-//bool fixingTheProblems = false;
 long startWakeTime, currentWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
@@ -60,8 +41,7 @@ void setup()
 {
     permanentStorageInit();
     shr16_init(); // shift register
-    led_blink(0);
-    delay(1000);  // wait for boot ok printer
+    delay(1000);  // wait for boot of printer
     startWakeTime = millis();
     led_blink(1);
 
@@ -232,9 +212,7 @@ void process_commands()
             // Lx Load Filament CMD Received
             if ((tData2 >= 0) && (tData2 < EXTRUDERS) && !isFilamentLoaded) {
                 set_positions(active_extruder, tData2, true);
-                delay(10);
                 feed_filament();
-                delay(100);
                 txPayload(OK);
             }
         } else if ((tData1 == 'U') && (tData2 == '0')) {
@@ -304,22 +282,6 @@ void process_commands()
     }     // End of Confirmed with Valid CSUM
 }
 
-
-void process_signals()
-{
-    // what to do here?
-}
-
-void fault_handler(Fault id)
-{
-    while (1) {
-        shr16_set_led(id + 1);
-        delay(1000);
-        shr16_set_led(0);
-        delay(2000);
-    }
-}
-
 //****************************************************************************************************
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
@@ -350,7 +312,6 @@ void fixTheProblem(bool showPrevious) {
             } else shr16_set_led(1 << 2 * (4 - previous_extruder));
         }
     }
-    //fixingTheProblems = false;
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
     tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
     home(true); // Home and return to previous active extruder

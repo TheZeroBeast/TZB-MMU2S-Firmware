@@ -3,7 +3,7 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.5 RC	B#:  256**
+**MMU: V#: 2.1.5 RC	B#:  257**
 
 **MK3: V#: 5.0.4 RC	B#: 2324**
 
@@ -18,7 +18,7 @@ MMU 3-axis stepper control
   MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
   **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**
 * Value will be off if previously adjusted in STOCK FW. Adjust **BOWDEN_LENGTH** in **SETUP** menu,  
-  this is to be just appearing at end of detatched BOWDEN tube**(NOTE ONLY F1 IS CALIBRATED)**
+  this is to be just appearing at end of detatched BOWDEN tube (**NOTE ONLY F1 IS CALIBRATED**)
     1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector.
     2. As per STOCK FW, use **LEFT** button to move LED to fourth position.
     3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length.

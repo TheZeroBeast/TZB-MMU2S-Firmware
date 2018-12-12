@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  215 // example: 103 means version 1.0.3
-#define FW_BUILDNR  256 // number of commits in 'master'
+#define FW_BUILDNR  257 // number of commits in 'master'
 
 #define WAKE_TIMER            900000        //15m
 
@@ -75,10 +75,10 @@
 // speeds and accelerations
 #define MAX_SPEED_SEL 7000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
-#define MAX_SPEED_IDL 3000 // micro steps   changed from 1800 to 3000 11 Nov 18 - testing
+#define MAX_SPEED_IDL 3000 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_IDL_NORMAL 20000 // micro steps / s² changed from 25k to 30k 11 Nov 18 - testing
+#define ACC_IDL_NORMAL 25000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0

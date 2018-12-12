@@ -15,6 +15,7 @@
 // public variables:
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 const int filament_lookup_table[8][3] =
+            /*0*/  /*1*/  /*0*/
     /*0*/ {{4600,   400, 2800},
     /*1*/  {4000,   100, 1500},
     /*2*/  { 300,   330,  300},
@@ -43,7 +44,7 @@ const int filament_lookup_table[8][3] =
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int IDLER_STEPS_AFTER_HOMING = -130;
+static const int8_t IDLER_STEPS_AFTER_HOMING = -110;
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
@@ -51,9 +52,9 @@ static const int IDLER_STEPS_AFTER_HOMING = -130;
 
 static const uint16_t SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const uint16_t IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-const int IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60; // 237
+const uint8_t IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60;
 static const uint8_t EXTRA_STEPS_SELECTOR_SERVICE = 100;
-static const uint16_t EJECT_PULLEY_STEPS = 2500;
+static const uint16_t EJECT_PULLEY_STEPS = 2000;
 
 uint16_t BOWDEN_LENGTH = BowdenLength::get();
 
@@ -139,8 +140,6 @@ void set_idler_toLast_positions(int _next_extruder)
  */
 void eject_filament(int extruder)
 {
-    if (!isHomed) home(true);
-
     // if there is still filament detected by PINDA unload it first
     if (isFilamentLoaded) {
         unload_filament_withSensor(active_extruder);
@@ -154,7 +153,8 @@ void eject_filament(int extruder)
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
     // push filament forward
-    move_pulley(EJECT_PULLEY_STEPS, 666);
+    move_pulley(EJECT_PULLEY_STEPS, filament_lookup_table[5][filament_type[active_extruder]]);
+    //delay(50);
 
     // unpark idler so user can easily remove filament
     engage_filament_pulley(false);
@@ -373,7 +373,7 @@ void home(bool doToolSync)
     engage_filament_pulley(false);
     shr16_clr_led();            // All five off
 
-    isFilamentLoaded = false;
+    //isFilamentLoaded = false;
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
 
@@ -489,9 +489,9 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
 {
     uint8_t filament = 0;
     for (int c = 2; c > 0; c--) { // touch end 3 times
-        moveSmooth(AX_IDL, 2000, 2600, false);
+        moveSmooth(AX_IDL, 2000, 2400, false);
         if (c > 1) {
-            moveSmooth(AX_IDL, -350, MAX_SPEED_IDL, false);
+            moveSmooth(AX_IDL, -200, MAX_SPEED_IDL, false);
         }
     }
 

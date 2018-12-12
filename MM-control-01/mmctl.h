@@ -8,12 +8,12 @@
 // public variables:
 extern bool isPrinting;
 extern bool isHomed;
-extern int active_extruder;
-extern int previous_extruder;
+extern int8_t active_extruder;
+extern int8_t previous_extruder;
 extern bool isFilamentLoaded;
 extern bool isIdlerParked;
 extern bool homedOnUnload;
-extern int trackToolChanges;
+extern uint16_t trackToolChanges;
 
 // functions:
 bool toolChange(int new_extruder);

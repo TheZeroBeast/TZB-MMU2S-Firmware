@@ -12,8 +12,9 @@
 #include "Buttons.h"
 
 // public variables:
-int active_extruder = -1;
-int previous_extruder = -1;
+int8_t active_extruder = -1;
+int8_t previous_extruder = -1;
+uint16_t trackToolChanges = 0;
 bool isFilamentLoaded = false;
 bool isIdlerParked = false;
 bool isPrinting = false;
@@ -21,8 +22,7 @@ bool isHomed = false;
 bool homedOnUnload = false;
 
 // private variables:
-static int toolChanges = 0;
-int trackToolChanges = 0;
+static uint8_t toolChanges = 0;
 
 bool feed_filament(void)
 {

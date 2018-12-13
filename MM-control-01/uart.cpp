@@ -5,7 +5,7 @@
 volatile unsigned char readRxBuffer, rxData1 = 0, rxData2 = 0, rxData3 = 0,
                                      rxCSUM1 = 0, rxCSUM2 = 0;
 volatile bool startRxFlag = false, confirmedPayload = false, txNAKNext = false,
-              txACKNext = false, txRESEND = false, pendingACK = false;
+              txACKNext = false, txRESEND = false, pendingACK = false, fsensor_triggered = false;
 volatile uint8_t rxCount;
 
 byte lastTxPayload[3] = {0, 0, 0};
@@ -24,6 +24,9 @@ ISR(USART1_RX_vect)
                     if (rxCount > 3) {
                         if (rxCount > 4) {
                             if (readRxBuffer == 0xF7) {
+                              // 
+                                if ((rxData1 == 'F') && (rxData2 == 'S') && (rxData3 == '-')
+                                  && (rxCSUM1 == 0x00) && (rxCSUM2 == 0xC6)) fsensor_triggered = true;
                                 confirmedPayload = true; // set confirm payload bit true for processing my main loop
                             } else txNAKNext = true; // **send universal nack here **
                         } else {

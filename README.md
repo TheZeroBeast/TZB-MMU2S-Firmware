@@ -3,15 +3,15 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.5 RC	B#:  257**
+**MMU: V#: 2.1.5 RC	B#:  258**
 
-**MK3: V#: 5.0.4 RC	B#: 2324**
+**MK3: V#: 5.0.4 RC	B#: 2325**
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
 # POINTS OF NOTE
 
-## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU
+## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU - ACTION COMMANDS
 
 * You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW.
 * Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
@@ -30,6 +30,8 @@ MMU 3-axis stepper control
 * Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**  
   as depicted in images bellow from respective areas in Slic3r.
 * **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing
+* Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
+* Bowden limit raised to ~2.8m
 
 ## When in error state Active Extruder & or Previous Extruder LED/s will blink
 

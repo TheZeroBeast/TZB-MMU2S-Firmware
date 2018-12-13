@@ -22,13 +22,11 @@
 void manual_extruder_selector();
 
 // signals from interrupt to main loop
-extern bool load_filament_at_toolChange;
 extern bool mmuFSensorLoading;
 void process_commands(void);
 void fixTheProblem(bool showPrevious);
 
 extern uint8_t tmc2130_mode;
-extern bool fsensor_triggered;
 extern long startWakeTime;
 
 typedef enum eFault {FAULT_IDLER_INIT_0, FAULT_IDLER_INIT_1, FAULT_IDLER_INIT_2,

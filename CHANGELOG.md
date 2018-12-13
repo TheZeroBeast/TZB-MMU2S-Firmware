@@ -11,6 +11,8 @@ Changelog of MMU 2.0 Firmware
 * MK3 Serial Log now idicates tool change count per print. i.e. first T? cmd to U0 cmd.
 * SELECTOR MAX SPEED Reduced to help those with a bit more resistance
 * Idler homing improved further for wider variances in setup. Please ensure no contact with case as this will still present an issue.
+* Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
+* Bowden Length limit increased t. ~2.8m
 
 # V2.1.3 RMM
 * toolChanges every 25

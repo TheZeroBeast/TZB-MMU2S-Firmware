@@ -26,6 +26,8 @@ static uint8_t toolChanges = 0;
 
 bool feed_filament(void)
 {
+    if (!isHomed) home(true);
+  
     bool _loaded = false;
 
     int _c = 0;
@@ -71,7 +73,7 @@ bool toolChange(int new_extruder)
         if (!isFilamentLoaded) {
             shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
-            load_filament_at_toolChange = true;
+            load_filament_withSensor();
             _return = true;
         } else {
             _return = true; // nothing really happened
@@ -80,17 +82,17 @@ bool toolChange(int new_extruder)
         if (isFilamentLoaded) unload_filament_withSensor(previous_extruder); //unload filament if you need to
         if ((trackToolChanges == TOOLSYNC) || !isHomed) { // Home every period TOOLSYNC
             home(true);
-            // move idler and selector to new filament position
+                                   // move idler and selector to new filament position
         } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder, true);
         toolChanges++;
         trackToolChanges ++;
         shr16_clr_led();
         shr16_set_led(2 << 2 * (4 - active_extruder));
-        load_filament_at_toolChange = true;
+        load_filament_withSensor();
         homedOnUnload = false;
         _return = true;
     }
-
+    txPayload(OK);
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;

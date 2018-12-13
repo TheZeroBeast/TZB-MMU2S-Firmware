@@ -16,8 +16,8 @@
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 const int filament_lookup_table[8][3] =
             /*0*/  /*1*/  /*0*/
-    /*0*/ {{4600,   400, 2800},
-    /*1*/  {4000,   100, 1500},
+    /*0*/ {{4000,   400, 2800},
+    /*1*/  {3000,   100, 1500},
     /*2*/  { 300,   330,  300},
     /*3*/  {-610,  -610, -610},
     /*4*/  {6000, 10000, 6500},
@@ -100,13 +100,22 @@ void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool updat
 
 void set_position_eject(bool setTrueForEject)
 {
+    int _selector_steps = 0;
+    
     if (setTrueForEject) {
-        int _selector_steps = ((active_extruder - EXTRUDERS) * SELECTOR_STEPS) * -1;
-        _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
+        if (active_extruder == (EXTRUDERS - 1)) {
+            _selector_steps = ((active_extruder - 0) * SELECTOR_STEPS) * -1;
+        } else {
+            _selector_steps = ((active_extruder - EXTRUDERS) * SELECTOR_STEPS) * -1;
+            _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
+        }
         move_selector(_selector_steps);
     } else {
-        if (active_extruder > 0) {
-            int _selector_steps = ((EXTRUDERS - active_extruder) * SELECTOR_STEPS) * -1;
+        if (active_extruder == (EXTRUDERS - 1)) {
+            _selector_steps = ((0 - active_extruder) * SELECTOR_STEPS) * -1;
+            move_selector(_selector_steps);
+        } else if (active_extruder > 0) {
+            _selector_steps = ((EXTRUDERS - active_extruder) * SELECTOR_STEPS) * -1;
             _selector_steps -= EXTRA_STEPS_SELECTOR_SERVICE;
             move_selector(_selector_steps);
         } else {
@@ -200,12 +209,10 @@ loop:
                     }
 
                     move_pulley(1,filament_lookup_table[0][filament_type[active_extruder]]);
-                    process_commands();
-                    if (((currentTime - startTime) < 100) && fsensor_triggered) {
-                        fixTheProblem(false);
-                        goto loop;
+                    if (fsensor_triggered == true) {
+                        fsensor_triggered = false;
+                        tag = true;
                     }
-                    if (fsensor_triggered == true) tag = true;
                 }
                 moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]],false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
             }

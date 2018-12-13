@@ -3,12 +3,10 @@
 #include "main.h"
 
 // public variables:
-bool fsensor_triggered = false;
 bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
-bool load_filament_at_toolChange = false;
 long startWakeTime, currentWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
@@ -201,11 +199,7 @@ void process_commands()
                     mmuFSensorLoading = true;
                     duplicateTCmd = false;
                     toolChange(tData2);
-                    if (load_filament_at_toolChange) {
-                        load_filament_withSensor();
-                        load_filament_at_toolChange = false;
-                        txPayload(OK);
-                    }
+                    txPayload(OK);
                 }
             }
         } else if (tData1 == 'L') {
@@ -241,9 +235,9 @@ void process_commands()
             //init all axes
             tmc2130_init(tmc2130_mode);
             txPayload(OK);
-        } else if ((tData1 == 'F') && (tData2 == 'S')) {
+        //} else if ((tData1 == 'F') && (tData2 == 'S')) {
             // FS Filament Seen by MK3-FSensor CMD Received
-            fsensor_triggered = true;
+            //fsensor_triggered = true;
             // OK is sent once filament @ Bondtech Gears
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
@@ -275,9 +269,9 @@ void process_commands()
             // Rx Recover Post-Eject Filament X CMD Received
             recover_after_eject();
             txPayload(OK);
-        } else if (!mmuFSensorLoading && fsensor_triggered) {
-            fsensor_triggered = false;
-            txPayload(OK);
+        //} else if (!mmuFSensorLoading && fsensor_triggered) {
+            //fsensor_triggered = false;
+            //txPayload(OK);
         } // End of Processing Commands
     }     // End of Confirmed with Valid CSUM
 }

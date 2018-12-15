@@ -235,14 +235,10 @@ void process_commands()
             //init all axes
             tmc2130_init(tmc2130_mode);
             txPayload(OK);
-        //} else if ((tData1 == 'F') && (tData2 == 'S')) {
-            // FS Filament Seen by MK3-FSensor CMD Received
-            //fsensor_triggered = true;
-            // OK is sent once filament @ Bondtech Gears
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
             if (((tData2 >= 0) && (tData2 < EXTRUDERS)) && ((tData3 >= 0) && (tData3 <= 2))) {
-                filament_type[(int)tData2] = (int)tData3;
+                filament_type[tData2] = tData3;
                 txPayload(OK);
             }
         } else if ((tData1 == 'X') && (tData2 == '0')) {
@@ -250,8 +246,13 @@ void process_commands()
             wdt_enable(WDTO_15MS);
         } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
-            byte txTemp[3] = {'O', 'K', digitalRead(A1)};
-            txPayload(txTemp);
+            if (isFilamentLoaded) {
+              unsigned char txTemp[3] = {'O', 'K', digitalRead(A1)};
+              txPayload(txTemp);
+            } else {
+              unsigned char txTemp[3] = {'O', 'K', 1};
+              txPayload(txTemp);
+            }
         } else if ((tData1 == 'C') && (tData2 == '0')) {
             // Cx Continue Load onto Bondtech Gears CMD Received
             if (!duplicateTCmd) {
@@ -269,9 +270,6 @@ void process_commands()
             // Rx Recover Post-Eject Filament X CMD Received
             recover_after_eject();
             txPayload(OK);
-        //} else if (!mmuFSensorLoading && fsensor_triggered) {
-            //fsensor_triggered = false;
-            //txPayload(OK);
         } // End of Processing Commands
     }     // End of Confirmed with Valid CSUM
 }

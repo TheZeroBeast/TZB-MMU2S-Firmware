@@ -26,35 +26,34 @@ static uint8_t toolChanges = 0;
 
 bool feed_filament(void)
 {
-    if (!isHomed) home(true);
-  
     bool _loaded = false;
-
-    int _c = 0;
-    engage_filament_pulley(true);
-
-    while (!_loaded) {
-
-        if (moveSmooth(AX_PUL, 4000, filament_lookup_table[5][filament_type[active_extruder]], false, true, ACC_NORMAL, true) == MR_Success) {
-            delay(5);
-            moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL);
-            shr16_clr_led();
-            shr16_set_led(1 << 2 * (4 - active_extruder));
-            _loaded = true;
-            break;
-        } else {
-            if (_c < 1) {                     // Two attempt to load then give up
-                fixTheProblem(false);
-                engage_filament_pulley(true);
-            } else {
-                _loaded = false;
+    if (!isHomed && !isFilamentLoaded) home(true);
+    else if (!digitalRead(A1)) {
+        int _c = 0;
+        engage_filament_pulley(true);
+        while (!_loaded) {
+    
+            if (moveSmooth(AX_PUL, 4000, filament_lookup_table[5][filament_type[active_extruder]], false, true, ACC_NORMAL, true) == MR_Success) {
+                delay(5);
+                moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL);
+                shr16_clr_led();
+                shr16_set_led(1 << 2 * (4 - active_extruder));
+                _loaded = true;
                 break;
+            } else {
+                if (_c < 1) {                     // Two attempt to load then give up
+                    fixTheProblem(false);
+                    engage_filament_pulley(true);
+                } else {
+                    _loaded = false;
+                    break;
+                }
+                _c++;
             }
-            _c++;
         }
+        shr16_clr_ena(AX_PUL);
+        engage_filament_pulley(false);
     }
-    shr16_clr_ena(AX_PUL);
-    engage_filament_pulley(false);
     return _loaded;
 }
 
@@ -71,6 +70,7 @@ bool toolChange(int new_extruder)
 
     if (previous_extruder == active_extruder) {
         if (!isFilamentLoaded) {
+            if (!isHomed) home(true);
             shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
             load_filament_withSensor();

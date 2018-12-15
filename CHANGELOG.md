@@ -13,6 +13,7 @@ Changelog of MMU 2.0 Firmware
 * Idler homing improved further for wider variances in setup. Please ensure no contact with case as this will still present an issue.
 * Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
 * Bowden Length limit increased t. ~2.8m
+* Hotend and extruder motor off when in m600 waiting
 
 # V2.1.3 RMM
 * toolChanges every 25

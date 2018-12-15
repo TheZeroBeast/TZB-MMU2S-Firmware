@@ -70,8 +70,9 @@ void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool updat
         active_extruder = _next_extruder;
         FilamentLoaded::set(active_extruder);
     }
-    if (!isHomed) home(true);
-    else {
+    if (!isHomed) {
+        home(true);
+    } else {
         delay(50);
         int _idler_steps = (_current_extruder - _next_extruder) * IDLER_STEPS;
         if (_next_extruder == EXTRUDERS)    _idler_steps = (_current_extruder - (_next_extruder - 1)) * IDLER_STEPS;
@@ -94,7 +95,6 @@ void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool updat
             }
             moveSmooth(AX_SEL, 33, 2000, false);
         }
-
     }
 }
 
@@ -249,10 +249,7 @@ bool unload_filament_withSensor(int extruder)
             homedOnUnload = true;
         }
     }
-    if (!homedOnUnload && !isHomed) {
-        home(true);
-        homedOnUnload = true;
-    }
+    
     isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
@@ -496,7 +493,7 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
 {
     uint8_t filament = 0;
     for (int c = 2; c > 0; c--) { // touch end 3 times
-        moveSmooth(AX_IDL, 2000, 2400, false);
+        moveSmooth(AX_IDL, 2000, 2600, false);
         if (c > 1) {
             moveSmooth(AX_IDL, -200, MAX_SPEED_IDL, false);
         }

@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  215 // example: 103 means version 1.0.3
-#define FW_BUILDNR  258 // number of commits in 'master'
+#define FW_BUILDNR  259 // number of commits in 'master'
 
 #define WAKE_TIMER            900000        //15m
 
@@ -63,7 +63,7 @@
 // below that equivalent speed the stall detection is disabled
 #define TMC2130_TCOOLTHRS_AX_PUL 450 // 450 = 33.8us which is equal to a speed of 115 full steps/s
 #define TMC2130_TCOOLTHRS_AX_SEL 400
-#define TMC2130_TCOOLTHRS_AX_IDL 400 // 4100 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
+#define TMC2130_TCOOLTHRS_AX_IDL 400 // 400 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
 
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH     { 1,  7, 16}

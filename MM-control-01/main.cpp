@@ -7,7 +7,7 @@ bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
-long startWakeTime, currentWakeTime;
+long startWakeTime; //, currentWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
 
@@ -56,8 +56,6 @@ void setup()
 
     sei();
 
-    txPayload("STR");
-
     bool requestMenu = false;
     if (buttonClicked() == Btn::middle) requestMenu = true;
 
@@ -82,6 +80,8 @@ void setup()
     }
 
     if (digitalRead(A1)) isFilamentLoaded = true;
+
+    txPayload("STR");
 }
 
 //! @brief Select filament menu
@@ -162,26 +162,27 @@ void loop()
             } else if (active_extruder == EXTRUDERS) setupMenu();
         }
     }
-    currentWakeTime = millis();
-    if (((currentWakeTime - startWakeTime) > WAKE_TIMER) && !isFilamentLoaded) disableAllSteppers();
+    //currentWakeTime = millis();
+    if (((millis() - startWakeTime) > WAKE_TIMER) && !isFilamentLoaded) disableAllSteppers();
 }
 
 void process_commands()
 {
+    cli();
     unsigned char tData1 = rxData1;                  // Copy volitale vars as local
     unsigned char tData2 = rxData2;
     unsigned char tData3 = rxData3;
-    unsigned char tCSUM1 = rxCSUM1;
-    unsigned char tCSUM2 = rxCSUM2;
-    int16_t  tCSUM = ((tCSUM1 << 8) | tCSUM2);
+    int16_t  tCSUM = ((rxCSUM1 << 8) | rxCSUM2);
     bool     confPayload = confirmedPayload;
-    if (txRESEND) {
+    if ((txRESEND) || (pendingACK && ((startTXTimeout + TXTimeout) < millis()))) {
         txRESEND         = false;
         confirmedPayload = false;
         startRxFlag      = false;
+        sei();
         txPayload(lastTxPayload);
         return;
     }
+    sei();
     if ((confPayload && !(tCSUM == (tData1 + tData2 + tData3))) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
         txACK(false); // Send NACK Byte
     } else if (confPayload) {
@@ -204,7 +205,7 @@ void process_commands()
             }
         } else if (tData1 == 'L') {
             // Lx Load Filament CMD Received
-            if ((tData2 >= 0) && (tData2 < EXTRUDERS) && !isFilamentLoaded) {
+            if ((tData2 >= 0) && (tData2 < EXTRUDERS)) {
                 set_positions(active_extruder, tData2, true);
                 feed_filament();
                 txPayload(OK);
@@ -247,10 +248,10 @@ void process_commands()
         } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
             if (isFilamentLoaded) {
-              unsigned char txTemp[3] = {'O', 'K', digitalRead(A1)};
+              unsigned char txTemp[3] = {'P', 'K', digitalRead(A1)};
               txPayload(txTemp);
             } else {
-              unsigned char txTemp[3] = {'O', 'K', 1};
+              unsigned char txTemp[3] = {'P', 'K', 1};
               txPayload(txTemp);
             }
         } else if ((tData1 == 'C') && (tData2 == '0')) {

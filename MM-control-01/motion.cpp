@@ -18,7 +18,7 @@ const int filament_lookup_table[8][3] =
             /*0*/  /*1*/  /*0*/
     /*0*/ {{4000,   400, 2800},
     /*1*/  {3000,   100, 1500},
-    /*2*/  { 300,   330,  300},
+    /*2*/  { 290,   330,  300},
     /*3*/  {-610,  -610, -610},
     /*4*/  {6000, 10000, 6500},
     /*5*/  { 600,   300,  550},
@@ -186,7 +186,7 @@ loop:
         engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
 
-        long startTime, currentTime;
+        long startTime; //, currentTime;
         bool tag = false;
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
@@ -202,14 +202,15 @@ loop:
                 startTime = millis();
                 txPayload("FS-");
                 while (tag == false) {
-                    currentTime = millis();
-                    if ((currentTime - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips
+                    //currentTime = millis();
+                    if ((millis() - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips
                         fixTheProblem(false);
                         goto loop;
                     }
 
                     move_pulley(1,filament_lookup_table[0][filament_type[active_extruder]]);
                     if (fsensor_triggered == true) {
+                        txACK();      // Send  ACK Byte
                         fsensor_triggered = false;
                         tag = true;
                     }

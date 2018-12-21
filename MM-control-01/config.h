@@ -2,9 +2,10 @@
 
 
 #define FW_VERSION  215 // example: 103 means version 1.0.3
-#define FW_BUILDNR  259 // number of commits in 'master'
+#define FW_BUILDNR  260 // number of commits in 'master'
 
 #define WAKE_TIMER            900000        //15m
+#define TXTimeout                 60        //55ms Due to longer loop cycles
 
 //#define green_board
 
@@ -73,7 +74,7 @@
 #define CURRENT_HOMING              { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_SEL 7000 // micro steps
+#define MAX_SPEED_SEL 5000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3000 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²

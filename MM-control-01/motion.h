@@ -4,6 +4,12 @@
 #define _MOTION_h
 
 #include "config.h"
+#include "shr16.h"
+#include "tmc2130.h"
+#include "mmctl.h"
+#include "motion.h"
+#include "permanent_storage.h"
+#include "main.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -11,6 +17,8 @@ extern int8_t filament_type[EXTRUDERS];
 extern const int filament_lookup_table[8][3]; // [X][Y]Two-dimensional Array of extruder and used variables
 extern const uint8_t IDLER_PARKING_STEPS;
 extern uint16_t BOWDEN_LENGTH;
+extern BowdenLength bowdenLength;
+
 
 void home(bool doToolSync = false);
 void engage_filament_pulley(bool engage);
@@ -36,8 +44,9 @@ void recover_after_eject();
 
 enum MotReturn {MR_Success, MR_FailedAndRehomed, MR_Failed};
 MotReturn homeSelectorSmooth();
-MotReturn moveSmooth(uint8_t axis, int steps, int speed,bool rehomeOnFail = true,
-                     bool withStallDetection = true, float ACC = ACC_NORMAL, bool withFindaDetection = false);
+MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail = true,
+                     bool withStallDetection = true, float ACC = ACC_NORMAL,
+                     bool withFindaDetection = false, bool withFSensorDetection = false);
 MotReturn homeIdlerSmooth(bool toLastFilament = false);
 MotReturn homeSelectorSmooth();
 #endif

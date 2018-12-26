@@ -7,10 +7,10 @@ volatile unsigned char readRxBuffer, rxData1 = 0, rxData2 = 0, rxData3 = 0,
 volatile bool startRxFlag = false, confirmedPayload = false, txNAKNext = false,
               txACKNext = false, txRESEND = false, pendingACK = false, fsensor_triggered = false;
 volatile uint8_t rxCount;
-volatile long startRXTimeout;
-long startTXTimeout;
 
-byte lastTxPayload[3] = {0, 0, 0};
+unsigned long startTXTimeout;
+
+unsigned char lastTxPayload[] = {0, 0, 0};
 
 ISR(USART1_RX_vect)
 {
@@ -30,7 +30,7 @@ ISR(USART1_RX_vect)
                             if (readRxBuffer == 0xF7) {
                                 if ((rxData1 == 'F') && (rxData2 == 'S') && (rxData3 == '-')
                                   && (rxCSUM1 == 0x00) && (rxCSUM2 == 0xC6)) fsensor_triggered = true;
-                                confirmedPayload = true; // set confirm payload bit true for processing my main loop
+                                else confirmedPayload = true; // set confirm payload bit true for processing my main loop
                             } else txNAKNext = true; // **send universal nack here **
                         } else {
                             rxCSUM2 = readRxBuffer;
@@ -56,23 +56,23 @@ ISR(USART1_RX_vect)
     sei();
 }
 
-void txPayload(unsigned char payload[3])
+void txPayload(unsigned char payload[])
 {
-    for (int i = 0; i < 3; i++) lastTxPayload[i] = payload[i];  // Backup incase resend on NACK
+    for (uint8_t i = 0; i < 3; i++) lastTxPayload[i] = payload[i];  // Backup incase resend on NACK
     uint16_t csum = 0;
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
     if (!txRESEND) UDR1 = 0x7F;                              // Start byte 0x7F
-    for (int i = 0; i < 3; i++) {             // Send data
+    for (uint8_t i = 0; i < 3; i++) {             // Send data
         loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
-        if (!txRESEND) UDR1 = payload[i];
-        csum += payload[i];
+        if (!txRESEND) UDR1 = (0xFF & (int)payload[i]);
+        csum += (0xFF & (int)payload[i]);
     }
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
     if (!txRESEND) UDR1 = ((0xFFFF & csum) >> 8);
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
     if (!txRESEND) UDR1 = (0xFF & csum);
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
-    UDR1 = 0xF7;
+    if (!txRESEND) UDR1 = 0xF7;
     pendingACK = true;                        // Set flag to wait for ACK
     startTXTimeout = millis();                // Start Tx timeout counter
 }

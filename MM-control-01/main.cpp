@@ -81,7 +81,7 @@ void setup()
 
     if (digitalRead(A1)) isFilamentLoaded = true;
 
-    txPayload("STR");
+    txPayload((unsigned char*)0x535452); // STR
 }
 
 //! @brief Select filament menu
@@ -191,7 +191,7 @@ void process_commands()
 
         if (tData1 == 'T') {
             //Tx Tool Change CMD Received
-            if ((tData2 >= 0) && (tData2 < EXTRUDERS)) {
+            if (tData2 < EXTRUDERS) {
                 if ((active_extruder == tData2) && isFilamentLoaded && !m600RunoutChanging) {
                     duplicateTCmd = true;
                     txPayload(OK);
@@ -205,7 +205,7 @@ void process_commands()
             }
         } else if (tData1 == 'L') {
             // Lx Load Filament CMD Received
-            if ((tData2 >= 0) && (tData2 < EXTRUDERS)) {
+            if (tData2 < EXTRUDERS) {
                 set_positions(active_extruder, tData2, true);
                 feed_filament();
                 txPayload(OK);
@@ -238,7 +238,7 @@ void process_commands()
             txPayload(OK);
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
-            if (((tData2 >= 0) && (tData2 < EXTRUDERS)) && ((tData3 >= 0) && (tData3 <= 2))) {
+            if ((tData2 < EXTRUDERS) && (tData3 <= 2)) {
                 filament_type[tData2] = tData3;
                 txPayload(OK);
             }
@@ -248,7 +248,7 @@ void process_commands()
         } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
             if (isFilamentLoaded) {
-              unsigned char txTemp[3] = {'P', 'K', digitalRead(A1)};
+              unsigned char txTemp[3] = {'P', 'K', (uint8_t)digitalRead(A1)};
               txPayload(txTemp);
             } else {
               unsigned char txTemp[3] = {'P', 'K', 1};
@@ -257,12 +257,13 @@ void process_commands()
         } else if ((tData1 == 'C') && (tData2 == '0')) {
             // Cx Continue Load onto Bondtech Gears CMD Received
             if (!duplicateTCmd) {
-                load_filament_into_extruder();
                 txPayload(OK);
+                delay(5);
+                load_filament_into_extruder();
             } else txPayload(OK);
         } else if (tData1 == 'E') {
             // Ex Eject Filament X CMD Received
-            if ((tData2 >= 0) && (tData2 < EXTRUDERS)) { // Ex: eject filament
+            if (tData2 < EXTRUDERS) { // Ex: eject filament
                 m600RunoutChanging = true;
                 eject_filament(tData2);
                 txPayload(OK);
@@ -283,12 +284,23 @@ void fixTheProblem(bool showPrevious) {
     engage_filament_pulley(false);                    // park the idler stepper motor
     shr16_clr_ena(AX_SEL);                            // turn OFF the selector stepper motor
     shr16_clr_ena(AX_IDL);                            // turn OFF the idler stepper motor
-    //fixingTheProblems = true;
 
     while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
-        //process_commands();
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         if (!showPrevious) {
+            if (buttonClicked() == Btn::right) {
+                engage_filament_pulley(true);
+                if (digitalRead(A1)) {
+                    if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH * 1.5) * -1),
+                                   filament_lookup_table[5][filament_type[active_extruder]],
+                                   false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+                        moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]],
+                                   filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+                    }
+                } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[active_extruder]], false);
+                engage_filament_pulley(false);
+                shr16_clr_ena(AX_IDL);
+            }
             delay(100);
             shr16_clr_led();
             delay(100);
@@ -296,6 +308,19 @@ void fixTheProblem(bool showPrevious) {
                 shr16_set_led(2 << 2 * (4 - active_extruder));
             } else shr16_set_led(1 << 2 * (4 - active_extruder));
         } else {
+            if (buttonClicked() == Btn::right) {
+                engage_filament_pulley(true);
+                if (digitalRead(A1)) {
+                    if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH * 1.5) * -1),
+                                   filament_lookup_table[5][filament_type[previous_extruder]],
+                                   false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+                        moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[previous_extruder]],
+                                   filament_lookup_table[5][filament_type[previous_extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+                    }
+                } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[previous_extruder]], false);
+                engage_filament_pulley(false);
+                shr16_clr_ena(AX_IDL);
+            }
             delay(100);
             shr16_clr_led();
             shr16_set_led(1 << 2 * (4 - active_extruder));

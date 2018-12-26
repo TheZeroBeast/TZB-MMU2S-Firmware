@@ -53,7 +53,7 @@ void eepromEraseAll()
 //! @retval false invalid
 static bool validFilament(uint8_t filament)
 {
-    if (filament < ARR_SIZE(eeprom_t::eepromBowdenLen)) return true;
+    if (filament < (EXTRUDERS-1)) return true;
     else return false;
 }
 

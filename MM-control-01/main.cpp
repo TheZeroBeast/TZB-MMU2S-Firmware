@@ -162,8 +162,9 @@ void loop()
             } else if (active_extruder == EXTRUDERS) setupMenu();
         }
     }
-    //currentWakeTime = millis();
-    if (((millis() - startWakeTime) > WAKE_TIMER) && !isFilamentLoaded) disableAllSteppers();
+
+    if (((millis() - startWakeTime) > WAKE_TIMER) && !isFilamentLoaded &&
+         (shr16_get_ena() != 111)) disableAllSteppers();
 }
 
 void process_commands()
@@ -216,7 +217,6 @@ void process_commands()
             txPayload(OK);
             isPrinting = false;
             trackToolChanges = 0;
-            //disableAllSteppers();
         } else if (tData1 == 'S') {
             // Sx Starting CMD Received
             if (tData2 == '0') {

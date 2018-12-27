@@ -1,12 +1,6 @@
 //! @file
 
 #include "Buttons.h"
-#include "shr16.h"
-#include "tmc2130.h"
-#include "mmctl.h"
-#include "motion.h"
-#include "permanent_storage.h"
-#include "main.h"
 
 const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 
@@ -127,12 +121,11 @@ void settings_bowden_length()
     // load filament to end of detached bowden tube to check correct length
     if (!isHomed) home();
     else set_positions(active_extruder, 0, true);
-    BowdenLength bowdenLength;
-    uint16_t localLength = bowdenLength.get();
+    //BowdenLength bowdenLength;
 loop:
-    load_filament_withSensor(localLength);
+    load_filament_withSensor(bowdenLength.m_length);
 
-    tmc2130_init_axis_current_normal(AX_PUL, 1, 30);
+    tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
     do
     {
         switch (buttonClicked())
@@ -141,7 +134,6 @@ loop:
             if (bowdenLength.decrease())
             {
                 move_pulley(-bowdenLength.stepSize);
-                localLength -= bowdenLength.stepSize;
                 delay(200);
             }
             break;
@@ -150,7 +142,6 @@ loop:
             if (bowdenLength.increase())
             {
                 move_pulley(bowdenLength.stepSize);
-                localLength += bowdenLength.stepSize;
                 delay(200);
             }
             break;
@@ -174,6 +165,7 @@ loop2:
         goto loop2;
     }
 loop3:
+    for (uint8_t i = 0; i < 3; i++) bowdenLength.decrease();
     bowdenLength.~BowdenLength();
     BOWDEN_LENGTH = BowdenLength::get();
 }

@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include "config.h"
+#include "shr16.h"
 
 #define TMC2130_SG_THR         4       // SG_THR default
 #define TMC2130_TCOOLTHRS      450     // TCOOLTHRS default
@@ -25,7 +26,7 @@ extern "C" {
 int8_t tmc2130_init(uint8_t mode);
 
 int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode);
-int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r);
+int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r, bool homing);
 int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_t current_r);
 
 #ifdef _DIAG

@@ -214,11 +214,11 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
 
     switch (mode) {
     case HOMING_MODE:
-        ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis], current_homing[axis]);
+        ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis], current_homing[axis], true);
         break; //drivers in normal mode, homing currents
     case NORMAL_MODE:
         ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis],
-                                               current_running_normal[axis]);
+                                               current_running_normal[axis], false);
         break; //drivers in normal mode
     case STEALTH_MODE:
         ret = tmc2130_init_axis_current_stealth(axis, current_holding_stealth[axis],
@@ -247,7 +247,7 @@ int8_t tmc2130_init_axis_current_stealth(uint8_t axis, uint8_t current_h, uint8_
     return 0;
 }
 
-int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r)
+int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t current_r, bool homing)
 {
     shr16_set_ena(axis);
     //normal mode
@@ -255,7 +255,12 @@ int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t
         return -1;
     }
     tmc2130_wr(axis, TMC2130_REG_TPOWERDOWN, 0x00000000);
-    tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((uint32_t)__sg_thr(axis)) << 16));
+    if (homing && (axis == AX_IDL)) {
+        tmc2130_wr(axis, TMC2130_REG_COOLCONF, ((int32_t)TMC2130_SG_THR_HOM_IDL << 16));
+        tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, 0);
+    } else {
+        tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((int32_t)__sg_thr(axis)) << 16));
+    }
     tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
     tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
     if (axis == AX_PUL) {

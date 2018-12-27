@@ -16,16 +16,16 @@ void eepromEraseAll();
 //! Active filament is deduced from active_extruder global variable.
 class BowdenLength
 {
+private:
+    uint8_t m_filament; //!< Selected filament
 public:
     static uint16_t get();
     static const uint8_t stepSize = 30u; //!< increase()/decrease() bowden length step size
-    BowdenLength();
     bool increase();
     bool decrease();
     ~BowdenLength();
-private:
-    uint8_t m_filament; //!< Selected filament
     uint16_t m_length;  //!< Selected filament bowden length
+    BowdenLength();
 };
 
 //! @brief Read and store last filament loaded to nozzle

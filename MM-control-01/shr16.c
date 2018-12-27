@@ -114,7 +114,7 @@ void shr16_set_dir(uint8_t dir)
 
 uint8_t shr16_get_ena(void)
 {
-    return ((shr16_v & 2) >> 1) | ((shr16_v & 8) >> 2) | ((shr16_v & 0x20) >> 3);
+    return ((shr16_v & SHR16_ENA_PUL) >> 1) | ((shr16_v & SHR16_ENA_SEL) >> 2) | ((shr16_v & SHR16_ENA_IDL) >> 3);
 }
 
 uint8_t shr16_get_dir(void)

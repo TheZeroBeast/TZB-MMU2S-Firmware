@@ -2,10 +2,10 @@
 
 
 #define FW_VERSION  215 // example: 103 means version 1.0.3
-#define FW_BUILDNR  260 // number of commits in 'master'
+#define FW_BUILDNR  263 // number of commits in 'master'
 
 #define WAKE_TIMER            900000        //15m
-#define TXTimeout                 60        //55ms Due to longer loop cycles
+#define TXTimeout        (uint8_t)60        //60ms
 
 //#define green_board
 
@@ -59,6 +59,7 @@
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 6
 #define TMC2130_SG_THR_IDL 6
+#define TMC2130_SG_THR_HOM_IDL 4
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
@@ -71,7 +72,7 @@
 #define CURRENT_HOLDING_NORMAL      { 1, 10, 22}
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 35}
+#define CURRENT_HOMING              { 1, 35, 50}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL 5000 // micro steps
@@ -133,6 +134,36 @@
 #define STA_ERR_TMC2_PIN_STP -24 // TMC2130 axis2 pin wirring error - stp signal
 #define STA_ERR_TMC2_PIN_DIR -25 // TMC2130 axis2 pin wirring error - dir signal
 #define STA_ERR_TMC2_PIN_ENA -26 // TMC2130 axis2 pin wirring error - ena signal
+
+// Type Definitions
+// filament types (0: default; 1:flex; 2: PVA)
+// Default
+#define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
+#define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
+#define TYPE_0_STEPS_MK3FSensor_To_Bondtech    270  //  STEPS
+#define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
+#define TYPE_0_FSensor_Sense_STEPS            1200  //  STEPS
+#define TYPE_0_FEED_SPEED_PUL                  600  //  S/S
+#define TYPE_0_L2ExStageOne                    350  //  S/S
+#define TYPE_0_L2ExStageTwo                    390  //  S/S
+// Flex
+#define TYPE_1_MAX_SPPED_PUL                   400  //  S/S
+#define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
+#define TYPE_1_STEPS_MK3FSensor_To_Bondtech    330  //  STEPS
+#define TYPE_1_FILAMENT_PARKING_STEPS         -610  //  STEPS
+#define TYPE_1_FSensor_Sense_STEPS            1300  //  STEPS
+#define TYPE_1_FEED_SPEED_PUL                  300  //  S/S
+#define TYPE_1_L2ExStageOne                    200  //  S/S
+#define TYPE_1_L2ExStageTwo                    200  //  S/S
+// PVA
+#define TYPE_2_MAX_SPPED_PUL                  2800  //  S/S
+#define TYPE_2_ACC_FEED_PUL                   1500  //  S/S/S
+#define TYPE_2_STEPS_MK3FSensor_To_Bondtech    300  //  STEPS
+#define TYPE_2_FILAMENT_PARKING_STEPS         -610  //  STEPS
+#define TYPE_2_FSensor_Sense_STEPS            1200  //  STEPS
+#define TYPE_2_FEED_SPEED_PUL                  550  //  S/S
+#define TYPE_2_L2ExStageOne                    350  //  S/S
+#define TYPE_2_L2ExStageTwo                    390  //  S/S
 
 // number of extruders
 #define EXTRUDERS 5

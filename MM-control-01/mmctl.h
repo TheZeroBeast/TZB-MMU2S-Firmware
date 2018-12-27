@@ -13,6 +13,7 @@ extern int8_t previous_extruder;
 extern bool isFilamentLoaded;
 extern bool isIdlerParked;
 extern bool homedOnUnload;
+extern bool isEjected;
 extern uint16_t trackToolChanges;
 
 // functions:

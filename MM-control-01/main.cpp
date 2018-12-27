@@ -81,7 +81,7 @@ void setup()
 
     if (digitalRead(A1)) isFilamentLoaded = true;
 
-    txPayload((unsigned char*)"STR");
+    if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR");
 }
 
 //! @brief Select filament menu
@@ -177,7 +177,7 @@ void loop()
     }
 
     if (((millis() - startWakeTime) > WAKE_TIMER) && !isFilamentLoaded &&
-         (shr16_get_ena() != 111)) disableAllSteppers();
+         !isPrinting && (shr16_get_ena() != 111)) disableAllSteppers();
 }
 
 void process_commands()

@@ -2,9 +2,9 @@
 
 
 #define FW_VERSION  215 // example: 103 means version 1.0.3
-#define FW_BUILDNR  263 // number of commits in 'master'
+#define FW_BUILDNR  265 // number of commits in 'master'
 
-#define WAKE_TIMER            900000        //15m
+#define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms
 
 //#define green_board
@@ -138,9 +138,9 @@
 // Type Definitions
 // filament types (0: default; 1:flex; 2: PVA)
 // Default
-#define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
+#define TYPE_0_MAX_SPPED_PUL                  2000  //  S/S
 #define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
-#define TYPE_0_STEPS_MK3FSensor_To_Bondtech    270  //  STEPS
+#define TYPE_0_STEPS_MK3FSensor_To_Bondtech    300  //  STEPS
 #define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_0_FSensor_Sense_STEPS            1200  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  600  //  S/S

@@ -4,7 +4,7 @@ Changelog of MMU 2.0 Firmware
 * Added Bowden Length Cal off service menu or holding middle @ boot (you need to cal first filament to end of tube. This is used as a ballpark for those with different length tubes.
 * Implemented entire serial communication re-write. using ISR either side with modbus inspired payload ack-nack.
 * Fully implemented shr16 methods to utilise stepper enable lines and leds are now better handled.
-* Steppers now run a 15m timer when unloaded to disable (no hiss, no heat)
+* Steppers now run a 5m timer when not printing (no hiss, no heat)
 * Implemented MK3 FSensor testing when not printing, disconnect bowden tube and test filaments for reactivity.
 * POWER PANIC is now functional when Printing from SD card.
 * Increased toolSync to 100 changes, as this seams to be plenty sufficient.
@@ -14,6 +14,10 @@ Changelog of MMU 2.0 Firmware
 * Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
 * Bowden Length limit increased t. ~2.8m
 * Hotend and extruder motor off when in m600 waiting
+* Added RIGHT Button retract option on failed load
+* Added RIGHT Button retract option after eject when checking tip formation
+* Added MMU2-OFF by putting selector in service position then restarting MK3
+  * To re-enable move selector to any filament position then restart MK3
 
 # V2.1.3 RMM
 * toolChanges every 25

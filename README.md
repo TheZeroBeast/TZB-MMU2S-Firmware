@@ -3,13 +3,13 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.5 RC	B#:  259**
+**MMU: V#: 2.1.5 RC	B#:  265**
 
-**MK3: V#: 5.0.4 RC	B#: 2327**
+**MK3: V#: 5.0.4 RC	B#: 2370**
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
-# POINTS OF NOTE
+# POINTS OF NOTE On configuring this FW
 
 ## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU - ACTION COMMANDS
 
@@ -24,7 +24,7 @@ MMU 3-axis stepper control
     3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length.
     4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
 * Distance to BONDTECH is set for factory R3 extruder configuration.
-  1. Adjust type values with array on **line 20 in file MOTION.CPP** if custom value desired.
+  1. Adjust type values within definitions on **line 143 in file config.h** if custom value desired.
 * Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
 * Blade isn't being used and can be removed. It has been known to add resistance to selector.
 * Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**  
@@ -38,11 +38,13 @@ MMU 3-axis stepper control
 ###   RED and GREEEN Idicate F.I.N.D.A. State @ Load Failure
 * Troubleshoot issue, usually was due to being caught on an edge or ground section of filament
   * Note: Failed **LOAD** where filament is found partly in Extruder requires a burst of air to clean MK3-FSensor
+  * **RIGHT** Button can now be used to retract slowely back to park (LED goes green to advise you can try load again)
 * If printer has shut down heaters, click MK3 wheel before clearing MMU2 issue with middle button
-* **ALWAYS** ensure filament pulled clear of selector.
+* **ALWAYS** ensure filament pulled clear of selector (**Auto as above or manually**)
 * Push middle button to rehome and continue
   * If nothing happens, filament is in FINDA, check again
   * If load fails again, give MK3-FSensor another burst of air and try again
+  * **IF FSENSOR FAILED/DEAD LCD WILL DISPLAY FSensor Disabled (Stop Print and Diagnose FSensor Fault)**
 
 ###   RED and GREEEN Idicate F.I.N.D.A. State pluss GREEN for next extruder @ Unload Failure
 * Troubleshoot issue, usually was due to ground section of filament

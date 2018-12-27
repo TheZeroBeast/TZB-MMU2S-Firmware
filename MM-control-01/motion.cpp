@@ -165,16 +165,12 @@ void recover_after_eject()
 
 bool load_filament_withSensor(uint16_t setupBowLen)
 {
-    //fsensor_triggered = false;
 loop:
     {
         if (!isHomed && (setupBowLen == 0)) home(true);
         engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         fsensor_triggered = false;
-
-        //long startTime; //, currentTime;
-        //bool tag = false;
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
@@ -197,23 +193,6 @@ loop:
                     fixTheProblem(false);
                     goto loop;
                 }
-                /*
-                while (tag == false) {
-                    //currentTime = millis();
-                    if ((millis() - startTime) > filament_lookup_table[4][filament_type[active_extruder]]) {      // After min bowden length load slow until MK3-FSensor trips
-                        fixTheProblem(false);
-                        goto loop;
-                    }
-
-                    move_pulley(2,200);
-                    if (fsensor_triggered == true) {
-                        txACK();      // Send  ACK Byte
-                        fsensor_triggered = false;
-                        tag = true;
-                    }
-                }
-                moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]]);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
-                */
             }
             shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
             shr16_set_led(1 << 2 * (4 - active_extruder));

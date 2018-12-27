@@ -38,7 +38,7 @@ static const uint16_t SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
 static const uint16_t IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
 const uint8_t IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60;
 static const uint8_t EXTRA_STEPS_SELECTOR_SERVICE = 100;
-static const uint16_t EJECT_PULLEY_STEPS = 2000;
+const uint16_t EJECT_PULLEY_STEPS = 2000;
 
 BowdenLength bowdenLength;
 uint16_t BOWDEN_LENGTH = bowdenLength.get();
@@ -94,6 +94,7 @@ void set_position_eject(bool setTrueForEject)
             _selector_steps = ((active_extruder - EXTRUDERS) * SELECTOR_STEPS) * -1;
             _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
         }
+        isEjected = true;
         move_selector(_selector_steps);
     } else {
         if (active_extruder == (EXTRUDERS - 1)) {
@@ -113,6 +114,7 @@ void set_position_eject(bool setTrueForEject)
             }
             moveSmooth(AX_SEL, 33, 2000, false);
         }
+        isEjected = false;
     }
 }
 
@@ -187,7 +189,7 @@ loop:
 
                 //startTime = millis();
                 
-                txPayload((unsigned char*)0x46532D);  // 'FS-' Starting FSensor checking on MK3
+                txPayload((unsigned char*)"FS-");  // 'FS-' Starting FSensor checking on MK3
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 350,
                     false, false, ACC_NORMAL, false, true) == MR_Success) {
                     moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command

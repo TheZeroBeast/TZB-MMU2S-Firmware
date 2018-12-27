@@ -5,7 +5,7 @@
 #define FW_BUILDNR  263 // number of commits in 'master'
 
 #define WAKE_TIMER            900000        //15m
-#define TXTimeout                 (uint8_t)60        //60ms
+#define TXTimeout        (uint8_t)60        //60ms
 
 //#define green_board
 
@@ -142,7 +142,7 @@
 #define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
 #define TYPE_0_STEPS_MK3FSensor_To_Bondtech    270  //  STEPS
 #define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_0_FSensor_Sense_STEPS            2000  //  STEPS
+#define TYPE_0_FSensor_Sense_STEPS            1200  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  600  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
 #define TYPE_0_L2ExStageTwo                    390  //  S/S
@@ -151,7 +151,7 @@
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
 #define TYPE_1_STEPS_MK3FSensor_To_Bondtech    330  //  STEPS
 #define TYPE_1_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_1_FSensor_Sense_STEPS            2500  //  STEPS
+#define TYPE_1_FSensor_Sense_STEPS            1300  //  STEPS
 #define TYPE_1_FEED_SPEED_PUL                  300  //  S/S
 #define TYPE_1_L2ExStageOne                    200  //  S/S
 #define TYPE_1_L2ExStageTwo                    200  //  S/S
@@ -160,7 +160,7 @@
 #define TYPE_2_ACC_FEED_PUL                   1500  //  S/S/S
 #define TYPE_2_STEPS_MK3FSensor_To_Bondtech    300  //  STEPS
 #define TYPE_2_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_2_FSensor_Sense_STEPS            2000  //  STEPS
+#define TYPE_2_FSensor_Sense_STEPS            1200  //  STEPS
 #define TYPE_2_FEED_SPEED_PUL                  550  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S
 #define TYPE_2_L2ExStageTwo                    390  //  S/S

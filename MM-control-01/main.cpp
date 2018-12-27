@@ -81,7 +81,7 @@ void setup()
 
     if (digitalRead(A1)) isFilamentLoaded = true;
 
-    txPayload((unsigned char*)0x535452); // STR
+    txPayload((unsigned char*)"STR");
 }
 
 //! @brief Select filament menu
@@ -150,7 +150,7 @@ void loop()
 {
     process_commands();
 
-    if (!isPrinting) {
+    if (!isPrinting && !isEjected) {
         manual_extruder_selector();
         if (Btn::middle == buttonClicked()) {
             if (active_extruder < EXTRUDERS) {
@@ -160,6 +160,19 @@ void loop()
                     feed_filament();
                 }
             } else if (active_extruder == EXTRUDERS) setupMenu();
+        }
+    } else if (isEjected) {
+        if (Btn::right & buttonClicked()) {
+            switch (buttonClicked()) {
+            case Btn::right:
+                engage_filament_pulley(true);
+                moveSmooth(AX_PUL, (EJECT_PULLEY_STEPS * -1),
+    filament_lookup_table[5][filament_type[previous_extruder]], false, false, ACC_NORMAL);
+                engage_filament_pulley(false);
+                break;
+            default:
+                break;
+            }
         }
     }
 

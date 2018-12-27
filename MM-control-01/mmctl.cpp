@@ -18,6 +18,7 @@ uint16_t trackToolChanges = 0;
 bool isFilamentLoaded = false;
 bool isIdlerParked = false;
 bool isPrinting = false;
+bool isEjected = false;
 bool isHomed = false;
 bool homedOnUnload = false;
 

@@ -121,7 +121,7 @@ void settings_bowden_length()
     // load filament to end of detached bowden tube to check correct length
     if (!isHomed) home();
     else set_positions(active_extruder, 0, true);
-    //BowdenLength bowdenLength;
+    for (uint8_t i = 0; i < 3; i++) bowdenLength.increase();
 loop:
     load_filament_withSensor(bowdenLength.m_length);
 

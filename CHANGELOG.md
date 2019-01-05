@@ -1,5 +1,9 @@
 Changelog of MMU 2.0 Firmware
 =============================
+# V2.1.5 RMM
+* Added feedback at start of Active Extruder to MK3 so display is acurate
+* Also added same feedback during load menu commands and feed filament
+
 # V2.1.4 RMM
 * Added Bowden Length Cal off service menu or holding middle @ boot (you need to cal first filament to end of tube. This is used as a ballpark for those with different length tubes.
 * Implemented entire serial communication re-write. using ISR either side with modbus inspired payload ack-nack.

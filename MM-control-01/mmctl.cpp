@@ -29,8 +29,10 @@ bool feed_filament(void)
 {
     bool _loaded = false;
     if (!isHomed && !isFilamentLoaded) home(true);
-    else if (!digitalRead(A1)) {
+    if (!digitalRead(A1)) {
         int _c = 0;
+        shr16_clr_led();
+        shr16_set_led(2 << 2 * (4 - active_extruder));
         engage_filament_pulley(true);
         while (!_loaded) {
     
@@ -55,6 +57,8 @@ bool feed_filament(void)
         shr16_clr_ena(AX_PUL);
         engage_filament_pulley(false);
     }
+    unsigned char tempS2[3] = {'O', 'K', (uint8_t)active_extruder};
+    txPayload(tempS2);
     return _loaded;
 }
 

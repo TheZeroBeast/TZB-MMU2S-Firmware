@@ -154,8 +154,6 @@ void loop()
         manual_extruder_selector();
         if (Btn::middle == buttonClicked()) {
             if (active_extruder < EXTRUDERS) {
-                shr16_clr_led();
-                shr16_set_led(2 << 2 * (4 - active_extruder));
                 if (Btn::middle == buttonClicked()) {
                     feed_filament();
                 }
@@ -182,7 +180,6 @@ void loop()
 
 void process_commands()
 {
-    cli();
     unsigned char tData1 = rxData1;                  // Copy volitale vars as local
     unsigned char tData2 = rxData2;
     unsigned char tData3 = rxData3;
@@ -192,11 +189,9 @@ void process_commands()
         txRESEND         = false;
         confirmedPayload = false;
         startRxFlag      = false;
-        sei();
         txPayload(lastTxPayload);
         return;
     }
-    sei();
     if ((confPayload && !(tCSUM == (tData1 + tData2 + tData3))) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
         txACK(false); // Send NACK Byte
     } else if (confPayload) {
@@ -221,8 +216,10 @@ void process_commands()
             // Lx Load Filament CMD Received
             if (tData2 < EXTRUDERS) {
                 set_positions(active_extruder, tData2, true);
-                feed_filament();
-                txPayload(OK);
+                feed_filament(); // returns OK and active_extruder to update MK3
+                //txPayload(OK);
+                //unsigned char tempS2[3] = {'O', 'K', (uint8_t)active_extruder};
+                //txPayload(tempS2);
             }
         } else if ((tData1 == 'U') && (tData2 == '0')) {
             // Ux Unload filament CMD Received
@@ -239,6 +236,9 @@ void process_commands()
                 txPayload(tempS1);
             } else if (tData2 == '2') {
                 unsigned char tempS2[3] = {(FW_BUILDNR >> 8), (0xFF & FW_BUILDNR), BLK};
+                txPayload(tempS2);
+            } else if (tData2 == '3') {
+                unsigned char tempS2[3] = {'O', 'K', (uint8_t)active_extruder};
                 txPayload(tempS2);
             }
         } else if (tData1 == 'M') {
@@ -300,6 +300,10 @@ void fixTheProblem(bool showPrevious) {
 
     while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
+        if (fsensor_triggered) {
+          txACK();      // Send  ACK Byte
+          fsensor_triggered = false;
+        }
         if (!showPrevious) {
             if (buttonClicked() == Btn::right) {
                 engage_filament_pulley(true);

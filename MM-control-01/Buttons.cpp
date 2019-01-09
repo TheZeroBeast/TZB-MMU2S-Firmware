@@ -33,15 +33,24 @@ void setupMenu()
     delay(1200);
     shr16_clr_led();
 
-    int _menu = 0;
+    uint8_t _menu = 0;
+    uint8_t _menu_last_cycle = 10;
     bool _exit = false;
     bool eraseLocked = true;
-
-
+    inErrorState = true;
 
     do {
+        process_commands();
         shr16_clr_led();
         shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * _menu));
+        if (_menu != _menu_last_cycle) {
+               if (_menu == 0) txPayload((unsigned char*)"X1-");
+          else if (_menu == 1) txPayload((unsigned char*)"X2-");
+          else if (_menu == 2) txPayload((unsigned char*)"X5-");
+          else if (_menu == 3) txPayload((unsigned char*)"X6-");
+          else if (_menu == 4) txPayload((unsigned char*)"X7-");
+        }
+        _menu_last_cycle = _menu;
 
         switch (buttonClicked()) {
         case Btn::right:
@@ -66,7 +75,7 @@ void setupMenu()
                     _exit = true;
                 }
                 break;
-            case 3: //unlock erase
+            case 3: // unlock erase
                 eraseLocked = false;
                 break;
             case 4: // exit menu
@@ -83,15 +92,16 @@ void setupMenu()
         default:
             break;
         }
-
     } while (!_exit);
-
 
     shr16_clr_led();
     delay(400);
     shr16_set_led(0x2aa);
     delay(400);
     shr16_clr_led();
+    inErrorState = false;
+    process_commands();
+    txPayload((unsigned char*)"ZZZ");
     shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
@@ -121,9 +131,10 @@ void settings_bowden_length()
     // load filament to end of detached bowden tube to check correct length
     if (!isHomed) home();
     else set_positions(active_extruder, 0, true);
-    for (uint8_t i = 0; i < 3; i++) bowdenLength.increase();
+    for (uint8_t i = 0; i < 5; i++) bowdenLength.increase();
 loop:
     load_filament_withSensor(bowdenLength.m_length);
+    txPayload((unsigned char*)"X3-");
 
     tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
     do
@@ -150,9 +161,10 @@ loop:
         }
 
         shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
-
     } while (buttonClicked() != Btn::middle);
+    BOWDEN_LENGTH = (BowdenLength::get() - 1250);
     unload_filament_withSensor(active_extruder);
+    txPayload((unsigned char*)"X4-");
 loop2:
     switch (buttonClicked()) {
     case Btn::middle:
@@ -165,7 +177,7 @@ loop2:
         goto loop2;
     }
 loop3:
-    for (uint8_t i = 0; i < 3; i++) bowdenLength.decrease();
+    for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
     bowdenLength.~BowdenLength();
     BOWDEN_LENGTH = BowdenLength::get();
 }

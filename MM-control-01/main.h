@@ -23,8 +23,11 @@ void manual_extruder_selector();
 
 // signals from interrupt to main loop
 extern bool mmuFSensorLoading;
+extern bool inErrorState;
 void process_commands(void);
 void fixTheProblem(bool showPrevious);
+void fixSelCrash(void);
+void fixIdlCrash(void);
 
 extern uint8_t tmc2130_mode;
 extern long startWakeTime;

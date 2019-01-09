@@ -28,7 +28,7 @@ static uint8_t toolChanges = 0;
 bool feed_filament(void)
 {
     bool _loaded = false;
-    if (!isHomed && !isFilamentLoaded) home(true);
+    if (!isHomed && !digitalRead(A1)) home(true);
     if (!digitalRead(A1)) {
         int _c = 0;
         shr16_clr_led();
@@ -56,9 +56,12 @@ bool feed_filament(void)
         }
         shr16_clr_ena(AX_PUL);
         engage_filament_pulley(false);
+    } else {
+        txPayload((unsigned char*)"Z1-");
+        delay(1000);
+        process_commands();
+        txPayload((unsigned char*)"ZZZ");
     }
-    unsigned char tempS2[3] = {'O', 'K', (uint8_t)active_extruder};
-    txPayload(tempS2);
     return _loaded;
 }
 

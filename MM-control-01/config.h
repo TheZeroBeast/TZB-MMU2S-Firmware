@@ -57,9 +57,9 @@
 // Tuning: increase treshold, if stall detection triggers at normal loads
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
-#define TMC2130_SG_THR_SEL 6
-#define TMC2130_SG_THR_IDL 6
-#define TMC2130_SG_THR_HOM_IDL 4
+#define TMC2130_SG_THR_SEL 5
+#define TMC2130_SG_THR_IDL 5
+#define TMC2130_SG_THR_HOM_IDL 5
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
@@ -72,15 +72,15 @@
 #define CURRENT_HOLDING_NORMAL      { 1, 10, 22}
 #define CURRENT_RUNNING_STEALTH     {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 50}
+#define CURRENT_HOMING              { 1, 35, 54}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL 5000 // micro steps
-#define MAX_SPEED_STEALTH_SEL 3000 // micro steps
+#define MAX_SPEED_STEALTH_SEL 3500 // micro steps
 #define MAX_SPEED_IDL 3000 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_IDL_NORMAL 25000 // micro steps / s²
+#define ACC_IDL_NORMAL 50000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0
@@ -142,7 +142,7 @@
 #define TYPE_0_ACC_FEED_PUL                   2500  //  S/S/S
 #define TYPE_0_STEPS_MK3FSensor_To_Bondtech    300  //  STEPS
 #define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_0_FSensor_Sense_STEPS            1200  //  STEPS
+#define TYPE_0_FSensor_Sense_STEPS             900  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  600  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
@@ -151,7 +151,7 @@
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
 #define TYPE_1_STEPS_MK3FSensor_To_Bondtech    330  //  STEPS
 #define TYPE_1_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_1_FSensor_Sense_STEPS            1300  //  STEPS
+#define TYPE_1_FSensor_Sense_STEPS            1200  //  STEPS
 #define TYPE_1_FEED_SPEED_PUL                  300  //  S/S
 #define TYPE_1_L2ExStageOne                    200  //  S/S
 #define TYPE_1_L2ExStageTwo                    200  //  S/S
@@ -160,7 +160,7 @@
 #define TYPE_2_ACC_FEED_PUL                   1500  //  S/S/S
 #define TYPE_2_STEPS_MK3FSensor_To_Bondtech    300  //  STEPS
 #define TYPE_2_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_2_FSensor_Sense_STEPS            1200  //  STEPS
+#define TYPE_2_FSensor_Sense_STEPS             900  //  STEPS
 #define TYPE_2_FEED_SPEED_PUL                  550  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S
 #define TYPE_2_L2ExStageTwo                    440  //  S/S

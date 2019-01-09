@@ -7,6 +7,7 @@ bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
+bool inErrorState = false;
 long startWakeTime; //, currentWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
@@ -39,7 +40,7 @@ void setup()
 {
     permanentStorageInit();
     shr16_init(); // shift register
-    delay(1000);  // wait for boot of printer
+    //delay(600);  // wait for boot of printer
     startWakeTime = millis();
     led_blink(1);
 
@@ -125,6 +126,11 @@ void manual_extruder_selector()
         default:
             break;
         }
+    } else if (((Btn::left | Btn::right) & buttonClicked()) && digitalRead(A1)) {
+        txPayload((unsigned char*)"Z1-");
+        delay(1000);
+        process_commands();
+        txPayload((unsigned char*)"ZZZ");
     }
 
     if (active_extruder == 5) {
@@ -192,9 +198,13 @@ void process_commands()
         txPayload(lastTxPayload);
         return;
     }
+    if (fsensor_triggered) {
+        txACK();      // Send  ACK Byte
+        fsensor_triggered = false;
+    }
     if ((confPayload && !(tCSUM == (tData1 + tData2 + tData3))) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
         txACK(false); // Send NACK Byte
-    } else if (confPayload) {
+    } else if (confPayload && !inErrorState) {
         txACK();      // Send  ACK Byte
 
 
@@ -217,9 +227,7 @@ void process_commands()
             if (tData2 < EXTRUDERS) {
                 set_positions(active_extruder, tData2, true);
                 feed_filament(); // returns OK and active_extruder to update MK3
-                //txPayload(OK);
-                //unsigned char tempS2[3] = {'O', 'K', (uint8_t)active_extruder};
-                //txPayload(tempS2);
+                txPayload(OK);
             }
         } else if ((tData1 == 'U') && (tData2 == '0')) {
             // Ux Unload filament CMD Received
@@ -286,7 +294,7 @@ void process_commands()
             recover_after_eject();
             txPayload(OK);
         } // End of Processing Commands
-    }     // End of Confirmed with Valid CSUM
+    } // End of Confirmed with Valid CSUM
 }
 
 //****************************************************************************************************
@@ -298,12 +306,11 @@ void fixTheProblem(bool showPrevious) {
     shr16_clr_ena(AX_SEL);                            // turn OFF the selector stepper motor
     shr16_clr_ena(AX_IDL);                            // turn OFF the idler stepper motor
 
+    inErrorState = true;
+
     while ((Btn::middle != buttonClicked()) || digitalRead(A1)) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
-        if (fsensor_triggered) {
-          txACK();      // Send  ACK Byte
-          fsensor_triggered = false;
-        }
+        process_commands();
         if (!showPrevious) {
             if (buttonClicked() == Btn::right) {
                 engage_filament_pulley(true);
@@ -340,14 +347,63 @@ void fixTheProblem(bool showPrevious) {
             }
             delay(100);
             shr16_clr_led();
-            shr16_set_led(1 << 2 * (4 - active_extruder));
+            if (active_extruder != previous_extruder) shr16_set_led(1 << 2 * (4 - active_extruder));
             delay(100);
             if (digitalRead(A1)) {
                 shr16_set_led(2 << 2 * (4 - previous_extruder));
             } else shr16_set_led(1 << 2 * (4 - previous_extruder));
         }
     }
+    delay(100);
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
     tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
+    inErrorState = false;
+    process_commands();
+    txPayload((unsigned char*)"ZZZ"); // Clear MK3 Message
     home(true); // Home and return to previous active extruder
+}
+
+void fixSelCrash(void) {
+
+    engage_filament_pulley(false);                    // park the idler stepper motor
+    shr16_clr_ena(AX_SEL);                            // turn OFF the selector stepper motor
+    inErrorState = true;
+
+    while (Btn::middle != buttonClicked()) {
+        process_commands();
+        //  wait until key is entered to proceed  (this is to allow for operator intervention)
+        delay(100);
+        shr16_clr_led();
+        delay(100);
+        if (digitalRead(A1)) {
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+        } else shr16_set_led(1 << 2 * (4 - active_extruder));
+    }
+    selSGFailCount = 0;
+    inErrorState = false;
+    homeSelectorSmooth();
+    set_sel_toLast_positions(active_extruder);
+    set_idler_toLast_positions(active_extruder);
+}
+
+void fixIdlCrash(void) {
+
+    shr16_clr_ena(AX_IDL);                            // turn OFF the idler stepper motor
+    inErrorState = true;
+
+    while (Btn::middle != buttonClicked()) {
+        process_commands();
+        //  wait until key is entered to proceed  (this is to allow for operator intervention)
+        delay(100);
+        shr16_clr_led();
+        delay(100);
+        if (digitalRead(A1)) {
+            shr16_set_led(2 << 2 * (4 - active_extruder));
+        } else shr16_set_led(1 << 2 * (4 - active_extruder));
+    }
+    idlSGFailCount = 0;
+    inErrorState = false;
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the selector stepper motor
+    homeIdlerSmooth();
+    set_idler_toLast_positions(active_extruder);
 }

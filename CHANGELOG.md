@@ -1,8 +1,24 @@
 Changelog of MMU 2.0 Firmware
 =============================
-# V2.1.5 RMM
+# V2.1.6 RMM
 * Added feedback at start of Active Extruder to MK3 so display is acurate
 * Also added same feedback during load menu commands and feed filament
+* Added feedback from set_positions to update MK3 active filament info display
+* Added a bunch of MK3 messages to advise user of MMU state in setup menu and when it isn't doing a function due to filament detected
+* Added 7x7 MBL
+* More action commands added for failure states
+  1. // action:m600
+  2. // action:mmuAttention
+  3. // action:mmuFailedLoad1
+  4. // action:mmuFailedLoad2
+  5. // action:mmuFailedUnload
+
+# V2.1.5 RMM
+* Hotend and extruder motor off when in m600 waiting
+* Added RIGHT Button retract option on failed load
+* Added RIGHT Button retract option after eject when checking tip formation
+* Added MMU2-OFF by putting selector in service position then restarting MK3
+  * To re-enable move selector to any filament position then restart MK3
 
 # V2.1.4 RMM
 * Added Bowden Length Cal off service menu or holding middle @ boot (you need to cal first filament to end of tube. This is used as a ballpark for those with different length tubes.
@@ -17,11 +33,6 @@ Changelog of MMU 2.0 Firmware
 * Idler homing improved further for wider variances in setup. Please ensure no contact with case as this will still present an issue.
 * Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
 * Bowden Length limit increased t. ~2.8m
-* Hotend and extruder motor off when in m600 waiting
-* Added RIGHT Button retract option on failed load
-* Added RIGHT Button retract option after eject when checking tip formation
-* Added MMU2-OFF by putting selector in service position then restarting MK3
-  * To re-enable move selector to any filament position then restart MK3
 
 # V2.1.3 RMM
 * toolChanges every 25

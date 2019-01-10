@@ -12,6 +12,7 @@ Changelog of MMU 2.0 Firmware
   3. // action:mmuFailedLoad1
   4. // action:mmuFailedLoad2
   5. // action:mmuFailedUnload
+  6. // action:jamDetected
 
 # V2.1.5 RMM
 * Hotend and extruder motor off when in m600 waiting

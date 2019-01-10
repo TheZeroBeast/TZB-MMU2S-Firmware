@@ -128,8 +128,8 @@ void set_sel_toLast_positions(uint8_t _next_extruder)
 void eject_filament(uint8_t extruder)
 {
     // if there is still filament detected by PINDA unload it first
-    if (isFilamentLoaded) {
-        unload_filament_withSensor(active_extruder);
+    if (isFilamentLoaded()) {
+        unload_filament_withSensor();
     }
 
     set_positions(active_extruder, extruder, true);
@@ -146,12 +146,11 @@ void eject_filament(uint8_t extruder)
     // unpark idler so user can easily remove filament
     engage_filament_pulley(false);
     shr16_clr_ena(AX_PUL);
-    isFilamentLoaded = false; // ensure MMU knows it doesn't have filament loaded so next T? command works
 }
 
 void recover_after_eject()
 {
-    while (digitalRead(A1)) fixTheProblem(false);
+    while (isFilamentLoaded()) fixTheProblem();
     set_position_eject();
 }
 
@@ -195,19 +194,18 @@ loop:
                         goto loop2;
                     } else {
                         txPayload((unsigned char*)"ZL2"); // Report Loading failed to MK3
-                        fixTheProblem(false);
+                        fixTheProblem();
                         goto loop;
                     }
                 }
             }
             shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
-            isFilamentLoaded = true;  // filament loaded
             mmuFSensorLoading = false;
             return true;
         }
         txPayload((unsigned char*)"ZL1"); // Report Loading failed to MK3
-        fixTheProblem(false);
+        fixTheProblem();
         goto loop;
     }
     startWakeTime = millis();  // Start/Reset wakeTimer
@@ -219,7 +217,7 @@ loop:
  */
 bool unload_filament_withSensor(uint8_t extruder)
 {
-    if (digitalRead(A1)) {
+    if (isFilamentLoaded()) {
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         tmc2130_init_axis(AX_IDL, tmc2130_mode);
         engage_filament_pulley(true); // get in contact with filament
@@ -234,14 +232,14 @@ bool unload_filament_withSensor(uint8_t extruder)
             loop:
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
                        filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
-        } else if (digitalRead(A1)) {
+        } else if (isFilamentLoaded()) {
             txPayload((unsigned char*)"ZU-"); // Report Unloading failed to MK3
-            fixTheProblem(true);
+            if (extruder != active_extruder) fixTheProblem(true);
+            else fixTheProblem();
             homedOnUnload = true;
         }
     }
     
-    isFilamentLoaded = false;                                                                                   // update global variable filament unloaded
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
     return true;
@@ -355,7 +353,6 @@ void home(bool doToolSync)
     engage_filament_pulley(false);
     shr16_clr_led();            // All five off
 
-    //isFilamentLoaded = false;
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
 
@@ -394,7 +391,7 @@ void move_selector(int steps, uint16_t speed)
             speed = MAX_SPEED_STEALTH_SEL;
         }
     }
-    if (digitalRead(A1) == false) {
+    if (isFilamentLoaded() == false) {
         moveSmooth(AX_SEL, steps, speed);
     }
 }
@@ -473,11 +470,11 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
 
     tmc2130_init(tmc2130_mode);  // trinamic, homing
     moveSmooth(AX_IDL, -250, MAX_SPEED_IDL, false);
-    for (int c = 2; c > 0; c--) { // touch end 2 times
+    for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
-        moveSmooth(AX_IDL, 2600, 3800, false, true, ACC_IDL_NORMAL);
+        moveSmooth(AX_IDL, 2600, 2300, false, true, ACC_IDL_NORMAL);
         tmc2130_init(tmc2130_mode);  // trinamic, homing
-        if (c > 1) moveSmooth(AX_IDL, -300, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
+        if (c > 1) moveSmooth(AX_IDL, -600, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
     }
 
     MotReturn _return = moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
@@ -562,8 +559,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
-            if (withFindaDetection && ( steps > 0 ) && digitalRead(A1)) return MR_Success;
-            if (withFindaDetection && ( steps < 0 ) && (digitalRead(A1) == false)) return MR_Success;
+            if (withFindaDetection && ( steps > 0 ) && isFilamentLoaded()) return MR_Success;
+            if (withFindaDetection && ( steps < 0 ) && (isFilamentLoaded() == false)) return MR_Success;
             if (withFSensorDetection && fsensor_triggered) {
                 txACK();      // Send  ACK Byte
                 fsensor_triggered = false;

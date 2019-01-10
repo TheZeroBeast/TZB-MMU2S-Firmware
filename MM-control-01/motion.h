@@ -27,7 +27,7 @@ void home(bool doToolSync = false);
 void engage_filament_pulley(bool engage);
 
 bool load_filament_withSensor(uint16_t setupBowLen = 0);
-bool unload_filament_withSensor(uint8_t extruder);
+bool unload_filament_withSensor(uint8_t extruder = active_extruder);
 void load_filament_into_extruder();
 
 void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool update_extruders = false);

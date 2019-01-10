@@ -19,13 +19,15 @@
 #include "config.h"
 #include "uart.h"
 
+#define isFilamentLoaded() digitalRead(A1)
+
 void manual_extruder_selector();
 
 // signals from interrupt to main loop
 extern bool mmuFSensorLoading;
 extern bool inErrorState;
 void process_commands(void);
-void fixTheProblem(bool showPrevious);
+void fixTheProblem(bool showPrevious = false);
 void fixSelCrash(void);
 void fixIdlCrash(void);
 

@@ -15,7 +15,6 @@
 int8_t active_extruder = -1;
 int8_t previous_extruder = -1;
 uint16_t trackToolChanges = 0;
-bool isFilamentLoaded = false;
 bool isIdlerParked = false;
 bool isPrinting = false;
 bool isEjected = false;
@@ -28,8 +27,8 @@ static uint8_t toolChanges = 0;
 bool feed_filament(void)
 {
     bool _loaded = false;
-    if (!isHomed && !digitalRead(A1)) home(true);
-    if (!digitalRead(A1)) {
+    if (!isHomed && !isFilamentLoaded()) home(true);
+    if (!isFilamentLoaded()) {
         int _c = 0;
         shr16_clr_led();
         shr16_set_led(2 << 2 * (4 - active_extruder));
@@ -45,7 +44,7 @@ bool feed_filament(void)
                 break;
             } else {
                 if (_c < 1) {                     // Two attempt to load then give up
-                    fixTheProblem(false);
+                    fixTheProblem();
                     engage_filament_pulley(true);
                 } else {
                     _loaded = false;
@@ -77,7 +76,7 @@ bool toolChange(int new_extruder)
     active_extruder = new_extruder;
 
     if (previous_extruder == active_extruder) {
-        if (!isFilamentLoaded) {
+        if (!isFilamentLoaded()) {
             if (!isHomed) home(true);
             shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
@@ -87,7 +86,7 @@ bool toolChange(int new_extruder)
             _return = true; // nothing really happened
         }
     } else {
-        if (isFilamentLoaded) unload_filament_withSensor(previous_extruder); //unload filament if you need to
+        if (isFilamentLoaded()) unload_filament_withSensor(previous_extruder); //unload filament if you need to
         if ((trackToolChanges == TOOLSYNC) || !isHomed) { // Home every period TOOLSYNC
             home(true);
                                    // move idler and selector to new filament position

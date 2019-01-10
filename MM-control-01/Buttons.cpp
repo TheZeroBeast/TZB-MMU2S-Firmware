@@ -63,7 +63,7 @@ void setupMenu()
 
             switch (_menu) {
             case 1:
-                if (!isFilamentLoaded) {
+                if (!isFilamentLoaded()) {
                     settings_bowden_length();
                     _exit = true;
                 }
@@ -163,7 +163,7 @@ loop:
         shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
     } while (buttonClicked() != Btn::middle);
     BOWDEN_LENGTH = (BowdenLength::get() - 1250);
-    unload_filament_withSensor(active_extruder);
+    unload_filament_withSensor();
     txPayload((unsigned char*)"X4-");
 loop2:
     switch (buttonClicked()) {

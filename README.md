@@ -35,6 +35,7 @@ MMU 3-axis stepper control
 * Blade isn't being used and can be removed. It has been known to add resistance to selector.
 * Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**  
   as depicted in images bellow from respective areas in Slic3r.
+* Bowden limit raised to ~2.8m
 * **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing
 * **Jam Detection** is now operational and will aim to catch when a jam occurs usually resulting in missed layer/s
 * **Action commands** added for failure states that can be used for notifications in Octoprint
@@ -44,8 +45,6 @@ MMU 3-axis stepper control
   4.  // action:mmuFailedLoad2
   5.  // action:mmuFailedUnload
   6.  // action:jamDetected
-
-* Bowden limit raised to ~2.8m
 
 ## When in error state Active Extruder & or Previous Extruder LED/s will blink
 
@@ -70,10 +69,10 @@ MMU 3-axis stepper control
 
 
 ## Slic3r Advance Settging for load/unload Speed
-![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds.png)
+![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds2.1.6.png)
 
 ## Slic3r Single Extruder MMU Parameters under Printer Settings
-![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters.png)
+![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.6.png)
 
 ## Examble Octoprint Serial Communications for a successful load using MK3-FSensor
 ![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample.png)

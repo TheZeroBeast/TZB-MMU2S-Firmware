@@ -11,8 +11,6 @@ MMU 3-axis stepper control
 
 # POINTS OF NOTE On configuring this FW
 
-## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU - ACTION COMMANDS
-
 * You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW.
 
 * Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
@@ -78,7 +76,7 @@ MMU 3-axis stepper control
 ![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample-2.1.6.png)
 
 # Building this custom setup
-This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
+This is configured to work directly with **MMU2** with matching **MK3** FW at link below to load filament to **Extruder Laser Filament Sensor** and unload to FINDA Sensor.
 
 https://github.com/TheZeroBeast/Prusa-Firmware
 

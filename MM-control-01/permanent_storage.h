@@ -5,6 +5,7 @@
 #define PERMANENT_STORAGE_H_
 
 #include <stdint.h>
+//#include "motion.h"
 
 void permanentStorageInit();
 
@@ -20,11 +21,16 @@ private:
     uint8_t m_filament; //!< Selected filament
 public:
     static uint16_t get();
+    static uint16_t getFSensorSteps();
     static const uint8_t stepSize = 30u; //!< increase()/decrease() bowden length step size
+    static const uint8_t stepSizeFSensor = 20u; //!< increase()/decrease() bowden length step size
     bool increase();
     bool decrease();
+    bool increaseFSensor();
+    bool decreaseFSensor();
     ~BowdenLength();
     uint16_t m_length;  //!< Selected filament bowden length
+    uint16_t m_FSensorSteps;
     BowdenLength();
 };
 

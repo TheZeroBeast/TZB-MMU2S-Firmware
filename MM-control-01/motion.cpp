@@ -13,11 +13,15 @@
 #include "config.h"
 
 // public variables:
+BowdenLength bowdenLength;
+uint16_t BOWDEN_LENGTH = bowdenLength.get();
+int16_t tempFSensorSteps = bowdenLength.getFSensorSteps();
+
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
-const int filament_lookup_table[8][3] =
+int filament_lookup_table[8][3] =
 {{TYPE_0_MAX_SPPED_PUL,               TYPE_1_MAX_SPPED_PUL,               TYPE_2_MAX_SPPED_PUL},
  {TYPE_0_ACC_FEED_PUL,                TYPE_1_ACC_FEED_PUL,                TYPE_2_ACC_FEED_PUL},
- {TYPE_0_STEPS_MK3FSensor_To_Bondtech,TYPE_1_STEPS_MK3FSensor_To_Bondtech,TYPE_2_STEPS_MK3FSensor_To_Bondtech},
+ {tempFSensorSteps,                   tempFSensorSteps+10,                tempFSensorSteps},
  {TYPE_0_FILAMENT_PARKING_STEPS,      TYPE_1_FILAMENT_PARKING_STEPS,      TYPE_2_FILAMENT_PARKING_STEPS},
  {TYPE_0_FSensor_Sense_STEPS,         TYPE_1_FSensor_Sense_STEPS,         TYPE_2_FSensor_Sense_STEPS},
  {TYPE_0_FEED_SPEED_PUL,              TYPE_1_FEED_SPEED_PUL,              TYPE_2_FEED_SPEED_PUL},
@@ -42,9 +46,6 @@ const uint16_t EJECT_PULLEY_STEPS = 2000;
 
 uint8_t selSGFailCount = 0;
 uint8_t idlSGFailCount = 0;
-
-BowdenLength bowdenLength;
-uint16_t BOWDEN_LENGTH = bowdenLength.get();
 
 // private functions:
 static uint16_t set_idler_direction(int steps);
@@ -174,12 +175,15 @@ loop:
                            false, false);
                 moveSmooth(AX_PUL, BOWDEN_LENGTH - 400, filament_lookup_table[0][filament_type[active_extruder]],
                            false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor                
-                process_commands();
-                txPayload((unsigned char*)"FS-");  // 'FS-' Starting FSensor checking on MK3
-                fsensor_triggered = false;
                 uint8_t iLoop2 = 0;
             loop2:
-                if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 350,
+                txRESEND         = false;
+                startRxFlag      = false;
+                pendingACK       = false;
+                txPayload((unsigned char*)"FS-");  // 'FS-' Starting FSensor checking on MK3
+                fsensor_triggered = false;
+
+                if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
                     false, false, ACC_NORMAL, false, true) == MR_Success) {
                     moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]],
                     filament_lookup_table[5][filament_type[active_extruder]], false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
@@ -474,7 +478,7 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
         tmc2130_init(HOMING_MODE);  // trinamic, homing
         moveSmooth(AX_IDL, 2600, 2300, false, true, ACC_IDL_NORMAL);
         tmc2130_init(tmc2130_mode);  // trinamic, homing
-        if (c > 1) moveSmooth(AX_IDL, -600, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
+        if (c > 1) moveSmooth(AX_IDL, -400, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
     }
 
     MotReturn _return = moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);

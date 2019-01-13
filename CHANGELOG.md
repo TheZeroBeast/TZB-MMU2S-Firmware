@@ -6,6 +6,8 @@ Changelog of MMU 2.0 Firmware
 * Added feedback from set_positions to update MK3 active filament info display
 * Added a bunch of MK3 messages to advise user of MMU state in setup menu and when it isn't doing a function due to filament detected
 * Added 7x7 MBL
+* Added Jam detection
+* Added Setup guided BowLen and FSensor to BondTech distance setup
 * More action commands added for failure states
   1. // action:m600
   2. // action:mmuAttention

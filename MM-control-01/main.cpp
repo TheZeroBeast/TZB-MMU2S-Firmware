@@ -3,12 +3,11 @@
 #include "main.h"
 
 // public variables:
-bool unloadatBoot = false;
 bool mmuFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool inErrorState = false;
-long startWakeTime; //, currentWakeTime;
+long startWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
 
@@ -117,8 +116,10 @@ void manual_extruder_selector()
         switch (buttonClicked()) {
         case Btn::right:
             if (active_extruder < EXTRUDERS) set_positions(active_extruder, active_extruder + 1, true);
+            if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1-");
             break;
         case Btn::left:
+            if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ");
             if (active_extruder > 0) set_positions(active_extruder, active_extruder - 1, true);
             break;
         default:
@@ -266,7 +267,7 @@ void process_commands()
             wdt_enable(WDTO_15MS);
         } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
-            if (isFilamentLoaded()) {
+            if (isPrinting) {
               unsigned char txTemp[3] = {'P', 'K', (uint8_t)isFilamentLoaded()};
               txPayload(txTemp);
             } else {

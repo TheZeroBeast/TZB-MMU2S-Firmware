@@ -5,6 +5,7 @@
 const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 
 void settings_bowden_length();
+void settings_fsensor_length();
 
 //! @brief Show setup menu
 //!
@@ -132,9 +133,20 @@ void settings_bowden_length()
     if (!isHomed) home();
     else set_positions(active_extruder, 0, true);
     for (uint8_t i = 0; i < 5; i++) bowdenLength.increase();
+    uint8_t tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
+    uint8_t tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
+    unsigned char tempW[3] = {'W', tempBowLenUpper, tempBowLenLower};
+    unsigned char tempV[3] = {0,0,0};
+    txPayload(tempW);    
+    goto loop2;
 loop:
+    tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
+    tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
+    tempV[0] = 'V';
+    tempV[1] = tempBowLenUpper;
+    tempV[2] = tempBowLenLower;
+    txPayload(tempV);
     load_filament_withSensor(bowdenLength.m_length);
-    txPayload((unsigned char*)"X3-");
 
     tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
     do
@@ -145,6 +157,12 @@ loop:
             if (bowdenLength.decrease())
             {
                 move_pulley(-bowdenLength.stepSize);
+                tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
+                tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
+                tempV[0] = 'V';
+                tempV[1] = tempBowLenUpper;
+                tempV[2] = tempBowLenLower;
+                txPayload(tempV);
                 delay(200);
             }
             break;
@@ -153,6 +171,12 @@ loop:
             if (bowdenLength.increase())
             {
                 move_pulley(bowdenLength.stepSize);
+                tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
+                tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
+                tempV[0] = 'V';
+                tempV[1] = tempBowLenUpper;
+                tempV[2] = tempBowLenLower;
+                txPayload(tempV);
                 delay(200);
             }
             break;
@@ -162,24 +186,80 @@ loop:
 
         shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
     } while (buttonClicked() != Btn::middle);
-    BOWDEN_LENGTH = (BowdenLength::get() - 1250);
+    tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
+    tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
+    tempW[0] = 'W';
+    tempW[1] = tempBowLenUpper;
+    tempW[2] = tempBowLenLower;
+    txPayload(tempW);
     unload_filament_withSensor();
-    txPayload((unsigned char*)"X4-");
 loop2:
     switch (buttonClicked()) {
     case Btn::middle:
         goto loop;
         break;
     case Btn::left:
-        goto loop3;
+        break;
+    case Btn::right:
+        settings_fsensor_length();
         break;
     default:
         goto loop2;
     }
-loop3:
     for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
     bowdenLength.~BowdenLength();
     BOWDEN_LENGTH = BowdenLength::get();
+}
+
+void settings_fsensor_length()
+{
+    // load filament to FSensor then to middle of Bondtech to set middle
+
+    uint8_t tempFSensLenUpper = (0xFF & (bowdenLength.m_FSensorSteps >> 8));
+    uint8_t tempFSensLenLower = (0xFF & bowdenLength.m_FSensorSteps);
+    unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
+    txPayload(tempB);
+    load_filament_withSensor();    
+    tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
+    do
+    {
+        switch (buttonClicked())
+        {
+        case Btn::right:
+            if (bowdenLength.decreaseFSensor())
+            {
+                move_pulley(-bowdenLength.stepSizeFSensor);
+                tempFSensLenUpper = (0xFF & (bowdenLength.m_FSensorSteps >> 8));
+                tempFSensLenLower = (0xFF & bowdenLength.m_FSensorSteps);
+                unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
+                txPayload(tempB);
+                delay(200);
+            }
+            break;
+
+        case Btn::left:
+            if (bowdenLength.increaseFSensor())
+            {
+                move_pulley(bowdenLength.stepSizeFSensor);
+                tempFSensLenUpper = (0xFF & (bowdenLength.m_FSensorSteps >> 8));
+                tempFSensLenLower = (0xFF & bowdenLength.m_FSensorSteps);
+                unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
+                txPayload(tempB);
+                delay(200);
+            }
+            break;
+        default:
+            break;
+        }
+
+        shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
+    } while (buttonClicked() != Btn::middle);
+    
+    //uint16_t tempFSensorSteps = (0xFF & bowdenLength.m_FSensorSteps);
+    filament_lookup_table[2][0] = bowdenLength.m_FSensorSteps;
+    filament_lookup_table[2][1] = bowdenLength.m_FSensorSteps+10;
+    filament_lookup_table[2][2] = bowdenLength.m_FSensorSteps;
+    unload_filament_withSensor();
 }
 
 //! @brief Is button pushed?

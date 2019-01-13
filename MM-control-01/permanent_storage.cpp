@@ -32,6 +32,7 @@ static const uint16_t eepromLengthCorrectionBase = 7900u; //!< legacy bowden len
 static const uint16_t eepromBowdenLenDefault = 8000u; //!< Default bowden length
 static const uint16_t eepromBowdenLenMinimum = 6900u; //!< Minimum bowden length
 static const uint16_t eepromBowdenLenMaximum = 65500u; //!< Maximum bowden length
+static const uint16_t eepromFSensorStepsDefault = 290u; //!< Default bowden length
 
 void permanentStorageInit()
 {
@@ -93,12 +94,30 @@ uint16_t BowdenLength::get()
     return eepromBowdenLenDefault;
 }
 
+//! @brief Get bowden length for active filament
+//!
+//! Returns stored value, doesn't return actual value when it is edited by increase() / decrease() unless it is stored.
+//! @return stored bowden length
+uint16_t BowdenLength::getFSensorSteps()
+{
+    if (validFilament(1))
+    {
+        uint16_t fSensorSteps = eeprom_read_word(&(eepromBase->eepromBowdenLen[1]));
+
+        if (eepromEmpty != fSensorSteps)
+        {
+            if (fSensorSteps < 3000) return fSensorSteps;
+        }
+    }
+
+    return eepromFSensorStepsDefault;
+}
 
 //! @brief Construct BowdenLength object which allows bowden length manipulation
 //!
 //! To be created on stack, new value is permanently stored when object goes out of scope.
 //! Active filament and associated bowden length is stored in member variables.
-BowdenLength::BowdenLength() : m_filament(0), m_length(BowdenLength::get())
+BowdenLength::BowdenLength() : m_filament(0), m_length(BowdenLength::get()), m_FSensorSteps(BowdenLength::getFSensorSteps())
 {
 }
 
@@ -132,12 +151,40 @@ bool BowdenLength::decrease()
     return false;
 }
 
+//! @brief Increase bowden length
+//!
+//! New value is not stored immediately. See ~BowdenLength() for storing permanently.
+//! @retval true passed
+//! @retval false failed, it is not possible to increase, new bowden length would be out of range
+bool BowdenLength::increaseFSensor()
+{
+    if ((m_FSensorSteps + stepSizeFSensor) > 0) {
+      m_FSensorSteps += stepSizeFSensor;
+      return true;
+    }
+    return false;
+}
+
+//! @brief Decrease bowden length
+//!
+//! New value is not stored immediately. See ~BowdenLength() for storing permanently.
+//! @retval true passed
+//! @retval false failed, it is not possible to decrease, new bowden length would be out of range
+bool BowdenLength::decreaseFSensor()
+{
+    if ((m_FSensorSteps - stepSizeFSensor) > 0) {
+      m_FSensorSteps -= stepSizeFSensor;
+      return true;
+    }
+    return false;
+}
+
 //! @brief Store bowden length permanently.
 BowdenLength::~BowdenLength()
 {
     if (validFilament(m_filament))eeprom_update_word(&(eepromBase->eepromBowdenLen[m_filament]), m_length);
+    eeprom_update_word(&(eepromBase->eepromBowdenLen[1]), m_FSensorSteps);
 }
-
 
 //! @brief Get filament storage status
 //!
@@ -145,7 +192,6 @@ BowdenLength::~BowdenLength()
 //!
 //! @return status
 //! @retval 0xff Uninitialized EEPROM or no 2 values agrees
-
 uint8_t FilamentLoaded::getStatus()
 {
     if (eeprom_read_byte(&(eepromBase->eepromFilamentStatus[0])) == eeprom_read_byte(&(eepromBase->eepromFilamentStatus[1])))

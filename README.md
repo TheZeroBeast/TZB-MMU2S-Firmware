@@ -3,9 +3,9 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.5 RC	B#:  265**
+**MMU: V#: 2.1.6 RC	B#:  275**
 
-**MK3: V#: 5.0.4 RC	B#: 2370**
+**MK3: B#: 2378**
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
@@ -14,23 +14,37 @@ MMU 3-axis stepper control
 ## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU - ACTION COMMANDS
 
 * You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW.
+
 * Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
   MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
   **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**
+  
 * Value will be off if previously adjusted in STOCK FW. Adjust **BOWDEN_LENGTH** in **SETUP** menu,  
   this is to be just appearing at end of detatched BOWDEN tube (**NOTE ONLY F1 IS CALIBRATED**)
-    1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector.
-    2. As per STOCK FW, use **LEFT** button to move LED to fourth position.
-    3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length.
+    1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector
+    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
+    3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length
     4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
-* Distance to BONDTECH is set for factory R3 extruder configuration.
-  1. Adjust type values within definitions on **line 143 in file config.h** if custom value desired.
-* Ensure filament sensor is enalbed via MK3 menu the first time you flash your MK3 to ensure your MMU2 gets messages when filament gets to the MK3.
+
+* Adjust **FSensor to BONDTECH Steps** in **SETUP** menu
+    1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector
+    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
+    3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length
+    4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
+    
 * Blade isn't being used and can be removed. It has been known to add resistance to selector.
 * Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**  
   as depicted in images bellow from respective areas in Slic3r.
 * **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing
-* Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
+* **Jam Detection** is now operational and will aim to catch when a jam occurs usually resulting in missed layer/s
+* **Action commands** added for failure states that can be used for notifications in Octoprint
+  1.  // action:m600
+  2.  // action:mmuAttention
+  3.  // action:mmuFailedLoad1
+  4.  // action:mmuFailedLoad2
+  5.  // action:mmuFailedUnload
+  6.  // action:jamDetected
+
 * Bowden limit raised to ~2.8m
 
 ## When in error state Active Extruder & or Previous Extruder LED/s will blink

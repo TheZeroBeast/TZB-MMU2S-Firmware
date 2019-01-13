@@ -14,7 +14,7 @@
 #include <stdbool.h>
 
 extern int8_t filament_type[EXTRUDERS];
-extern const int filament_lookup_table[8][3]; // [X][Y]Two-dimensional Array of extruder and used variables
+extern int filament_lookup_table[8][3]; // [X][Y]Two-dimensional Array of extruder and used variables
 extern const uint8_t IDLER_PARKING_STEPS;
 extern const uint16_t EJECT_PULLEY_STEPS;
 extern uint16_t BOWDEN_LENGTH;

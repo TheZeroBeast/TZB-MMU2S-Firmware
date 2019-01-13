@@ -3,7 +3,7 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.6 RC	B#:  275**
+**MMU: V#: 2.1.6 RC	B#:  278**
 
 **MK3: B#: 2378**
 
@@ -69,13 +69,13 @@ MMU 3-axis stepper control
 
 
 ## Slic3r Advance Settging for load/unload Speed
-![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds2.1.6.png)
+![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.6.png)
 
 ## Slic3r Single Extruder MMU Parameters under Printer Settings
 ![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.6.png)
 
 ## Examble Octoprint Serial Communications for a successful load using MK3-FSensor
-![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample.png)
+![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample-2.1.6.png)
 
 # Building this custom setup
 This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.

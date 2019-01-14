@@ -39,8 +39,8 @@ void setup()
 {
     permanentStorageInit();
     shr16_init(); // shift register
-    //delay(600);  // wait for boot of printer
     startWakeTime = millis();
+    bool requestMenu = false;
     led_blink(1);
 
     UCSR1A = (0 << U2X1); // baudrate multiplier
@@ -56,7 +56,6 @@ void setup()
 
     sei();
 
-    bool requestMenu = false;
     if (buttonClicked() == Btn::middle) requestMenu = true;
 
     spi_init();
@@ -75,11 +74,14 @@ void setup()
     tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 
     // check if to goto the settings menu
+
+    if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR");
+
+    for (uint8_t i = 100; i > 0; i--) { process_commands(); delay(10);}
+    
     if (requestMenu) {
         setupMenu();
     }
-
-    if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR");
 }
 
 //! @brief Select filament menu
@@ -380,10 +382,8 @@ void fixSelCrash(void) {
         } else shr16_set_led(1 << 2 * (4 - active_extruder));
     }
     selSGFailCount = 0;
-    inErrorState = false;
-    homeSelectorSmooth();
+    inErrorState = false;    
     set_sel_toLast_positions(active_extruder);
-    set_idler_toLast_positions(active_extruder);
 }
 
 void fixIdlCrash(void) {
@@ -403,7 +403,5 @@ void fixIdlCrash(void) {
     }
     idlSGFailCount = 0;
     inErrorState = false;
-    tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the selector stepper motor
-    homeIdlerSmooth();
     set_idler_toLast_positions(active_extruder);
 }

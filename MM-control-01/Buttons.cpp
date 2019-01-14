@@ -100,7 +100,6 @@ void setupMenu()
     shr16_set_led(0x2aa);
     delay(400);
     shr16_clr_led();
-    inErrorState = false;
     process_commands();
     txPayload((unsigned char*)"ZZZ");
     shr16_set_led(1 << 2 * (4 - active_extruder));

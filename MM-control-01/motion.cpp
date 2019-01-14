@@ -106,6 +106,7 @@ void set_position_eject(bool setTrueForEject)
 
 void set_idler_toLast_positions(uint8_t _next_extruder)
 {
+    homeIdlerSmooth();
     int _idler_steps = (0 - _next_extruder) * IDLER_STEPS;
     if (_next_extruder == EXTRUDERS) _idler_steps = (0 - (_next_extruder - 1)) * IDLER_STEPS;
     // steps to move to new position of idler
@@ -114,6 +115,7 @@ void set_idler_toLast_positions(uint8_t _next_extruder)
 
 void set_sel_toLast_positions(uint8_t _next_extruder)
 {
+    homeSelectorSmooth();
     int _selector_steps = ((0 - _next_extruder) * SELECTOR_STEPS) * -1;
     if (_next_extruder == EXTRUDERS) _selector_steps += EXTRA_STEPS_SELECTOR_SERVICE;
     // steps to move to new position of selector
@@ -157,6 +159,7 @@ void recover_after_eject()
 
 bool load_filament_withSensor(uint16_t setupBowLen)
 {
+    uint8_t retries = 1;
 loop:
     {
         if (!isHomed && (setupBowLen == 0)) home(true);
@@ -208,6 +211,7 @@ loop:
             mmuFSensorLoading = false;
             return true;
         }
+        if (retries > 0) { set_idler_toLast_positions(active_extruder); retries = 0; goto loop; }
         txPayload((unsigned char*)"ZL1"); // Report Loading failed to MK3
         fixTheProblem();
         goto loop;
@@ -476,9 +480,9 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
     moveSmooth(AX_IDL, -250, MAX_SPEED_IDL, false);
     for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
-        moveSmooth(AX_IDL, 2600, 2300, false, true, ACC_IDL_NORMAL);
+        moveSmooth(AX_IDL, 2600, 6000, false, true, ACC_IDL_NORMAL*2);
         tmc2130_init(tmc2130_mode);  // trinamic, homing
-        if (c > 1) moveSmooth(AX_IDL, -400, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
+        if (c > 1) moveSmooth(AX_IDL, -500, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
     }
 
     MotReturn _return = moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
@@ -489,7 +493,10 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
         isIdlerParked = false;
         delay(50); // delay to release the stall detection
         engage_filament_pulley(false);
-        set_idler_toLast_positions(active_extruder);
+        int _idler_steps = (0 - active_extruder) * IDLER_STEPS;
+        if (active_extruder == EXTRUDERS) _idler_steps = (0 - (active_extruder - 1)) * IDLER_STEPS;
+        // steps to move to new position of idler
+        move_idler(_idler_steps);
     }
     return _return;
 }
@@ -579,9 +586,12 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                 if (rehomeOnFail) {
                     if (idlSGFailCount < 3) {
                         idlSGFailCount++;
-                        homeIdlerSmooth();
-                        set_idler_toLast_positions(active_extruder); 
-                    } else fixIdlCrash();
+                        set_idler_toLast_positions(active_extruder);
+                        return MR_FailedAndRehomed;
+                    } else {
+                      fixIdlCrash();
+                      return MR_FailedAndRehomed;
+                    }
                 } else return MR_Failed;
             }
             break;
@@ -593,8 +603,11 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                 if (rehomeOnFail) {
                     if (selSGFailCount < 3) {
                         selSGFailCount++;
-                        homeSelectorSmooth();
                         set_sel_toLast_positions(active_extruder);
+                        return MR_FailedAndRehomed;
+                    } else {
+                      fixSelCrash();
+                      return MR_FailedAndRehomed;
                     }
                 } else return MR_Failed;
             }

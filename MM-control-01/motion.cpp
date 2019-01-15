@@ -159,12 +159,16 @@ void recover_after_eject()
 
 bool load_filament_withSensor(uint16_t setupBowLen)
 {
+    uint8_t AX_IDL_current_running_normal = CURRENT_RUNNING_NORMAL[AX_IDL];
+    uint8_t AX_IDL_current_holding_loading = CURRENT_HOLDING_NORMAL_LOADING[AX_IDL];
     uint8_t retries = 1;
 loop:
     {
         if (!isHomed && (setupBowLen == 0)) home(true);
         engage_filament_pulley(true); // get in contact with filament
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        //tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        tmc2130_init_axis_current_normal(AX_IDL, AX_IDL_current_running_normal,
+                                         AX_IDL_current_running_normal, false);
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
@@ -266,6 +270,7 @@ bool unload_filament_withSensor(uint8_t extruder)
 void load_filament_into_extruder()
 {
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_running_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;

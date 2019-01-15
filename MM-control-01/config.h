@@ -69,8 +69,8 @@
 
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH        { 1,  7, 16}
-#define CURRENT_HOLDING_NORMAL         { 1, 10, 20}
-#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 26}
+#define CURRENT_HOLDING_NORMAL         { 1, 10, 10}
+#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 30}
 #define CURRENT_RUNNING_STEALTH        {30, 35, 35}
 #define CURRENT_RUNNING_NORMAL         {30, 35, 35}
 #define CURRENT_HOMING                 { 1, 35, 35}
@@ -81,7 +81,7 @@
 #define MAX_SPEED_IDL 3000 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_IDL_NORMAL 40000 // micro steps / s²
+#define ACC_IDL_NORMAL 20000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0

@@ -32,15 +32,15 @@ int filament_lookup_table[8][3] =
 // private constants:
 // selector homes on the right end. afterwards it is moved to extruder 0
 static const int SELECTOR_STEPS_AFTER_HOMING = -3700;
-static const int8_t IDLER_STEPS_AFTER_HOMING = -110;
+static const int IDLER_STEPS_AFTER_HOMING = -130;
 
 //static const int IDLER_FULL_TRAVEL_STEPS = 1420; // 16th micro steps
 // after homing: 1420 into negative direction
 // and 130 steps into positive direction
 
-static const uint16_t SELECTOR_STEPS = 2832 / (EXTRUDERS - 1);
+static const uint16_t SELECTOR_STEPS = 2800 / (EXTRUDERS - 1);
 static const uint16_t IDLER_STEPS = 1420 / (EXTRUDERS - 1); // full travel = 1420 16th micro steps
-const uint8_t IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 60;
+const uint8_t IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40;
 static const uint8_t EXTRA_STEPS_SELECTOR_SERVICE = 100;
 const uint16_t EJECT_PULLEY_STEPS = 2000;
 
@@ -159,16 +159,16 @@ void recover_after_eject()
 
 bool load_filament_withSensor(uint16_t setupBowLen)
 {
-    uint8_t AX_IDL_current_running_normal = CURRENT_RUNNING_NORMAL[AX_IDL];
-    uint8_t AX_IDL_current_holding_loading = CURRENT_HOLDING_NORMAL_LOADING[AX_IDL];
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
     uint8_t retries = 1;
 loop:
     {
         if (!isHomed && (setupBowLen == 0)) home(true);
         engage_filament_pulley(true); // get in contact with filament
-        //tmc2130_init_axis(AX_PUL, tmc2130_mode);
-        tmc2130_init_axis_current_normal(AX_IDL, AX_IDL_current_running_normal,
-                                         AX_IDL_current_running_normal, false);
+        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                         current_running_normal[AX_IDL], false);
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
@@ -232,9 +232,14 @@ bool unload_filament_withSensor(uint8_t extruder)
     if (isFilamentLoaded()) {
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
         tmc2130_init_axis(AX_IDL, tmc2130_mode);
+        uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+        uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
+        tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                         current_running_normal[AX_IDL], false);
+        
         engage_filament_pulley(true); // get in contact with filament
         txPayload((unsigned char*)"OKU");
-        delay(45);
+        delay(40);
         moveSmooth(AX_PUL, -1250, 445, false, false, ACC_NORMAL);
         if (moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
@@ -254,6 +259,7 @@ bool unload_filament_withSensor(uint8_t extruder)
     
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);           // reset idler currents
     return true;
 }
 
@@ -270,7 +276,6 @@ bool unload_filament_withSensor(uint8_t extruder)
 void load_filament_into_extruder()
 {
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
-    uint8_t current_running_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
@@ -310,6 +315,7 @@ void load_filament_into_extruder()
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
                                           current_running_stealth[AX_PUL]);
     }
+    tmc2130_init_axis(AX_IDL, tmc2130_mode);           // reset idler currents
     shr16_clr_ena(AX_PUL);
 }
 
@@ -485,13 +491,13 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
     moveSmooth(AX_IDL, -250, MAX_SPEED_IDL, false);
     for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
-        moveSmooth(AX_IDL, 2600, 6000, false, true, ACC_IDL_NORMAL*2);
+        moveSmooth(AX_IDL, 2600, 6000, false, true, 40000);
         tmc2130_init(tmc2130_mode);  // trinamic, homing
         if (c > 1) moveSmooth(AX_IDL, -500, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
     }
 
     MotReturn _return = moveSmooth(AX_IDL, IDLER_STEPS_AFTER_HOMING, MAX_SPEED_IDL, false);
-    
+
     if (toLastFilament) {
         FilamentLoaded::get(filament);
         active_extruder = filament;
@@ -653,6 +659,14 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
         }
         break;
         }
+    }
+    switch (axis) {
+    case AX_IDL:
+        idlSGFailCount = 0;
+        break;
+    case AX_SEL:
+        selSGFailCount = 0;
+        break;
     }
     return ret;
 }

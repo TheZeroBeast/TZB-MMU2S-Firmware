@@ -9,42 +9,51 @@ MMU 3-axis stepper control
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
-# POINTS OF NOTE On configuring this FW
+## Points of Notes
 
-## POWER PANIC - IDLE FSensor Testing - BOWDEN CAL SETUP MENU - ACTION COMMANDS
-
-* You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW.
-
-* Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
-  MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
-  **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**
-  
-* Value will be off if previously adjusted in STOCK FW. Adjust **BOWDEN_LENGTH** in **SETUP** menu,  
-  this is to be just appearing at end of detatched BOWDEN tube (**NOTE ONLY F1 IS CALIBRATED**)
-    1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector
-    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
-    3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length
-    4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
-
-* Adjust **FSensor to BONDTECH Steps** in **SETUP** menu
-    1. Enter **SETUP** menu @ boot or using **MIDDLE** button while on **SERVICE** location with selector
-    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
-    3. Use **MIDDLE** to send **Filament 1** in and out until satisfied of length
-    4. Use **LEFT** button to save and exit (**ONLY WHEN FILAMENT RETRACTED**)
-    
-* Blade isn't being used and can be removed. It has been known to add resistance to selector.
-* Load/Unload and MMU Parameters should be set in Slic3r to minimise **GRINDING**  
-  as depicted in images bellow from respective areas in Slic3r.
-* Bowden limit raised to ~2.8m
-* **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing
-* **Jam Detection** is now operational and will aim to catch when a jam occurs usually resulting in missed layer/s
-* **Action commands** added for failure states that can be used for notifications in Octoprint
+You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW  
+Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the 
+MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
+**DEFAULT FACTORY BOWDEN LENGETH OF 350mm**  
+**POWER PANIC** is now operational and will allow autorecover/continue when SD Printing  
+**Jam Detection** is now operational and will aim to catch when a jam occurs usually resulting in missed layer/s  
+**Action commands** added for failure states that can be used for notifications in Octoprint  
   1.  // action:m600
   2.  // action:mmuAttention
   3.  // action:mmuFailedLoad1
   4.  // action:mmuFailedLoad2
   5.  // action:mmuFailedUnload
   6.  // action:jamDetected
+
+# **STEPS TO FIRST GET SETUP AND PRINTING WITH MY FW** 
+
+1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  
+**(NOTE ONLY FIRST FILAMENT CHANNEL IS CALIBRATED)**
+    1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
+    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
+    3. Use **MIDDLE** button to enter calibration
+    4. Use **MIDDLE** button again to load for **Bowden Length** Calibration
+    4. Use **LEFT/RIGHT** buttons to adjust until flush with end of tube when detatched from extruder
+    5. Use **MIDDLE** button to unload
+    6. Use **LEFT** button to save and exit
+
+2. Adjust **FSensor to BONDTECH Steps** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**
+    1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
+    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
+    3. Use **MIDDLE** button to enter calibration
+    4. Use **RIGHT** button to load for **FSensor to BondTech** Length Calibration
+    4. Use **LEFT/RIGHT** buttons to adjust until **end of filament is in middle of BondTech gears**
+    5. Use **MIDDLE** button to save and exit
+
+3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters
+![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.6.png)
+![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.6.png)
+
+4. Blade isn't being used and can be removed. It has been known to add resistance to selector.
+
+5. Get familiar with the differences in failure states and recovery procedures from STOCK
+
+6. Happy **PRINTING!**
 
 ## When in error state Active Extruder & or Previous Extruder LED/s will blink
 
@@ -67,18 +76,11 @@ MMU 3-axis stepper control
 * Push middle button to rehome and continue
   * If nothing happens, filament is in FINDA, check again
 
-
-## Slic3r Advance Settging for load/unload Speed
-![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.6.png)
-
-## Slic3r Single Extruder MMU Parameters under Printer Settings
-![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.6.png)
-
-## Examble Octoprint Serial Communications for a successful load using MK3-FSensor
+## Example Octoprint Serial Communications for a successful load using MK3-FSensor
 ![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample-2.1.6.png)
 
 # Building this custom setup
-This is configured to work directly with MK2.5/MK3 with matching printer FW at link below to load filament to ExtruderLaserFilamentSensor and unload to FINDA Sensor.
+This is configured to work directly with **MMU2** with matching **MK3** FW at link below to load filament to **Extruder Laser Filament Sensor** and unload to FINDA Sensor.
 
 https://github.com/TheZeroBeast/Prusa-Firmware
 

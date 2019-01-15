@@ -17,7 +17,7 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
 **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**  
 **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing  
 **Jam Detection** is now operational and will aim to catch when a jam occurs usually resulting in missed layer/s  
-**Action commands** added for failure states that can be used for notifications in Octoprint  
+**Action commands** added for failure states that can be used for notifications in Octoprint
   1.  // action:m600
   2.  // action:mmuAttention
   3.  // action:mmuFailedLoad1
@@ -29,21 +29,21 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
 
 1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  
 **(NOTE ONLY FIRST FILAMENT CHANNEL IS CALIBRATED)**
-    1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
-    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
-    3. Use **MIDDLE** button to enter calibration
-    4. Use **MIDDLE** button again to load for **Bowden Length** Calibration
-    4. Use **LEFT/RIGHT** buttons to adjust until flush with end of tube when detatched from extruder
-    5. Use **MIDDLE** button to unload
-    6. Use **LEFT** button to save and exit
+   1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
+   2. As per STOCK FW, use **LEFT** button to move LED to fourth position
+   3. Use **MIDDLE** button to enter calibration
+   4. Use **MIDDLE** button again to load for **Bowden Length** Calibration
+   4. Use **LEFT/RIGHT** buttons to adjust until flush with end of tube when detatched from extruder
+   5. Use **MIDDLE** button to unload
+   6. Use **LEFT** button to save and exit
 
 2. Adjust **FSensor to BONDTECH Steps** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**
-    1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
-    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
-    3. Use **MIDDLE** button to enter calibration
-    4. Use **RIGHT** button to load for **FSensor to BondTech** Length Calibration
-    4. Use **LEFT/RIGHT** buttons to adjust until **end of filament is in middle of BondTech gears**
-    5. Use **MIDDLE** button to save and exit
+   1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
+   2. As per STOCK FW, use **LEFT** button to move LED to fourth position
+   3. Use **MIDDLE** button to enter calibration
+   4. Use **RIGHT** button to load for **FSensor to BondTech** Length Calibration
+   4. Use **LEFT/RIGHT** buttons to adjust until **end of filament is in middle of BondTech gears**
+   5. Use **MIDDLE** button to save and exit
 
 3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters
 ![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.6.png)

@@ -58,7 +58,7 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 5
-#define TMC2130_SG_THR_IDL 5
+#define TMC2130_SG_THR_IDL 6
 #define TMC2130_SG_THR_HOM_IDL 2
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -68,11 +68,12 @@
 #define TMC2130_TCOOLTHRS_AX_IDL 400 // 400 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
 
 // currents for pulley, selector and idler
-#define CURRENT_HOLDING_STEALTH     { 1,  7, 16}
-#define CURRENT_HOLDING_NORMAL      { 1, 10, 25}
-#define CURRENT_RUNNING_STEALTH     {30, 35, 35}
-#define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 35}
+#define CURRENT_HOLDING_STEALTH        { 1,  7, 16}
+#define CURRENT_HOLDING_NORMAL         { 1, 10, 20}
+#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 26}
+#define CURRENT_RUNNING_STEALTH        {30, 35, 35}
+#define CURRENT_RUNNING_NORMAL         {30, 35, 35}
+#define CURRENT_HOMING                 { 1, 35, 35}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL 5000 // micro steps

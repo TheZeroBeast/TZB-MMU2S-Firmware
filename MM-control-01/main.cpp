@@ -58,20 +58,14 @@ void setup()
 
     if (buttonClicked() == Btn::middle) requestMenu = true;
 
-    spi_init();
     led_blink(2);
-    tmc2130_init(HOMING_MODE); // trinamic, homing
+    spi_init();
     led_blink(3);
-    adc_init(); // ADC
+    adc_init();
     led_blink(4);
 
     shr16_clr_led();
-
-    init_Pulley();
     homeIdlerSmooth(true);
-
-    //add reading previously stored mode (stealth/normal) from eeprom
-    tmc2130_init(tmc2130_mode); // trinamic, initialize all axes
 
     // check if to goto the settings menu
 

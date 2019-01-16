@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION  216 // example: 103 means version 1.0.3
-#define FW_BUILDNR  280 // number of commits in 'master'
+#define FW_VERSION  217 // example: 103 means version 1.0.3
+#define FW_BUILDNR  290 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms
@@ -98,6 +98,8 @@
 #define AX_SEL 1 // Selector
 #define AX_IDL 2 // Idler
 
+#define AX_PUL_STEP_MM_Ratio          19
+
 #define PIN_STP_IDL_HIGH (PORTD |= 0x40)
 #define PIN_STP_IDL_LOW (PORTD &= ~0x40)
 #define PIN_STP_SEL_HIGH (PORTD |= 0x10)
@@ -143,25 +145,28 @@
 #define TYPE_0_ACC_FEED_PUL                   2500  //  S/S/S
 #define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_0_FSensor_Sense_STEPS             800  //  STEPS
-#define TYPE_0_FEED_SPEED_PUL                  400  //  S/S
+#define TYPE_0_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
+#define TYPE_0_UnloadSpeed                     760  //  S/S
 // Flex
 #define TYPE_1_MAX_SPPED_PUL                   400  //  S/S
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
 #define TYPE_1_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_1_FSensor_Sense_STEPS             900  //  STEPS
-#define TYPE_1_FEED_SPEED_PUL                  200  //  S/S
+#define TYPE_1_FEED_SPEED_PUL                  285  //  S/S
 #define TYPE_1_L2ExStageOne                    200  //  S/S
 #define TYPE_1_L2ExStageTwo                    200  //  S/S
+#define TYPE_1_UnloadSpeed                     285  //  S/S
 // PVA
 #define TYPE_2_MAX_SPPED_PUL                  2800  //  S/S
 #define TYPE_2_ACC_FEED_PUL                   1500  //  S/S/S
 #define TYPE_2_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_2_FSensor_Sense_STEPS             800  //  STEPS
-#define TYPE_2_FEED_SPEED_PUL                  400  //  S/S
+#define TYPE_2_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S
 #define TYPE_2_L2ExStageTwo                    440  //  S/S
+#define TYPE_2_UnloadSpeed                     760  //  S/S
 
 // number of extruders
 #define EXTRUDERS 5

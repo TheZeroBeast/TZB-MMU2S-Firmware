@@ -18,7 +18,7 @@ uint16_t BOWDEN_LENGTH = bowdenLength.get();
 int16_t tempFSensorSteps = bowdenLength.getFSensorSteps();
 
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
-int filament_lookup_table[8][3] =
+int filament_lookup_table[9][3] =
 {{TYPE_0_MAX_SPPED_PUL,               TYPE_1_MAX_SPPED_PUL,               TYPE_2_MAX_SPPED_PUL},
  {TYPE_0_ACC_FEED_PUL,                TYPE_1_ACC_FEED_PUL,                TYPE_2_ACC_FEED_PUL},
  {tempFSensorSteps,                   tempFSensorSteps+10,                tempFSensorSteps},
@@ -26,7 +26,8 @@ int filament_lookup_table[8][3] =
  {TYPE_0_FSensor_Sense_STEPS,         TYPE_1_FSensor_Sense_STEPS,         TYPE_2_FSensor_Sense_STEPS},
  {TYPE_0_FEED_SPEED_PUL,              TYPE_1_FEED_SPEED_PUL,              TYPE_2_FEED_SPEED_PUL},
  {TYPE_0_L2ExStageOne,                TYPE_1_L2ExStageOne,                TYPE_2_L2ExStageOne},
- {TYPE_0_L2ExStageTwo,                TYPE_1_L2ExStageTwo,                TYPE_2_L2ExStageTwo}
+ {TYPE_0_L2ExStageTwo,                TYPE_1_L2ExStageTwo,                TYPE_2_L2ExStageTwo},
+ {TYPE_0_UnloadSpeed,                 TYPE_1_UnloadSpeed,                 TYPE_2_UnloadSpeed}
 };
 
 // private constants:
@@ -156,9 +157,9 @@ loop:
             if (setupBowLen != 0) moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
                                                  false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
             else {
-                moveSmooth(AX_PUL, 400, filament_lookup_table[5][filament_type[active_extruder]],
+                moveSmooth(AX_PUL, 500, filament_lookup_table[5][filament_type[active_extruder]],
                            false, false);
-                moveSmooth(AX_PUL, BOWDEN_LENGTH - 400, filament_lookup_table[0][filament_type[active_extruder]],
+                moveSmooth(AX_PUL, BOWDEN_LENGTH - 500, filament_lookup_table[0][filament_type[active_extruder]],
                            false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor                
                 uint8_t iLoop2 = 0;
             loop2:
@@ -171,7 +172,7 @@ loop:
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
                     false, false, ACC_NORMAL, false, true) == MR_Success) {
                     moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]],
-                    filament_lookup_table[5][filament_type[active_extruder]], false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
+                    filament_lookup_table[5][filament_type[active_extruder]] * 0.8, false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
                 } else {
                     if (iLoop2 < 3) { // 4 attempts
                         delay(50);
@@ -212,9 +213,15 @@ bool unload_filament_withSensor(uint8_t extruder)
         tmc2130_init_axis(AX_IDL, tmc2130_mode);
         
         engage_filament_pulley(true); // get in contact with filament
+        uint8_t mmPerSecSpeedUpper = ((filament_lookup_table[8][filament_type[active_extruder]] * AX_PUL_STEP_MM_Ratio) >> 8);
+        uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[active_extruder]] * AX_PUL_STEP_MM_Ratio));
+        unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
+        txPayload(txUFR);
         txPayload((unsigned char*)"OKU");
         delay(40);
-        moveSmooth(AX_PUL, -1250, 445, false, false, ACC_NORMAL);
+        //moveSmooth(AX_PUL, -1250, 445, false, false, ACC_NORMAL);
+        moveSmooth(AX_PUL, -1250, filament_lookup_table[8][filament_type[active_extruder]],
+                   false, false, ACC_NORMAL);
         if (moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;

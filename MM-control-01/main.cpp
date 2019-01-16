@@ -319,6 +319,11 @@ void fixTheProblem(bool showPrevious) {
                 } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[active_extruder]], false);
                 engage_filament_pulley(false);
                 shr16_clr_ena(AX_IDL);
+            } else if (buttonClicked() == Btn::left) {
+                engage_filament_pulley(true);
+                moveSmooth(AX_PUL, 300, filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false);
+                engage_filament_pulley(false);
+                shr16_clr_ena(AX_IDL);
             }
             delay(100);
             shr16_clr_led();
@@ -331,12 +336,17 @@ void fixTheProblem(bool showPrevious) {
                 engage_filament_pulley(true);
                 if (isFilamentLoaded()) {
                     if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH * 1.5) * -1),
-                                   filament_lookup_table[5][filament_type[previous_extruder]],
+                                   filament_lookup_table[5][filament_type[previous_extruder]]*1.8,
                                    false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
                         moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[previous_extruder]],
-                                   filament_lookup_table[5][filament_type[previous_extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+                                   filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false, false, ACC_NORMAL);                     // move to filament parking position
                     }
-                } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[previous_extruder]], false);
+                } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false);
+                engage_filament_pulley(false);
+                shr16_clr_ena(AX_IDL);
+            } else if (buttonClicked() == Btn::left) {
+                engage_filament_pulley(true);
+                moveSmooth(AX_PUL, 300, filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false);
                 engage_filament_pulley(false);
                 shr16_clr_ena(AX_IDL);
             }

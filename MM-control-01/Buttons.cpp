@@ -130,7 +130,7 @@ void settings_bowden_length()
 {
     // load filament to end of detached bowden tube to check correct length
     if (!isHomed) home();
-    else set_positions(active_extruder, 0, true);
+    else set_positions(0, true);
     for (uint8_t i = 0; i < 5; i++) bowdenLength.increase();
     uint8_t tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
     uint8_t tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));

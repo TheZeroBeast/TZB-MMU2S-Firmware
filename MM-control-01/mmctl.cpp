@@ -92,7 +92,7 @@ bool toolChange(int new_extruder)
         if ((trackToolChanges == TOOLSYNC) || !isHomed) { // Home every period TOOLSYNC
             home(true);
                                    // move idler and selector to new filament position
-        } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder, true);
+        } else if (!homedOnUnload) set_positions(active_extruder, true);
         toolChanges++;
         trackToolChanges ++;
         shr16_clr_led();

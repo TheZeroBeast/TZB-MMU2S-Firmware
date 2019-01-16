@@ -30,12 +30,12 @@ bool load_filament_withSensor(uint16_t setupBowLen = 0);
 bool unload_filament_withSensor(uint8_t extruder = active_extruder);
 void load_filament_into_extruder();
 
-void set_positions(uint8_t _current_extruder, uint8_t _next_extruder, bool update_extruders = false);
+void set_positions(uint8_t _next_extruder, bool update_extruders = false);
 void set_position_eject(bool setTrueForEject = false);
+int steps2setIDL2pos(uint8_t _next_extruder);
+int steps2setSEL2pos(uint8_t _next_extruder);
 void set_idler_toLast_positions(uint8_t _next_extruder);
 void set_sel_toLast_positions(uint8_t _next_extruder);
-
-void init_Pulley();
 
 void move_idler(int steps, uint16_t speed = MAX_SPEED_IDL);
 void move_selector(int steps, uint16_t speed = MAX_SPEED_SEL);

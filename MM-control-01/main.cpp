@@ -111,12 +111,12 @@ void manual_extruder_selector()
     if (((Btn::left | Btn::right) & buttonClicked()) && !isFilamentLoaded()) {
         switch (buttonClicked()) {
         case Btn::right:
-            if (active_extruder < EXTRUDERS) set_positions(active_extruder, active_extruder + 1, true);
+            if (active_extruder < EXTRUDERS) set_positions(active_extruder + 1, true);
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1-");
             break;
         case Btn::left:
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ");
-            if (active_extruder > 0) set_positions(active_extruder, active_extruder - 1, true);
+            if (active_extruder > 0) set_positions(active_extruder - 1, true);
             break;
         default:
             break;
@@ -220,7 +220,7 @@ void process_commands()
         } else if (tData1 == 'L') {
             // Lx Load Filament CMD Received
             if (tData2 < EXTRUDERS) {
-                set_positions(active_extruder, tData2, true);
+                set_positions(tData2, true);
                 feed_filament(); // returns OK and active_extruder to update MK3
                 txPayload(OK);
             }

@@ -30,7 +30,7 @@ int filament_lookup_table[8][3] =
 };
 
 // private constants:
-const uint8_t IDLER_PARKING_STEPS = (IDLER_STEPS / 2) + 40;      // 217
+const uint8_t IDLER_PARKING_STEPS = (355 / 2) + 40;      // 217
 const uint16_t EJECT_PULLEY_STEPS = 2000;
 
 const int selectorStepPositionsFromHome[EXTRUDERS+2] = {-3700, -3000, -2300, -1600, -900, -100, 0};
@@ -55,8 +55,8 @@ void set_positions(uint8_t _next_extruder, bool update_extruders)
     }
     if (!isHomed) home(true);
     else {
-        _idler_steps = set_idler_position(_next_extruder);
-        _selector_steps = set_sel_position(_next_extruder);
+        int _idler_steps = steps2setIDL2pos(_next_extruder);
+        int _selector_steps = steps2setSEL2pos(_next_extruder);
         move_idler(_idler_steps);
         move_selector(_selector_steps);
     }
@@ -65,21 +65,23 @@ void set_positions(uint8_t _next_extruder, bool update_extruders)
 int steps2setIDL2pos(uint8_t _next_extruder)
 {
     if (_next_extruder == EXTRUDERS) _next_extruder -= 1;
-    int _idler_steps = (idlerStepPositionsFromHome[_next_extruder] - idlerStepPositionsFromHome[activeIdlerPos]);
+    int _idler_steps = (idlerStepPositionsFromHome[_next_extruder] - idlerStepPositionsFromHome[activeIdlPos]);
     activeSelPos = _next_extruder;
+    return _idler_steps;
 }
 
-int steps2setSELer2pos(uint8_t _next_extruder)
+int steps2setSEL2pos(uint8_t _next_extruder)
 {
     int _selector_steps = (selectorStepPositionsFromHome[_next_extruder] - selectorStepPositionsFromHome[activeSelPos]);
     activeSelPos = _next_extruder;
+    return _selector_steps;
 }
 
-void set_position_eject()
+void set_position_eject(bool setTrueForEject)
 {
     int _selector_steps = 0;
     if (setTrueForEject) {
-        if (active_extruder == (EXTRUDERS - 1)) _selector_steps = set_sel_position(0);
+        if (active_extruder == (EXTRUDERS - 1)) _selector_steps = steps2setSEL2pos(0);
         else _selector_steps = steps2setSEL2pos(EXTRUDERS);
         isEjected = true;
         move_selector(_selector_steps);
@@ -309,7 +311,7 @@ void engage_filament_pulley(bool engage)
         isIdlerParked = false;
     } else if (!isIdlerParked && !engage) { // park idler so filament can move freely
         move_idler(IDLER_PARKING_STEPS * -1);
-        tmc2130_init_axis_current_normal(AX_IDL, current_holding[AX_IDL],
+        tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
                                          current_running_normal[AX_IDL], false);
         isIdlerParked = true;
     }
@@ -334,7 +336,7 @@ void home(bool doToolSync)
     startWakeTime = millis();
 
     if (doToolSync) {
-        set_positions(active_extruder); // move idler and selector to new filament position
+        set_positions(active_extruder);
         FilamentLoaded::set(active_extruder);
         engage_filament_pulley(previouslyEngaged);
         trackToolChanges = 0;
@@ -435,8 +437,8 @@ MotReturn homeSelectorSmooth()
         if (c > 1) moveSmooth(AX_SEL, -300, 2000, false);
     }
     tmc2130_init(tmc2130_mode);  // trinamic, homing
-    activeSelPos = EXTRUDERS+1
-    return true;
+    activeSelPos = EXTRUDERS+1;
+    return MR_Success;
 }
 
 MotReturn homeIdlerSmooth(bool toLastFilament)
@@ -455,11 +457,11 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
         uint8_t filament = 0;
         FilamentLoaded::get(filament);
         active_extruder = filament;
-        _idler_steps = set_idler_position(active_extruder);
+        int _idler_steps = steps2setIDL2pos(active_extruder);
         move_idler(_idler_steps);
         engage_filament_pulley(false);
     }
-    return true;
+    return MR_Success;
 }
 
 /**

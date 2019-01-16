@@ -13,6 +13,8 @@
 
 // public variables:
 int8_t active_extruder = -1;
+int8_t activeSelPos = -1;
+int8_t activeIdlPos = -1;
 int8_t previous_extruder = -1;
 uint16_t trackToolChanges = 0;
 bool isIdlerParked = false;

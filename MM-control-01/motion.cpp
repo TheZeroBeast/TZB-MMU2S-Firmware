@@ -217,7 +217,7 @@ bool unload_filament_withSensor(uint8_t extruder)
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[active_extruder]] * AX_PUL_STEP_MM_Ratio));
         unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
         txPayload(txUFR);
-        txPayload((unsigned char*)"OKU");
+        //txPayload((unsigned char*)"OKU");
         delay(40);
         //moveSmooth(AX_PUL, -1250, 445, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, -1250, filament_lookup_table[8][filament_type[active_extruder]],

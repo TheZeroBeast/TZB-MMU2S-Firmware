@@ -3,7 +3,7 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.6 RC	B#:  280**
+**MMU: V#: 2.1.8 RC	B#:  290**
 
 **MK3: B#: 2378**
 
@@ -25,11 +25,11 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
   5.  // action:mmuFailedUnload
   6.  // action:jamDetected
 
-# **STEPS TO FIRST GET SETUP AND PRINTING WITH MY FW** 
-
+# **STEPS TO FIRST GET SETUP AND PRINTING WITH MY FW**  
 1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  
 **(NOTE ONLY FIRST FILAMENT CHANNEL IS CALIBRATED)**
-   1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
+   1. Move selector all the way to the **RIGHT** with **RIGHT** button to Position 6 which is **SERVICE POSITION**
+   1. Enter **SETUP** menu using **MIDDLE** button while on **SERVICE POSITION**
    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
    3. Use **MIDDLE** button to enter calibration
    4. Use **MIDDLE** button again to load for **Bowden Length** Calibration
@@ -37,8 +37,9 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
    5. Use **MIDDLE** button to unload
    6. Use **LEFT** button to save and exit
 
-2. Adjust **FSensor to BONDTECH Steps** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**
-   1. Enter **SETUP** menu at boot or using **MIDDLE** button while on **SERVICE** location with selector
+2. Adjust **FSensor to BONDTECH Steps** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  
+   1. Move selector all the way to the **RIGHT** with **RIGHT** button to Position 6 which is **SERVICE POSITION**
+   1. Enter **SETUP** menu using **MIDDLE** button while on **SERVICE POSITION**
    2. As per STOCK FW, use **LEFT** button to move LED to fourth position
    3. Use **MIDDLE** button to enter calibration
    4. Use **RIGHT** button to load for **FSensor to BondTech** Length Calibration

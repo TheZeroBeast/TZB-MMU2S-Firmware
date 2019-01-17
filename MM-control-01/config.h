@@ -1,7 +1,7 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION  217 // example: 103 means version 1.0.3
+#define FW_VERSION  218 // example: 103 means version 1.0.3
 #define FW_BUILDNR  290 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
@@ -59,7 +59,7 @@
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 5
 #define TMC2130_SG_THR_IDL 6
-#define TMC2130_SG_THR_HOM_IDL 2
+#define TMC2130_SG_THR_HOM_IDL 1
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
@@ -70,15 +70,15 @@
 // currents for pulley, selector and idler
 #define CURRENT_HOLDING_STEALTH        { 1,  7, 16}
 #define CURRENT_HOLDING_NORMAL         { 1, 10, 10}
-#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 30}
+#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 40}
 #define CURRENT_RUNNING_STEALTH        {30, 35, 35}
-#define CURRENT_RUNNING_NORMAL         {30, 35, 35}
+#define CURRENT_RUNNING_NORMAL         {30, 35, 40}
 #define CURRENT_HOMING                 { 1, 35, 35}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL 5000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3500 // micro steps
-#define MAX_SPEED_IDL 3000 // micro steps
+#define MAX_SPEED_IDL 2800 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
 #define ACC_IDL_NORMAL 20000 // micro steps / s²
@@ -141,8 +141,8 @@
 // Type Definitions
 // filament types (0: default; 1:flex; 2: PVA)
 // Default
-#define TYPE_0_MAX_SPPED_PUL                  3000  //  S/S
-#define TYPE_0_ACC_FEED_PUL                   2500  //  S/S/S
+#define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
+#define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
 #define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_0_FSensor_Sense_STEPS             800  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  760  //  S/S

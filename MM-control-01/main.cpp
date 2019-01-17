@@ -40,7 +40,6 @@ void setup()
     permanentStorageInit();
     shr16_init(); // shift register
     startWakeTime = millis();
-    bool requestMenu = false;
     led_blink(1);
 
     UCSR1A = (0 << U2X1); // baudrate multiplier
@@ -56,8 +55,6 @@ void setup()
 
     sei();
 
-    if (buttonClicked() == Btn::middle) requestMenu = true;
-
     led_blink(2);
     spi_init();
     led_blink(3);
@@ -66,16 +63,7 @@ void setup()
 
     shr16_clr_led();
     homeIdlerSmooth(true);
-
-    // check if to goto the settings menu
-
     if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR");
-
-    for (uint8_t i = 100; i > 0; i--) { process_commands(); delay(10);}
-    
-    if (requestMenu) {
-        setupMenu();
-    }
 }
 
 //! @brief Select filament menu

@@ -136,6 +136,9 @@ void settings_bowden_length()
     uint8_t tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
     unsigned char tempW[3] = {'W', tempBowLenUpper, tempBowLenLower};
     unsigned char tempV[3] = {0,0,0};
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
     txPayload(tempW);    
     goto loop2;
 loop:
@@ -146,7 +149,8 @@ loop:
     tempV[2] = tempBowLenLower;
     txPayload(tempV);
     load_filament_withSensor(bowdenLength.m_length);
-
+    tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                     current_running_normal[AX_IDL], false);
     tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
     do
     {
@@ -155,7 +159,11 @@ loop:
         case Btn::right:
             if (bowdenLength.decrease())
             {
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 move_pulley(-bowdenLength.stepSize);
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
                 tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
                 tempV[0] = 'V';
@@ -169,7 +177,11 @@ loop:
         case Btn::left:
             if (bowdenLength.increase())
             {
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 move_pulley(bowdenLength.stepSize);
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 tempBowLenUpper = (0xFF & ((bowdenLength.m_length - 150u) >> 8));
                 tempBowLenLower = (0xFF & (bowdenLength.m_length - 150u));
                 tempV[0] = 'V';
@@ -191,6 +203,8 @@ loop:
     tempW[1] = tempBowLenUpper;
     tempW[2] = tempBowLenLower;
     txPayload(tempW);
+    tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                     current_running_normal[AX_IDL], false);
     unload_filament_withSensor();
 loop2:
     switch (buttonClicked()) {
@@ -213,11 +227,13 @@ loop2:
 void settings_fsensor_length()
 {
     // load filament to FSensor then to middle of Bondtech to set middle
-
     uint8_t tempFSensLenUpper = (0xFF & (bowdenLength.m_FSensorSteps >> 8));
     uint8_t tempFSensLenLower = (0xFF & bowdenLength.m_FSensorSteps);
     unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
     txPayload(tempB);
+    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
+    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
     load_filament_withSensor();    
     tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
     do
@@ -227,7 +243,11 @@ void settings_fsensor_length()
         case Btn::right:
             if (bowdenLength.decreaseFSensor())
             {
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 move_pulley(-bowdenLength.stepSizeFSensor);
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 tempFSensLenUpper = (0xFF & (bowdenLength.m_FSensorSteps >> 8));
                 tempFSensLenLower = (0xFF & bowdenLength.m_FSensorSteps);
                 unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
@@ -239,7 +259,11 @@ void settings_fsensor_length()
         case Btn::left:
             if (bowdenLength.increaseFSensor())
             {
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 move_pulley(bowdenLength.stepSizeFSensor);
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                 current_running_normal[AX_IDL], false);
                 tempFSensLenUpper = (0xFF & (bowdenLength.m_FSensorSteps >> 8));
                 tempFSensLenLower = (0xFF & bowdenLength.m_FSensorSteps);
                 unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
@@ -258,6 +282,8 @@ void settings_fsensor_length()
     filament_lookup_table[2][0] = bowdenLength.m_FSensorSteps;
     filament_lookup_table[2][1] = bowdenLength.m_FSensorSteps+10;
     filament_lookup_table[2][2] = bowdenLength.m_FSensorSteps;
+    tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                     current_running_normal[AX_IDL], false);
     unload_filament_withSensor();
 }
 

@@ -67,7 +67,7 @@ int steps2setIDL2pos(uint8_t _next_extruder)
 {
     if (_next_extruder == EXTRUDERS) _next_extruder -= 1;
     int _idler_steps = (idlerStepPositionsFromHome[_next_extruder] - idlerStepPositionsFromHome[activeIdlPos]);
-    activeSelPos = _next_extruder;
+    activeIdlPos = _next_extruder;
     return _idler_steps;
 }
 
@@ -454,9 +454,10 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
     moveSmooth(AX_IDL, -250, MAX_SPEED_IDL, false);
     for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
-        moveSmooth(AX_IDL, 2600, 6000, false, true, 40000);
+        moveSmooth(AX_IDL, 2600, 6000, false, true, 80000);
         tmc2130_init(tmc2130_mode);  // trinamic, homing
-        if (c > 1) moveSmooth(AX_IDL, -500, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
+        if (c > 1) moveSmooth(AX_IDL, -200, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
+        delay(50);
     }
     isIdlerParked = false;
     activeIdlPos = EXTRUDERS;

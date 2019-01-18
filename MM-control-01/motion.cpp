@@ -213,8 +213,8 @@ bool unload_filament_withSensor(uint8_t extruder)
         tmc2130_init_axis(AX_IDL, tmc2130_mode);
         
         engage_filament_pulley(true); // get in contact with filament
-        uint8_t mmPerSecSpeedUpper = ((filament_lookup_table[8][filament_type[active_extruder]] * AX_PUL_STEP_MM_Ratio) >> 8);
-        uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[active_extruder]] * AX_PUL_STEP_MM_Ratio));
+        uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[active_extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
+        uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[active_extruder]] / AX_PUL_STEP_MM_Ratio));
         unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
         txPayload(txUFR);
         //txPayload((unsigned char*)"OKU");
@@ -226,7 +226,7 @@ bool unload_filament_withSensor(uint8_t extruder)
                    filament_lookup_table[0][filament_type[extruder]], false, false,
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
         if (moveSmooth(AX_PUL, -3000, filament_lookup_table[5][filament_type[extruder]],
-                       false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+                       false, false, ACC_NORMAL, true) == MR_Success) {                                                  // move to trigger FINDA
             loop:
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
                        filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position

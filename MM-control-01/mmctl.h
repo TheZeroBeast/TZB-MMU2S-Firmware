@@ -9,6 +9,8 @@
 extern bool isPrinting;
 extern bool isHomed;
 extern int8_t active_extruder;
+extern int8_t activeSelPos;
+extern int8_t activeIdlPos;
 extern int8_t previous_extruder;
 extern bool isIdlerParked;
 extern bool homedOnUnload;

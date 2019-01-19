@@ -13,6 +13,8 @@
 
 // public variables:
 int8_t active_extruder = -1;
+int8_t activeSelPos = -1;
+int8_t activeIdlPos = -1;
 int8_t previous_extruder = -1;
 uint16_t trackToolChanges = 0;
 bool isIdlerParked = false;
@@ -35,9 +37,9 @@ bool feed_filament(void)
         engage_filament_pulley(true);
         while (!_loaded) {
     
-            if (moveSmooth(AX_PUL, 4000, filament_lookup_table[5][filament_type[active_extruder]] * 1.8, false, true, ACC_NORMAL, true) == MR_Success) {
+            if (moveSmooth(AX_PUL, 4000, filament_lookup_table[5][filament_type[active_extruder]], false, true, ACC_NORMAL, true) == MR_Success) {
                 delay(10);
-                moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]] * 1.8, false, false, ACC_NORMAL);
+                moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL);
                 shr16_clr_led();
                 shr16_set_led(1 << 2 * (4 - active_extruder));
                 _loaded = true;
@@ -90,9 +92,13 @@ bool toolChange(int new_extruder)
         if ((trackToolChanges == TOOLSYNC) || !isHomed) { // Home every period TOOLSYNC
             home(true);
                                    // move idler and selector to new filament position
-        } else if (!homedOnUnload) set_positions(previous_extruder, active_extruder, true);
+        } else if (!homedOnUnload) set_positions(active_extruder, true);
         toolChanges++;
-        trackToolChanges ++;
+        uint8_t toolChangesUpper = (0xFF & (toolChanges >> 8));
+        uint8_t toolChangesLower = (0xFF & toolChanges);
+        unsigned char txTCU[3] = {'T',toolChangesUpper, toolChangesLower};
+        txPayload(txTCU);
+        trackToolChanges++;
         shr16_clr_led();
         shr16_set_led(2 << 2 * (4 - active_extruder));
         load_filament_withSensor();

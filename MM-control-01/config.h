@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION  216 // example: 103 means version 1.0.3
-#define FW_BUILDNR  280 // number of commits in 'master'
+#define FW_VERSION  218 // example: 103 means version 1.0.3
+#define FW_BUILDNR  300 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms
@@ -58,8 +58,8 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 5
-#define TMC2130_SG_THR_IDL 5
-#define TMC2130_SG_THR_HOM_IDL 2
+#define TMC2130_SG_THR_IDL 6
+#define TMC2130_SG_THR_HOM_IDL 1
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
@@ -68,19 +68,20 @@
 #define TMC2130_TCOOLTHRS_AX_IDL 400 // 400 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
 
 // currents for pulley, selector and idler
-#define CURRENT_HOLDING_STEALTH     { 1,  7, 16}
-#define CURRENT_HOLDING_NORMAL      { 1, 10, 25}
-#define CURRENT_RUNNING_STEALTH     {30, 35, 35}
-#define CURRENT_RUNNING_NORMAL      {30, 35, 35}
-#define CURRENT_HOMING              { 1, 35, 35}
+#define CURRENT_HOLDING_STEALTH        { 1,  7, 16}
+#define CURRENT_HOLDING_NORMAL         { 1, 10, 10}
+#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 40}
+#define CURRENT_RUNNING_STEALTH        {30, 35, 35}
+#define CURRENT_RUNNING_NORMAL         {30, 35, 40}
+#define CURRENT_HOMING                 { 1, 35, 35}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL 5000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3500 // micro steps
-#define MAX_SPEED_IDL 3000 // micro steps
+#define MAX_SPEED_IDL 2800 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_IDL_NORMAL 40000 // micro steps / s²
+#define ACC_IDL_NORMAL 20000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0
@@ -96,6 +97,8 @@
 #define AX_PUL 0 // Pulley (Filament Drive)
 #define AX_SEL 1 // Selector
 #define AX_IDL 2 // Idler
+
+#define AX_PUL_STEP_MM_Ratio          19
 
 #define PIN_STP_IDL_HIGH (PORTD |= 0x40)
 #define PIN_STP_IDL_LOW (PORTD &= ~0x40)
@@ -138,29 +141,32 @@
 // Type Definitions
 // filament types (0: default; 1:flex; 2: PVA)
 // Default
-#define TYPE_0_MAX_SPPED_PUL                  3000  //  S/S
-#define TYPE_0_ACC_FEED_PUL                   2500  //  S/S/S
+#define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
+#define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
 #define TYPE_0_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_0_FSensor_Sense_STEPS             800  //  STEPS
-#define TYPE_0_FEED_SPEED_PUL                  400  //  S/S
+#define TYPE_0_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
+#define TYPE_0_UnloadSpeed                     950  //  S/S
 // Flex
 #define TYPE_1_MAX_SPPED_PUL                   400  //  S/S
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
 #define TYPE_1_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_1_FSensor_Sense_STEPS             900  //  STEPS
-#define TYPE_1_FEED_SPEED_PUL                  200  //  S/S
+#define TYPE_1_FEED_SPEED_PUL                  285  //  S/S
 #define TYPE_1_L2ExStageOne                    200  //  S/S
 #define TYPE_1_L2ExStageTwo                    200  //  S/S
+#define TYPE_1_UnloadSpeed                     285  //  S/S
 // PVA
 #define TYPE_2_MAX_SPPED_PUL                  2800  //  S/S
 #define TYPE_2_ACC_FEED_PUL                   1500  //  S/S/S
 #define TYPE_2_FILAMENT_PARKING_STEPS         -610  //  STEPS
 #define TYPE_2_FSensor_Sense_STEPS             800  //  STEPS
-#define TYPE_2_FEED_SPEED_PUL                  400  //  S/S
+#define TYPE_2_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S
 #define TYPE_2_L2ExStageTwo                    440  //  S/S
+#define TYPE_2_UnloadSpeed                     800  //  S/S
 
 // number of extruders
 #define EXTRUDERS 5

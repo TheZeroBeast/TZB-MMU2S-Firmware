@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  218 // example: 103 means version 1.0.3
-#define FW_BUILDNR  290 // number of commits in 'master'
+#define FW_BUILDNR  300 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms
@@ -148,7 +148,7 @@
 #define TYPE_0_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
-#define TYPE_0_UnloadSpeed                     760  //  S/S
+#define TYPE_0_UnloadSpeed                     950  //  S/S
 // Flex
 #define TYPE_1_MAX_SPPED_PUL                   400  //  S/S
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
@@ -166,7 +166,7 @@
 #define TYPE_2_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S
 #define TYPE_2_L2ExStageTwo                    440  //  S/S
-#define TYPE_2_UnloadSpeed                     760  //  S/S
+#define TYPE_2_UnloadSpeed                     800  //  S/S
 
 // number of extruders
 #define EXTRUDERS 5

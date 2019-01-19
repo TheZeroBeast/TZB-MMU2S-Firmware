@@ -95,9 +95,11 @@ void set_position_eject(bool setTrueForEject)
 
 void set_idler_toLast_positions(uint8_t _next_extruder)
 {
+    bool previouslyEngaged = !isIdlerParked;
     homeIdlerSmooth();
     int _idler_steps = steps2setIDL2pos(_next_extruder);
     move_idler(_idler_steps);
+    engage_filament_pulley(previouslyEngaged);
 }
 
 void set_sel_toLast_positions(uint8_t _next_extruder)
@@ -217,9 +219,7 @@ bool unload_filament_withSensor(uint8_t extruder)
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[active_extruder]] / AX_PUL_STEP_MM_Ratio));
         unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
         txPayload(txUFR);
-        //txPayload((unsigned char*)"OKU");
         delay(40);
-        //moveSmooth(AX_PUL, -1250, 445, false, false, ACC_NORMAL);
         moveSmooth(AX_PUL, -1250, filament_lookup_table[8][filament_type[active_extruder]],
                    false, false, ACC_NORMAL);
         if (moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1),

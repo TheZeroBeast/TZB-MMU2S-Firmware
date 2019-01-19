@@ -1,5 +1,17 @@
 Changelog of MMU 2.0 Firmware
 =============================
+# V2.1.8 RMM
+* Idler holding current now much lower when not engaged, allowing proper continual homing  
+  of idler when required as well as less chance of loosing idler steps during engagement.
+* Unload type based sync speeds have now been implemented and configurable in config.h
+* Removed setup menu from boot to remove confusion. Now only accessible via service position.
+* Implemented direct positioning for idler and selector resulting more efficient moves.
+
+Implemented toolChange from mmu count instead of the attempt from mk3.
+
+# V2.1.7 RMM
+* Skipped due to checksum issues with sending over serial
+
 # V2.1.6 RMM
 * Added feedback at start of Active Extruder to MK3 so display is acurate
 * Also added same feedback during load menu commands and feed filament

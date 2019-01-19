@@ -46,8 +46,8 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
    4. Use **LEFT/RIGHT** buttons to adjust until **end of filament is in middle of BondTech gears**
    5. Use **MIDDLE** button to save and exit
 
-3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters
-![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.6.png)
+3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters**
+![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.8.png)
 ![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.8.png)
 
 4. Blade isn't being used and can be removed. It has been known to add resistance to selector.
@@ -78,7 +78,7 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
   * If nothing happens, filament is in FINDA, check again
 
 ## Example Octoprint Serial Communications for a successful load using MK3-FSensor
-![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample-2.1.6.png)
+![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample-2.1.8.png)
 
 # Building this custom setup
 This is configured to work directly with **MMU2** with matching **MK3** FW at link below to load filament to **Extruder Laser Filament Sensor** and unload to FINDA Sensor.

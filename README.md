@@ -47,8 +47,10 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
    5. Use **MIDDLE** button to save and exit
 
 3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters**
-![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.8.png)
-![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.8.png)
+* Note that from previous versions the cooling length is reduced to increase distance to heatbreak  
+  This means the cooling move count needs to double from what you have to have same amount of cooling time.
+![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.8-2.png)
+![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.8-2.png)
 
 4. Blade isn't being used and can be removed. It has been known to add resistance to selector.
 

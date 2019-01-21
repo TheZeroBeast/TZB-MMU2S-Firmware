@@ -6,7 +6,6 @@
 #include <string.h>
 #include <avr/io.h>
 #include "shr16.h"
-#include "adc.h"
 #include "uart.h"
 #include "spi.h"
 #include "tmc2130.h"

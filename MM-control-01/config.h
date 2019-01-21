@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  218 // example: 103 means version 1.0.3
-#define FW_BUILDNR  300 // number of commits in 'master'
+#define FW_BUILDNR  302 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms
@@ -76,12 +76,12 @@
 #define CURRENT_HOMING                 { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_SEL 5000 // micro steps
+#define MAX_SPEED_SEL 6000 // micro steps
 #define MAX_SPEED_STEALTH_SEL 3500 // micro steps
-#define MAX_SPEED_IDL 2800 // micro steps
+#define MAX_SPEED_IDL 6000 // micro steps
 #define ACC_NORMAL 80000 // micro steps / s²
 #define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_IDL_NORMAL 20000 // micro steps / s²
+#define ACC_IDL_NORMAL 80000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0
@@ -89,10 +89,10 @@
 #define STEALTH_MODE 2
 
 //ADC configuration
-#define ADC_CHAN_MSK      0b0000000000100000 //used AD channels bit mask (ADC5)
-#define ADC_CHAN_CNT      1          //number of used channels)
-#define ADC_OVRSAMPL      1          //oversampling multiplier
-#define ADC_READY         _adc_ready //ready callback
+#define ADC_Btn_None      0
+#define ADC_Btn_Right     4
+#define ADC_Btn_Middle    2
+#define ADC_Btn_Left      1
 
 #define AX_PUL 0 // Pulley (Filament Drive)
 #define AX_SEL 1 // Selector

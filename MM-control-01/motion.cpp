@@ -45,8 +45,9 @@ static uint16_t set_idler_direction(int steps);
 static uint16_t set_selector_direction(int steps);
 static uint16_t set_pulley_direction(int steps);
 
-void set_positions(uint8_t _next_extruder, bool update_extruders)
+bool set_positions(uint8_t _next_extruder, bool update_extruders)
 {
+    bool _return0 = false, _return1 = false;
     if (update_extruders) {
         previous_extruder = active_extruder;
         active_extruder = _next_extruder;
@@ -56,57 +57,42 @@ void set_positions(uint8_t _next_extruder, bool update_extruders)
     }
     if (!isHomed) home(true);
     else {
-        int _idler_steps = steps2setIDL2pos(_next_extruder);
-        int _selector_steps = steps2setSEL2pos(_next_extruder);
-        move_idler(_idler_steps);
-        move_selector(_selector_steps);
+        _return0 = steps2setIDL2pos(_next_extruder);
+        _return1 = steps2setSEL2pos(_next_extruder);
     }
+    if (!_return0 || !_return1) return false;
+    else return true;
 }
 
-int steps2setIDL2pos(uint8_t _next_extruder)
+bool steps2setIDL2pos(uint8_t _next_extruder)
 {
+    bool _return = false;
     if (_next_extruder == EXTRUDERS) _next_extruder -= 1;
     int _idler_steps = (idlerStepPositionsFromHome[_next_extruder] - idlerStepPositionsFromHome[activeIdlPos]);
-    activeIdlPos = _next_extruder;
-    return _idler_steps;
+    if (move_idler(_idler_steps)) { activeIdlPos = _next_extruder; _return = true; }
+    return _return;
 }
 
-int steps2setSEL2pos(uint8_t _next_extruder)
+bool steps2setSEL2pos(uint8_t _next_extruder)
 {
+    bool _return = false;
     int _selector_steps = (selectorStepPositionsFromHome[_next_extruder] - selectorStepPositionsFromHome[activeSelPos]);
-    activeSelPos = _next_extruder;
-    return _selector_steps;
-}
-
-void set_position_eject(bool setTrueForEject)
-{
-    int _selector_steps = 0;
-    if (setTrueForEject) {
-        if (active_extruder == (EXTRUDERS - 1)) _selector_steps = steps2setSEL2pos(0);
-        else _selector_steps = steps2setSEL2pos(EXTRUDERS);
-        isEjected = true;
-        move_selector(_selector_steps);
-    } else {
-        _selector_steps = steps2setSEL2pos(active_extruder);
-        move_selector(_selector_steps);
-        isEjected = false;
-    }
+    if (move_selector(_selector_steps)) { activeSelPos = _next_extruder; _return = true; }
+    return _return;
 }
 
 void set_idler_toLast_positions(uint8_t _next_extruder)
 {
     bool previouslyEngaged = !isIdlerParked;
     homeIdlerSmooth();
-    int _idler_steps = steps2setIDL2pos(_next_extruder);
-    move_idler(_idler_steps);
+    if (!steps2setIDL2pos(_next_extruder)) fixTheProblem();
     engage_filament_pulley(previouslyEngaged);
 }
 
 void set_sel_toLast_positions(uint8_t _next_extruder)
 {
     homeSelectorSmooth();
-    int _selector_steps = steps2setSEL2pos(_next_extruder);
-    move_selector(_selector_steps);
+    if (!steps2setSEL2pos(_next_extruder)) fixTheProblem();
 }
 
 /**
@@ -123,7 +109,9 @@ void eject_filament(uint8_t extruder)
     }
 
     set_positions(extruder, true);
-    set_position_eject(true);
+    if (active_extruder == (EXTRUDERS - 1)) steps2setSEL2pos(0);
+    else steps2setSEL2pos(EXTRUDERS);
+    isEjected = true;
 
     engage_filament_pulley(true);
     tmc2130_init_axis(AX_PUL, tmc2130_mode);
@@ -139,7 +127,8 @@ void eject_filament(uint8_t extruder)
 void recover_after_eject()
 {
     while (isFilamentLoaded()) fixTheProblem();
-    set_position_eject();
+    home(true);
+    isEjected = false;
 }
 
 bool load_filament_withSensor(uint16_t setupBowLen)
@@ -220,7 +209,7 @@ bool unload_filament_withSensor(uint8_t extruder)
         unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
         txPayload(txUFR);
         delay(40);
-        moveSmooth(AX_PUL, -1250, filament_lookup_table[8][filament_type[active_extruder]],
+        moveSmooth(AX_PUL, -(100*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[active_extruder]],
                    false, false, ACC_NORMAL);
         if (moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
@@ -333,7 +322,6 @@ void home(bool doToolSync)
     shr16_clr_led();
     shr16_set_led(0x155);       // All five red
 
-    //engage_filament_pulley(false);
     shr16_clr_led();            // All five off
 
     shr16_clr_led();
@@ -347,16 +335,18 @@ void home(bool doToolSync)
         FilamentLoaded::set(active_extruder);
         engage_filament_pulley(previouslyEngaged);
         trackToolChanges = 0;
-    } //else active_extruder = 0;
+    }
 }
 
-void move_idler(int steps, uint16_t speed)
+bool move_idler(int steps, uint16_t speed)
 {
     if (speed > MAX_SPEED_IDL) {
         speed = MAX_SPEED_IDL;
     }
 
-    moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, ACC_IDL_NORMAL);
+    if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, ACC_IDL_NORMAL) == MR_Failed)
+         return false;
+    else return true;
 }
 
 /**
@@ -364,7 +354,7 @@ void move_idler(int steps, uint16_t speed)
  * Strictly prevent selector movement, when filament is in FINDA
  * @param steps, number of micro steps
  */
-void move_selector(int steps, uint16_t speed)
+bool move_selector(int steps, uint16_t speed)
 {
     if (speed > MAX_SPEED_SEL) {
         speed = MAX_SPEED_SEL;
@@ -374,9 +364,11 @@ void move_selector(int steps, uint16_t speed)
             speed = MAX_SPEED_STEALTH_SEL;
         }
     }
-    if (isFilamentLoaded() == false) {
-        moveSmooth(AX_SEL, steps, speed);
-    }
+    if (!isFilamentLoaded()) {
+        if (moveSmooth(AX_SEL, steps, speed) == MR_Failed)
+           return false;
+    } else return false;
+           return true;
 }
 
 void move_pulley(int steps, uint16_t speed)
@@ -465,8 +457,9 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
         uint8_t filament = 0;
         FilamentLoaded::get(filament);
         active_extruder = filament;
-        int _idler_steps = steps2setIDL2pos(active_extruder);
-        move_idler(_idler_steps);
+        unsigned char temp[3] = {'A', 'E', (uint8_t)active_extruder};
+        txPayload(temp);
+        steps2setIDL2pos(active_extruder);
         engage_filament_pulley(false);
     }
     return MR_Success;

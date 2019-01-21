@@ -91,14 +91,18 @@ bool toolChange(int new_extruder)
         if (isFilamentLoaded()) unload_filament_withSensor(previous_extruder); //unload filament if you need to
         if ((trackToolChanges == TOOLSYNC) || !isHomed) { // Home every period TOOLSYNC
             home(true);
-                                   // move idler and selector to new filament position
-        } else if (!homedOnUnload) set_positions(active_extruder, true);
+        // move idler and selector to new filament position
+        } else if (!homedOnUnload) {
+          if (!set_positions(active_extruder, true)) {
+            home(true);
+          }
+        }
         toolChanges++;
+        trackToolChanges++;
         uint8_t toolChangesUpper = (0xFF & (toolChanges >> 8));
         uint8_t toolChangesLower = (0xFF & toolChanges);
         unsigned char txTCU[3] = {'T',toolChangesUpper, toolChangesLower};
         txPayload(txTCU);
-        trackToolChanges++;
         shr16_clr_led();
         shr16_set_led(2 << 2 * (4 - active_extruder));
         load_filament_withSensor();

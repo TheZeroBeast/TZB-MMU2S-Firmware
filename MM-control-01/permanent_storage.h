@@ -22,8 +22,8 @@ private:
 public:
     static uint16_t get();
     static uint16_t getFSensorSteps();
-    static const uint8_t stepSize = 30u; //!< increase()/decrease() bowden length step size
-    static const uint8_t stepSizeFSensor = 20u; //!< increase()/decrease() bowden length step size
+    static const uint8_t stepSize = 38u; //!< increase()/decrease() bowden length step size
+    static const uint8_t stepSizeFSensor = 19u; //!< increase()/decrease() bowden length step size
     bool increase();
     bool decrease();
     bool increaseFSensor();

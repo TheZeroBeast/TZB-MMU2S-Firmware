@@ -226,6 +226,7 @@ void process_commands()
             unload_filament_withSensor();
             txPayload(OK);
             isPrinting = false;
+            toolChanges = 0;
             trackToolChanges = 0;
         } else if (tData1 == 'S') {
             // Sx Starting CMD Received
@@ -251,7 +252,7 @@ void process_commands()
             txPayload(OK);
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
-            if ((tData2 < EXTRUDERS) && (tData3 <= 2)) {
+            if ((tData2 < EXTRUDERS) && (tData3 < 3)) {
                 filament_type[tData2] = tData3;
                 txPayload(OK);
             }

@@ -16,15 +16,13 @@ int8_t active_extruder = -1;
 int8_t activeSelPos = -1;
 int8_t activeIdlPos = -1;
 int8_t previous_extruder = -1;
+uint16_t toolChanges = 0;
 uint16_t trackToolChanges = 0;
 bool isIdlerParked = false;
 bool isPrinting = false;
 bool isEjected = false;
 bool isHomed = false;
 bool homedOnUnload = false;
-
-// private variables:
-static uint8_t toolChanges = 0;
 
 bool feed_filament(void)
 {

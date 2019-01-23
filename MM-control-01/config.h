@@ -150,14 +150,14 @@
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
 #define TYPE_0_UnloadSpeed                     950  //  S/S
 // Flex
-#define TYPE_1_MAX_SPPED_PUL                   400  //  S/S
+#define TYPE_1_MAX_SPPED_PUL                   570  //  S/S
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
 #define TYPE_1_FILAMENT_PARKING_STEPS         -610  //  STEPS
-#define TYPE_1_FSensor_Sense_STEPS             900  //  STEPS
+#define TYPE_1_FSensor_Sense_STEPS            2000  //  STEPS
 #define TYPE_1_FEED_SPEED_PUL                  285  //  S/S
 #define TYPE_1_L2ExStageOne                    200  //  S/S
 #define TYPE_1_L2ExStageTwo                    200  //  S/S
-#define TYPE_1_UnloadSpeed                     285  //  S/S
+#define TYPE_1_UnloadSpeed                     200  //  S/S
 // PVA
 #define TYPE_2_MAX_SPPED_PUL                  2800  //  S/S
 #define TYPE_2_ACC_FEED_PUL                   1500  //  S/S/S

@@ -9,6 +9,10 @@ MMU 3-axis stepper control
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
+## Compatibility
+
+At this time **only the MK3 is compatible** with this firmware. If there are any AVR programmers that could help make this compatible with the MK2S or MK2.5, your help would be greatly appreciated. If you are so inclined, you could potentially compile this code for your hardware and have a 24v 5a supply powering the MMU2 unit. Then it will work the same as the MK3.
+
 ## Points of Notes
 
 You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW  

@@ -47,6 +47,7 @@ bool feed_filament(void)
                     fixTheProblem();
                     engage_filament_pulley(true);
                 } else {
+                    engage_filament_pulley(false);
                     _loaded = false;
                     break;
                 }

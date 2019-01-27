@@ -1,18 +1,20 @@
 Changelog of MMU 2.0 Firmware
 =============================
-# V2.1.8 RMM
+# V2.1.8 RMM  
 * Idler holding current now much lower when not engaged, allowing proper continual homing  
   of idler when required as well as less chance of loosing idler steps during engagement.
 * Unload type based sync speeds have now been implemented and configurable in config.h
 * Removed setup menu from boot to remove confusion. Now only accessible via service position.
 * Implemented direct positioning for idler and selector resulting more efficient moves.
+* Changed Jam detection to M219 E, off by default enalbed by adding M219 E at filament start gcode on filaments you want jam detect on
+* load, unload messages changed to status updates on MK3
+* Button debounce implemented for ensure correct button read
+* Implemented toolChange from mmu count instead of the attempt from mk3.
 
-Implemented toolChange from mmu count instead of the attempt from mk3.
-
-# V2.1.7 RMM
+# V2.1.7 RMM  
 * Skipped due to checksum issues with sending over serial
 
-# V2.1.6 RMM
+# V2.1.6 RMM  
 * Added feedback at start of Active Extruder to MK3 so display is acurate
 * Also added same feedback during load menu commands and feed filament
 * Added feedback from set_positions to update MK3 active filament info display
@@ -28,14 +30,14 @@ Implemented toolChange from mmu count instead of the attempt from mk3.
   5. // action:mmuFailedUnload
   6. // action:jamDetected
 
-# V2.1.5 RMM
+# V2.1.5 RMM  
 * Hotend and extruder motor off when in m600 waiting
 * Added RIGHT Button retract option on failed load
 * Added RIGHT Button retract option after eject when checking tip formation
 * Added MMU2-OFF by putting selector in service position then restarting MK3
   * To re-enable move selector to any filament position then restart MK3
 
-# V2.1.4 RMM
+# V2.1.4 RMM  
 * Added Bowden Length Cal off service menu or holding middle @ boot (you need to cal first filament to end of tube. This is used as a ballpark for those with different length tubes.
 * Implemented entire serial communication re-write. using ISR either side with modbus inspired payload ack-nack.
 * Fully implemented shr16 methods to utilise stepper enable lines and leds are now better handled.
@@ -49,7 +51,7 @@ Implemented toolChange from mmu count instead of the attempt from mk3.
 * Two action commands setup to be used with octoprint. "action: m600" & "action: mmuAttention" These can be setup with plugin Action Commands.
 * Bowden Length limit increased t. ~2.8m
 
-# V2.1.3 RMM
+# V2.1.3 RMM  
 * toolChanges every 25
 * Tuned Bowden length for less destructive failed load situation
 * Re-written home on fail to optimise fail recovery
@@ -57,14 +59,14 @@ Implemented toolChange from mmu count instead of the attempt from mk3.
 * Load to Extruder start now synced with MMU2 instead of an arbitrary 1.5s wait
 * Tuned load/unload speeds for PLA, tension bolts must be 2-3 full turns past flush to stop grinding
 
-# V2.1.2 RMM
+# V2.1.2 RMM  
 * corrected bug in 20 toolChange rehome resulting in extruder 0 being used for that change instead of intended filament. Eventually results in incorrect execution of T? command as MK3 thinks a different extruder is being used.
 * corrected bug resulting in adjacent filament extruder C0 command amount after you have fixed an issue.
 * MMU now does positive acknowledgement on all commands so it can't miss any as it has been doing
 * improvements for fixTheProblem() that now works better hand in hand with load, unload and FeedFilament issues
 * corrected a moveSmooth() error resulting in a successful move with FINDA enabled even if FINDA never triggered. Now resulting in an error to be fixed by user.
 
-# V2.1.1 RMM
+# V2.1.1 RMM  
 * moveSmooth ACC and FINDA triggering within, defaults ACC to NORMAL and FINDA to false
 * implemented new Karl motion into entire MMU firmware
 * adjusted homing methods and settings, hopefully it works on majority of setups
@@ -72,7 +74,7 @@ Implemented toolChange from mmu count instead of the attempt from mk3.
 * implemented MK3 comms to confirm when filament arrives at MK3, removed all tube length cal methods
 * implemented fixTheProblem() that pauses for user to fix issue, Middle button to continue, this version fixed loop that was possible if two triggered, nested
 
-# Project Fork
+# Project Fork  
 * forked project from V1.0.1 (51aea8692)
 * add QtCreator project file (usable for PlatformIO)
   used `pio init --ide qtcreator` for setting it up. 

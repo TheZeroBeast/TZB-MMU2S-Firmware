@@ -51,7 +51,7 @@ void setup()
     UBRR1L = BAUD_PRESCALE; // Load lower 8-bits of the baud rate value into the low byte of the UBRR register
     UCSR1B |= (1 << RXCIE1);
 
-    PORTF |= 0x20; // Set Button ADC High
+    PORTF |= 0x20; // Set Button ADC Pin High
 
     sei();
 

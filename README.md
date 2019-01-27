@@ -3,20 +3,20 @@ MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files
 
-**MMU: V#: 2.1.8 RC	B#:  300**
+**MMU: V#: 2.1.8 RC2	B#:  304**
 
-**MK3: B#: 2383**
+**MK3: B#: 2386**
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**
 
-## Points of Notes
-
+## Points of Notes  
 You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW  
-Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the 
+Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
 MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
 **DEFAULT FACTORY BOWDEN LENGETH OF 350mm**  
 **POWER PANIC** is now operational and will allow autorecover/continue when SD Printing  
-**Jam Detection** is now operational and will aim to catch when a jam occurs usually resulting in missed layer/s  
+**Jam Detection** is now able to be enabled for any filament with start gcode **M219 E** and will  
+aim to catch when a jam occurs usually resulting in missed layer/s. No longer requiring a Slic3rPE-Alpha slice.    
 **Action commands** added for failure states that can be used for notifications in Octoprint
   1.  // action:m600
   2.  // action:mmuAttention
@@ -24,6 +24,12 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
   4.  // action:mmuFailedLoad2
   5.  // action:mmuFailedUnload
   6.  // action:jamDetected
+  
+### Compatibility  
+   At this time **only the MK3 is compatible** with this firmware. If there are any AVR programmers that could  
+   help make this compatible with the MK2S or MK2.5, your help would be greatly appreciated. If you are so inclined,  
+   you could potentially compile this code for your hardware and have a 24v 5a supply powering the MMU2 unit.  
+   Then it will work the same as the MK3.
 
 # **STEPS TO FIRST GET SETUP AND PRINTING WITH MY FW**  
 1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  
@@ -46,9 +52,9 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
    4. Use **LEFT/RIGHT** buttons to adjust until **end of filament is in middle of BondTech gears**
    5. Use **MIDDLE** button to save and exit
 
-3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters**
+3. Update **Slic3r** Load/Unload Speeds & **MMU Printer Parameters**, add **M219 E** in filament start gcode if desired  
 * Note that from previous versions the cooling length is reduced to increase distance to heatbreak  
-  This means the cooling move count needs to double from what you have to have same amount of cooling time.
+  This means the cooling move count needs to double from what you have to have same amount of cooling time.  
 ![MMU2-Slic3r-LoadUnload-Speeds](/MMU2-Slic3r-LoadUnload-Speeds-2.1.8-2.png)
 ![MMU2-Slic3r-SingleExtruderMMUParameters](/MMU2-Slic3r-SingleExtruderMMUParameters-2.1.8-2.png)
 

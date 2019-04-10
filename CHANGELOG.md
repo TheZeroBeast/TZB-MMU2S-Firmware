@@ -1,6 +1,7 @@
 Changelog of MMU 2.0 Firmware
 =============================
 # V2.1.8 RMM  
+* Fixed long bowden cal from 2.1.8-RC2
 * Idler holding current now much lower when not engaged, allowing proper continual homing  
   of idler when required as well as less chance of loosing idler steps during engagement.
 * Unload type based sync speeds have now been implemented and configurable in config.h

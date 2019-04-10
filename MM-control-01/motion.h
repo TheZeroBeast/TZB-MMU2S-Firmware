@@ -28,6 +28,7 @@ void engage_filament_pulley(bool engage);
 
 bool load_filament_withSensor(uint16_t setupBowLen = 0);
 bool unload_filament_withSensor(uint8_t extruder = active_extruder);
+bool unload_filament_forSetup(uint16_t distance, uint8_t extruder = active_extruder);
 void load_filament_into_extruder();
 
 bool set_positions(uint8_t _next_extruder, bool update_extruders = false);

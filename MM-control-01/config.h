@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  218 // example: 103 means version 1.0.3
-#define FW_BUILDNR  304 // number of commits in 'master'
+#define FW_BUILDNR  305 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms

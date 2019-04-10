@@ -2,7 +2,7 @@
 MMU 3-axis stepper control
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files. 
-**MMU: V#: 2.1.8 RC2	B#:  304**  
+**MMU: V#: 2.1.8		B#:  305**  
 **MK3: B#: 2386**
 
 **https://github.com/TheZeroBeast/MM-control-01/releases**

@@ -208,7 +208,7 @@ loop:
     txPayload(tempW);
     tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
                                      current_running_normal[AX_IDL], false);
-    unload_filament_withSensor();
+    unload_filament_forSetup(bowdenLength.m_length);
 loop2:
     switch (buttonClicked()) {
     case ADC_Btn_Middle:

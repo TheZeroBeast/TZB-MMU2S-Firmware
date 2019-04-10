@@ -235,6 +235,45 @@ bool unload_filament_withSensor(uint8_t extruder)
 }
 
 /**
+ * @brief unload_filament_withSensor
+ * unloads filament from extruder - filament is above Bondtech gears
+ */
+bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
+{
+    int unloadFINDACheckSteps = -3000;
+    if (isFilamentLoaded()) {
+        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        tmc2130_init_axis(AX_IDL, tmc2130_mode);
+        
+        engage_filament_pulley(true); // get in contact with filament
+        uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
+        uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
+        unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
+        txPayload(txUFR);
+        delay(40);
+        if (moveSmooth(AX_PUL, (distance * -1),
+                   filament_lookup_table[0][filament_type[extruder]], false, false,
+                   filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
+        if (filament_type[extruder] == 1) unloadFINDACheckSteps = -5000;
+        if (moveSmooth(AX_PUL, unloadFINDACheckSteps, filament_lookup_table[5][filament_type[extruder]],
+                       false, false, ACC_NORMAL, true) == MR_Success) {                                                  // move to trigger FINDA
+            loop:
+            moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
+                       filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+        } else if (isFilamentLoaded()) {
+            txPayload((unsigned char*)"ZU-"); // Report Unloading failed to MK3
+            if (extruder != active_extruder) fixTheProblem(true);
+            else fixTheProblem();
+            homedOnUnload = true;
+        }
+    }
+    
+    shr16_clr_ena(AX_PUL);
+    engage_filament_pulley(false);
+    return true;
+}
+
+/**
  * @brief load_filament_intoExtruder
  * loads filament after confirmed by printer into the Bontech
  * pulley gears so they can grab them.

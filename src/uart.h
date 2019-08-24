@@ -3,8 +3,8 @@
 #define _UART_H
 
 #define USART1_BAUDRATE  38400UL
-#define MMU_F_CPU       16000000UL
-#define BAUD_PRESCALE (((MMU_F_CPU / (USART1_BAUDRATE * 16UL))) - 1)
+#define MMU2S_F_CPU       16000000UL
+#define BAUD_PRESCALE (((MMU2S_F_CPU / (USART1_BAUDRATE * 16UL))) - 1)
 #define OK            (unsigned char*)"OK-" // 'OK-' ASCII for  OK CMD tx
 #define BLK           0x2D  // Blank data filler
 

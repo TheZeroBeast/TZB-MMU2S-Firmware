@@ -262,7 +262,8 @@ int8_t tmc2130_init_axis_current_normal(uint8_t axis, uint8_t current_h, uint8_t
         tmc2130_wr(axis, TMC2130_REG_COOLCONF, (((int32_t)__sg_thr(axis)) << 16));
     }
     tmc2130_wr(axis, TMC2130_REG_TCOOLTHRS, __tcoolthrs(axis));
-    tmc2130_wr(axis, TMC2130_REG_GCONF, 0x00003180);
+                                        //****||||****||||
+    tmc2130_wr(axis, TMC2130_REG_GCONF, 0b0000000100000000); // 0x00003180);
     if (axis == AX_PUL) {
         tmc2130_wr_PWMCONF(axis, 4 * current_r, 2, 2, 1, 0, 1);
     } else {

@@ -206,6 +206,7 @@ loop:
     tempW[1] = tempBowLenUpper;
     tempW[2] = tempBowLenLower;
     txPayload(tempW);
+    delay(50);
     tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
                                      current_running_normal[AX_IDL], false);
     unload_filament_forSetup(bowdenLength.m_length);
@@ -217,80 +218,13 @@ loop2:
     case ADC_Btn_Left:
         break;
     case ADC_Btn_Right:
-        settings_fsensor_length();
-        break;
+        goto loop2;
     default:
         goto loop2;
     }
     for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
     bowdenLength.~BowdenLength();
     BOWDEN_LENGTH = BowdenLength::get();
-}
-
-void settings_fsensor_length()
-{
-    // load filament to FSensor then to middle of Bondtech to set middle
-    uint8_t tempFSensLenUpper = (0xFF & ((bowdenLength.m_FSensorSteps/AX_PUL_STEP_MM_Ratio) >> 8));
-    uint8_t tempFSensLenLower = (0xFF & (bowdenLength.m_FSensorSteps/AX_PUL_STEP_MM_Ratio));
-    unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
-    txPayload(tempB);
-    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
-    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
-    uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
-    load_filament_withSensor();    
-    tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
-    do
-    {
-        switch (buttonClicked())
-        {
-        case ADC_Btn_Right:
-            if (bowdenLength.decreaseFSensor())
-            {
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                move_pulley(-bowdenLength.stepSizeFSensor);
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                tempFSensLenUpper = (0xFF & ((bowdenLength.m_FSensorSteps/AX_PUL_STEP_MM_Ratio) >> 8));
-                tempFSensLenLower = (0xFF & (bowdenLength.m_FSensorSteps/AX_PUL_STEP_MM_Ratio));
-                //unsigned char tempB[3] = {'B', tempFSensLenUpper, tempFSensLenLower};
-                tempB[0] = 'B';
-                tempB[1] = tempFSensLenUpper;
-                tempB[2] = tempFSensLenLower;
-                txPayload(tempB);
-                delay(200);
-            }
-            break;
-
-        case ADC_Btn_Left:
-            if (bowdenLength.increaseFSensor())
-            {
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                move_pulley(bowdenLength.stepSizeFSensor);
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                tempFSensLenUpper = (0xFF & ((bowdenLength.m_FSensorSteps/AX_PUL_STEP_MM_Ratio) >> 8));
-                tempFSensLenLower = (0xFF & (bowdenLength.m_FSensorSteps/AX_PUL_STEP_MM_Ratio));
-                tempB[0] = 'B';
-                tempB[1] = tempFSensLenUpper;
-                tempB[2] = tempFSensLenLower;
-                txPayload(tempB);
-                delay(200);
-            }
-            break;
-        default:
-            break;
-        }
-
-        shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
-    } while (buttonClicked() != ADC_Btn_Middle);
-    filament_lookup_table[2][0] = bowdenLength.m_FSensorSteps;
-    filament_lookup_table[2][1] = bowdenLength.m_FSensorSteps+10;
-    filament_lookup_table[2][2] = bowdenLength.m_FSensorSteps;
-    tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                     current_running_normal[AX_IDL], false);
-    unload_filament_withSensor();
 }
 
 //! @brief Is button pushed?

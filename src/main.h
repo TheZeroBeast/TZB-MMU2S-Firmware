@@ -23,8 +23,9 @@
 void manual_extruder_selector();
 
 // signals from interrupt to main loop
-extern bool mmuFSensorLoading;
+extern bool MMU2SFSensorLoading;
 extern bool inErrorState;
+//extern bool initialised;
 void process_commands(void);
 void fixTheProblem(bool showPrevious = false);
 void fixSelCrash(void);

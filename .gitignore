@@ -4,6 +4,8 @@
 
 /MM-control-01.sln
 /__vm/.MMU_FW.vsarduino.h
+.pio
+.vscode
 .cproject
 .project
 .settings

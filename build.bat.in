@@ -1,1 +1,0 @@
-@${CMAKE_MAKE_PROGRAM} || pause

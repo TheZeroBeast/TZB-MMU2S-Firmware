@@ -15,7 +15,7 @@
 // public variables:
 BowdenLength bowdenLength;
 uint16_t BOWDEN_LENGTH = bowdenLength.get();
-int16_t tempFSensorSteps = bowdenLength.getFSensorSteps();
+int16_t tempFSensorSteps = 0; // Sensed at bondtech already
 
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 int filament_lookup_table[9][3] =
@@ -180,9 +180,9 @@ loop:
                     }
                 }
             }
-            shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
+            shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU2S unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
-            mmuFSensorLoading = false;
+            MMU2SFSensorLoading = false;
             return true;
         }
         if (retries > 0) { set_idler_toLast_positions(active_extruder); retries = 0; goto loop; }
@@ -498,8 +498,6 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
         uint8_t filament = 0;
         FilamentLoaded::get(filament);
         active_extruder = filament;
-        unsigned char temp[3] = {'A', 'E', (uint8_t)active_extruder};
-        txPayload(temp);
         steps2setIDL2pos(active_extruder);
         engage_filament_pulley(false);
     }
@@ -571,12 +569,16 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
         case AX_PUL:
             PIN_STP_PUL_HIGH;
             PIN_STP_PUL_LOW;
-            if (withStallDetection && digitalRead(A3)) { // stall detected
+            if (withStallDetection && !digitalRead(A3)) { // stall detected
                 delay(50); // delay to release the stall detection
                 return MR_Failed;
             }
-            if (withFindaDetection && ( steps > 0 ) && isFilamentLoaded()) return MR_Success;
-            if (withFindaDetection && ( steps < 0 ) && (isFilamentLoaded() == false)) return MR_Success;
+            if (withFindaDetection && ( steps > 0 ) && isFilamentLoaded()) {
+              return MR_Success;
+            }
+            if (withFindaDetection && ( steps < 0 ) && (isFilamentLoaded() == false)) {
+              return MR_Success;
+            }
             if (withFSensorDetection && fsensor_triggered) {
                 txACK();      // Send  ACK Byte
                 fsensor_triggered = false;
@@ -586,7 +588,7 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
         case AX_IDL:
             PIN_STP_IDL_HIGH;
             PIN_STP_IDL_LOW;
-            if (withStallDetection && digitalRead(A5)) { // stall detected
+            if (withStallDetection && !digitalRead(A5)) { // stall detected
                 delay(50); // delay to release the stall detection
                 if (rehomeOnFail) {
                     if (idlSGFailCount < 3) {
@@ -597,24 +599,28 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                       fixIdlCrash();
                       return MR_FailedAndRehomed;
                     }
-                } else return MR_Failed;
+                } else {
+                  return MR_Failed;
+                }
             }
             break;
         case AX_SEL:
             PIN_STP_SEL_HIGH;
             PIN_STP_SEL_LOW;
-            if (withStallDetection && digitalRead(A4)) { // stall detected
+            if (withStallDetection && !digitalRead(A4)) { // stall detected
                 delay(50); // delay to release the stall detection
                 if (rehomeOnFail) {
                     if (selSGFailCount < 3) {
-                        selSGFailCount++;
-                        set_sel_toLast_positions(active_extruder);
-                        return MR_FailedAndRehomed;
+                      selSGFailCount++;
+                      set_sel_toLast_positions(active_extruder);
+                      return MR_FailedAndRehomed;
                     } else {
                       fixSelCrash();
                       return MR_FailedAndRehomed;
                     }
-                } else return MR_Failed;
+                } else {
+                  return MR_Failed;
+                }
             }
             break;
         }

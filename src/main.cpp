@@ -3,10 +3,11 @@
 #include "main.h"
 
 // public variables:
-bool mmuFSensorLoading = false;
+bool MMU2SFSensorLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool inErrorState = false;
+uint8_t txRetries = 10, txRetryCount = 0;
 long startWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
@@ -37,9 +38,11 @@ uint8_t tmc2130_mode = NORMAL_MODE;
 //! @n b - blinking
 void setup()
 {
+    delay(5000); // wait for printer init first
     permanentStorageInit();
     shr16_init(); // shift register
     startWakeTime = millis();
+    
     led_blink(1);
     //Setup USART1 Interrupt Registers
     UCSR1A = (0 << U2X1); // baudrate multiplier
@@ -52,7 +55,7 @@ void setup()
     UCSR1B |= (1 << RXCIE1);
 
     PORTF |= 0x20; // Set Button ADC Pin High
-
+    
     sei();
 
     led_blink(2);
@@ -63,6 +66,7 @@ void setup()
     shr16_clr_led();
     homeIdlerSmooth(true);
     if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR");
+    delay(100);
 }
 
 //! @brief Select filament menu
@@ -180,6 +184,8 @@ void process_commands()
         txRESEND         = false;
         confirmedPayload = false;
         startRxFlag      = false;
+        txRetryCount++;
+        if (txRetryCount == txRetries) return;
         txPayload(lastTxPayload);
         return;
     }
@@ -201,7 +207,7 @@ void process_commands()
                     txPayload(OK);
                 } else {
                     m600RunoutChanging = false;
-                    mmuFSensorLoading = true;
+                    MMU2SFSensorLoading = true;
                     duplicateTCmd = false;
                     toolChange(tData2);
                     txPayload(OK);

@@ -104,8 +104,8 @@ void setupMenu()
     delay(400);
     shr16_clr_led();
     process_commands();
-    txPayload((unsigned char*)"ZZZ");
-    shr16_set_led(1 << 2 * (4 - active_extruder));
+    txPayload((unsigned char*)"ZZR");
+    //shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
 //! @brief Set bowden length

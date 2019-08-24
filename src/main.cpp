@@ -248,14 +248,6 @@ void process_commands()
                 unsigned char tempS3[3] = {'O', 'K', (uint8_t)active_extruder};
                 txPayload(tempS3);
             }
-        } else if (tData1 == 'M') {
-            // Mx Modes CMD Received
-            // M0: set to normal mode; M1: set to stealth mode
-            if (tData2 == '0') tmc2130_mode =  NORMAL_MODE;
-            if (tData2 == '1') tmc2130_mode = STEALTH_MODE;
-            //init all axes
-            tmc2130_init(tmc2130_mode);
-            txPayload(OK);
         } else if (tData1 == 'F') {
             // Fxy Filament Type Set CMD Received
             if ((tData2 < EXTRUDERS) && (tData3 < 3)) {
@@ -263,8 +255,8 @@ void process_commands()
                 txPayload(OK);
             }
         } else if ((tData1 == 'X') && (tData2 == '0')) {
-            // Xx RESET CMD Received
-            wdt_enable(WDTO_15MS);
+            // Xx RESET CMD Received (Done by starting program again)
+            asm("jmp 0");
         } else if ((tData1 == 'P') && (tData2 == '0')) {
             // P0 Read FINDA CMD Received
             if (isPrinting) {

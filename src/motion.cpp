@@ -144,45 +144,33 @@ loop:
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
 
         if (moveSmooth(AX_PUL, 2000, filament_lookup_table[5][filament_type[active_extruder]],
-                       false, false, ACC_NORMAL, true) == MR_Success) { // Move to Pulley
+            false, false, ACC_NORMAL, true) == MR_Success) { // Move to Pulley
             if (setupBowLen != 0) moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
-                                                 false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
+                false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
             else {
                 moveSmooth(AX_PUL, 500, filament_lookup_table[5][filament_type[active_extruder]],
-                           false, false);
+                    false, false);
                 moveSmooth(AX_PUL, BOWDEN_LENGTH - 500, filament_lookup_table[0][filament_type[active_extruder]],
-                           false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor                
-                uint8_t iLoop2 = 0;
-            loop2:
+                    false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
                 txRESEND         = false;
                 startRxFlag      = false;
                 pendingACK       = false;
                 txPayload((unsigned char*)"FS-");  // 'FS-' Starting FSensor checking on MK3
-                fsensor_triggered = false;
+                IR_SENSOR = false;
 
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
                     false, false, ACC_NORMAL, false, true) == MR_Success) {
                     moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]],
                     filament_lookup_table[5][filament_type[active_extruder]] * 0.8, false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
                 } else {
-                    if (iLoop2 < 3) { // 4 attempts
-                        delay(50);
-                        moveSmooth(AX_PUL, ((filament_lookup_table[4][filament_type[active_extruder]]) * -1),
-                                   filament_lookup_table[5][filament_type[previous_extruder]],
-                                   false, false, ACC_NORMAL, true);
-                        delay(50);
-                        iLoop2++;
-                        goto loop2;
-                    } else {
-                        txPayload((unsigned char*)"ZL2"); // Report Loading failed to MK3
-                        fixTheProblem();
-                        goto loop;
-                    }
+                    moveSmooth(AX_PUL, ((filament_lookup_table[4][filament_type[active_extruder]]) * -1),
+                        filament_lookup_table[5][filament_type[previous_extruder]],
+                        false, false, ACC_NORMAL, true);
                 }
             }
             shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU2S unit
             shr16_set_led(1 << 2 * (4 - active_extruder));
-            MMU2SFSensorLoading = false;
+            MMU2SLoading = false;
             return true;
         }
         if (retries > 0) { set_idler_toLast_positions(active_extruder); retries = 0; goto loop; }
@@ -525,12 +513,12 @@ void disableAllSteppers(void)
 // TODO 3: compensate delay for computation time, to get accurate speeds
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                      bool withStallDetection, float acc,
-                     bool withFindaDetection, bool withFSensorDetection)
+                     bool withFindaDetection, bool withIR_SENSORDetection)
 {
     shr16_set_ena(axis);
     startWakeTime = millis();
     MotReturn ret = MR_Success;
-    if (withFindaDetection or withFSensorDetection) ret = MR_Failed;
+    if (withFindaDetection or withIR_SENSORDetection) ret = MR_Failed;
 
     if (tmc2130_mode == STEALTH_MODE) {
         withStallDetection = false;
@@ -579,9 +567,9 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
             if (withFindaDetection && ( steps < 0 ) && (isFilamentLoaded() == false)) {
               return MR_Success;
             }
-            if (withFSensorDetection && fsensor_triggered) {
+            if (withIR_SENSORDetection && IR_SENSOR) {
                 txACK();      // Send  ACK Byte
-                fsensor_triggered = false;
+                IR_SENSOR = false;
                 return MR_Success;
             }
             break;

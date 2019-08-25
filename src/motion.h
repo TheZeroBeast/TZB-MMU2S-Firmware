@@ -49,7 +49,7 @@ enum MotReturn {MR_Success, MR_FailedAndRehomed, MR_Failed};
 MotReturn homeSelectorSmooth();
 MotReturn moveSmooth(uint8_t axis, int mm, int speed, bool rehomeOnFail = true,
                      bool withStallDetection = true, float ACC = ACC_NORMAL,
-                     bool withFindaDetection = false, bool withFSensorDetection = false);
+                     bool withFindaDetection = false, bool withIR_SENSORDetection = false);
 MotReturn homeIdlerSmooth(bool toLastFilament = false);
 MotReturn homeSelectorSmooth();
 #endif

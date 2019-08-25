@@ -5,7 +5,7 @@
 volatile unsigned char readRxBuffer, rxData1 = 0, rxData2 = 0, rxData3 = 0,
                                      rxCSUM1 = 0, rxCSUM2 = 0;
 volatile bool startRxFlag = false, confirmedPayload = false, txNAKNext = false,
-              txACKNext = false, txRESEND = false, pendingACK = false, fsensor_triggered = false;
+              txACKNext = false, txRESEND = false, pendingACK = false, IR_SENSOR = false;
 volatile uint8_t rxCount;
 
 unsigned long startTXTimeout;
@@ -19,8 +19,7 @@ ISR(USART1_RX_vect)
     if ((readRxBuffer == 0x7F) && (!startRxFlag)) {// check for start of framing bytes
         startRxFlag = true;
         rxCount = 0;
-    } else if (readRxBuffer == 0x06) pendingACK = false;  // ACK Received Clear pending flag
-    else   if (readRxBuffer == 0x15) txRESEND = true;     // Resend last message
+    }
     else   if ( startRxFlag == true) {
         if (rxCount > 0) {
             if (rxCount > 1) {
@@ -29,7 +28,7 @@ ISR(USART1_RX_vect)
                         if (rxCount > 4) {
                             if (readRxBuffer == 0xF7) {
                                 if ((rxData1 == 'F') && (rxData2 == 'S') && (rxData3 == '-')
-                                  && (rxCSUM1 == 0x00) && (rxCSUM2 == 0xC6)) fsensor_triggered = true;
+                                  && (rxCSUM1 == 0x00) && (rxCSUM2 == 0xC6)) IR_SENSOR = true;
                                 else confirmedPayload = true; // set confirm payload bit true for processing my main loop
                             } else txNAKNext = true; // **send universal nack here **
                         } else {
@@ -53,6 +52,8 @@ ISR(USART1_RX_vect)
             ++rxCount;
         }
     }
+    else if (readRxBuffer == 0x06) pendingACK = false;  // ACK Received Clear pending flag
+    else if (readRxBuffer == 0x15) txRESEND = true;     // Resend last message
     sei();
 }
 
@@ -84,10 +85,11 @@ void txACK(bool ACK)
     if (ACK) {
         loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
         UDR1 = 0x06; // ACK HEX
-        txACKNext = false;
+        pendingACK = false;
     } else {
         loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
         UDR1 = 0x15; // NACK HEX
         txNAKNext = false;
     }
+    delay(1);
 }

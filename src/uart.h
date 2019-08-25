@@ -17,7 +17,7 @@
 
 extern volatile unsigned char rxData1, rxData2, rxData3, rxCSUM1, rxCSUM2;
 extern volatile bool startRxFlag, confirmedPayload, txNAKNext, txACKNext,
-       txRESEND, pendingACK, fsensor_triggered;
+       txRESEND, pendingACK, IR_SENSOR;
 extern unsigned long startTXTimeout;
 
 extern unsigned char lastTxPayload[3];

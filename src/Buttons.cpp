@@ -1,6 +1,7 @@
 //! @file
 
 #include "Buttons.h"
+#include "main.h"
 
 const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 uint16_t countL = 0;
@@ -83,6 +84,7 @@ void setupMenu()
                 eraseLocked = false;
                 break;
             case 4: // exit menu
+                txPayload((unsigned char*)"ZZR");
                 _exit = true;
                 break;
             }
@@ -103,8 +105,6 @@ void setupMenu()
     shr16_set_led(0x2aa);
     delay(400);
     shr16_clr_led();
-    process_commands();
-    txPayload((unsigned char*)"ZZR");
     //shr16_set_led(1 << 2 * (4 - active_extruder));
 }
 
@@ -134,6 +134,13 @@ void settings_bowden_length()
     // load filament to end of detached bowden tube to check correct length
     if (!isHomed) home();
     else set_positions(0, true);
+    enum class S : uint8_t 
+    {
+        NotExtruded,
+        Extruded,
+        Done
+    };
+    S state = S::NotExtruded;
     for (uint8_t i = 0; i < 5; i++) bowdenLength.increase();
     uint8_t tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
     uint8_t tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
@@ -142,89 +149,103 @@ void settings_bowden_length()
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
-    txPayload(tempW);    
-    goto loop2;
-loop:
-    tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
-    tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
-    tempV[0] = 'V';
-    tempV[1] = tempBowLenUpper;
-    tempV[2] = tempBowLenLower;
-    txPayload(tempV);
-    load_filament_withSensor(bowdenLength.m_length);
-    tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
-                                     current_running_normal[AX_IDL], false);
-    tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
-    do
-    {
-        switch (buttonClicked())
-        {
-        case ADC_Btn_Right:
-            if (bowdenLength.decrease())
-            {
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                move_pulley(-bowdenLength.stepSize);
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
-                tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
-                tempV[0] = 'V';
-                tempV[1] = tempBowLenUpper;
-                tempV[2] = tempBowLenLower;
-                txPayload(tempV);
-                delay(200);
+    txPayload(tempW);
+    do {
+        delay(10);
+        process_commands();
+        switch (buttonClicked()) {
+        case ADC_Btn_Left:
+            switch (state) {
+            case S::NotExtruded:
+                state = S::Done;
+                for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
+                bowdenLength.~BowdenLength();
+                BOWDEN_LENGTH = BowdenLength::get();
+                txPayload((unsigned char*)"ZZR");
+                break;
+            case S::Extruded:
+                if (bowdenLength.increase())
+                {
+                    tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                    current_running_normal[AX_IDL], false);
+                    move_pulley(bowdenLength.stepSize);
+                    tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                    current_running_normal[AX_IDL], false);
+                    tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
+                    tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
+                    tempV[0] = 'V';
+                    tempV[1] = tempBowLenUpper;
+                    tempV[2] = tempBowLenLower;
+                    txPayload(tempV);
+                    delay(200);
+                }
+                break;
+            default:
+                break;
             }
             break;
-
-        case ADC_Btn_Left:
-            if (bowdenLength.increase())
-            {
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
-                move_pulley(bowdenLength.stepSize);
-                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
-                                                 current_running_normal[AX_IDL], false);
+        case ADC_Btn_Middle:
+            switch (state) {
+            case S::NotExtruded:
+                state = S::Extruded;
                 tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
                 tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
                 tempV[0] = 'V';
                 tempV[1] = tempBowLenUpper;
                 tempV[2] = tempBowLenLower;
                 txPayload(tempV);
-                delay(200);
+                load_filament_withSensor(bowdenLength.m_length);
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                current_running_normal[AX_IDL], false);
+                tmc2130_init_axis_current_normal(AX_PUL, 1, 30, false);
+                break;
+            case S::Extruded:
+                state = S::NotExtruded;
+                shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
+                tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
+                tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
+                tempW[0] = 'W';
+                tempW[1] = tempBowLenUpper;
+                tempW[2] = tempBowLenLower;
+                txPayload(tempW);
+                delay(50);
+                tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                current_running_normal[AX_IDL], false);
+                unload_filament_forSetup(bowdenLength.m_length);
+                break;
+            default:
+                break;
+            }
+            break;
+        case ADC_Btn_Right:
+            switch (state) {
+            case S::NotExtruded:
+                break;
+            case S::Extruded:
+                if (bowdenLength.decrease())
+                {
+                    tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
+                                                    current_running_normal[AX_IDL], false);
+                    move_pulley(-bowdenLength.stepSize);
+                    tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
+                                                    current_running_normal[AX_IDL], false);
+                    tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
+                    tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
+                    tempV[0] = 'V';
+                    tempV[1] = tempBowLenUpper;
+                    tempV[2] = tempBowLenLower;
+                    txPayload(tempV);
+                    delay(200);
+                }
+                break;
+            default:
+                break;
             }
             break;
         default:
             break;
         }
-
-        shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * 1));
-    } while (buttonClicked() != ADC_Btn_Middle);
-    tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
-    tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
-    tempW[0] = 'W';
-    tempW[1] = tempBowLenUpper;
-    tempW[2] = tempBowLenLower;
-    txPayload(tempW);
-    delay(50);
-    tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                     current_running_normal[AX_IDL], false);
-    unload_filament_forSetup(bowdenLength.m_length);
-loop2:
-    switch (buttonClicked()) {
-    case ADC_Btn_Middle:
-        goto loop;
-        break;
-    case ADC_Btn_Left:
-        break;
-    case ADC_Btn_Right:
-        goto loop2;
-    default:
-        goto loop2;
-    }
-    for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
-    bowdenLength.~BowdenLength();
-    BOWDEN_LENGTH = BowdenLength::get();
+    } while (state != S::Done);
 }
 
 //! @brief Is button pushed?

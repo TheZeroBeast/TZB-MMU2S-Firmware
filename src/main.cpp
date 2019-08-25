@@ -3,7 +3,7 @@
 #include "main.h"
 
 // public variables:
-bool MMU2SFSensorLoading = false;
+bool MMU2SLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool inErrorState = false;
@@ -38,7 +38,7 @@ uint8_t tmc2130_mode = NORMAL_MODE;
 //! @n b - blinking
 void setup()
 {
-    delay(5000); // wait for printer init first
+    delay(2000); // Allow MK3S Comms to be iniatilised
     permanentStorageInit();
     shr16_init(); // shift register
     startWakeTime = millis();
@@ -189,16 +189,17 @@ void process_commands()
         txPayload(lastTxPayload);
         return;
     }
-    if (fsensor_triggered) {
+    if (IR_SENSOR) {
         txACK();      // Send  ACK Byte
-        fsensor_triggered = false;
+        IR_SENSOR = false;
     }
     if ((confPayload && !(tCSUM == (tData1 + tData2 + tData3))) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
+        txRESEND         = false;
+        confirmedPayload = false;
+        startRxFlag      = false;
         txACK(false); // Send NACK Byte
     } else if (confPayload && !inErrorState) {
         txACK();      // Send  ACK Byte
-
-
         if (tData1 == 'T') {
             //Tx Tool Change CMD Received
             if (tData2 < EXTRUDERS) {
@@ -207,7 +208,7 @@ void process_commands()
                     txPayload(OK);
                 } else {
                     m600RunoutChanging = false;
-                    MMU2SFSensorLoading = true;
+                    MMU2SLoading = true;
                     duplicateTCmd = false;
                     toolChange(tData2);
                     txPayload(OK);

@@ -9,7 +9,6 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "permanent_storage.h"
-#include "main.h"
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

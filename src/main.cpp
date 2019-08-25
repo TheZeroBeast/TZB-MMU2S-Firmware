@@ -180,6 +180,7 @@ void process_commands()
     unsigned char tData3 = rxData3;
     int16_t  tCSUM = ((rxCSUM1 << 8) | rxCSUM2);
     bool     confPayload = confirmedPayload;
+    bool pendACK = pendingACK;
     if ((txRESEND) || (pendingACK && ((startTXTimeout + TXTimeout) < millis()))) {
         txRESEND         = false;
         confirmedPayload = false;
@@ -187,18 +188,42 @@ void process_commands()
         txRetryCount++;
         if (txRetryCount == txRetries) return;
         txPayload(lastTxPayload);
-        return;
     }
     if (IR_SENSOR) {
         txACK();      // Send  ACK Byte
         IR_SENSOR = false;
     }
-    if ((confPayload && !(tCSUM == (tData1 + tData2 + tData3))) || txNAKNext) { // If confirmed with bad CSUM or NACK return has been requested
-        txRESEND         = false;
-        confirmedPayload = false;
-        startRxFlag      = false;
-        txACK(false); // Send NACK Byte
-    } else if (confPayload && !inErrorState) {
+    if (txNAKNext) uart2_txACK(false); // Send NACK Byte
+      if (confPayload && pendACK) 
+      {
+        if (!(tCSUM == (tData1 + tData2 + tData3)))
+        { // If confirmed with bad CSUM return has been requested
+          uart2_txACK(false); // Send NACK Byte
+          confPayload = false;
+          #ifdef MMU_DEBUG
+          puts_P(PSTR("Non-Conf Payload"));
+          #endif //MMU_DEBUG
+          tData1 = ' ';
+          tData2 = ' ';
+          tData3 = ' ';
+        } // If confirmed with NACK return has been requested
+        else
+        {
+          mmu_last_response = _millis(); // Update last response counter
+          uart2_txACK(); // Send ACK Byte
+          #ifdef MMU_DEBUG
+          printf_P(PSTR("MMU Conf Payload,0x%2X %2X %2X %2X%2X\n"), tData1, tData2, tData3, (tCSUM >> 8), tCSUM);
+          #endif
+        }
+      }
+      else
+      {
+        tData1 = ' ';
+        tData2 = ' ';
+        tData3 = ' ';
+      }    
+        
+    if (confPayload && !inErrorState) {
         txACK();      // Send  ACK Byte
         if (tData1 == 'T') {
             //Tx Tool Change CMD Received

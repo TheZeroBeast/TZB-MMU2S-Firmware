@@ -52,7 +52,7 @@ bool set_positions(uint8_t _next_extruder, bool update_extruders)
         previous_extruder = active_extruder;
         active_extruder = _next_extruder;
         FilamentLoaded::set(active_extruder);
-        unsigned char temp[3] = {'A', 'E', (uint8_t)active_extruder};
+        unsigned char temp[5] = {'A', 'E', (uint8_t)active_extruder, BLK, BLK};
         txPayload(temp);
     }
     if (!isHomed) home(true);
@@ -153,9 +153,8 @@ loop:
                 moveSmooth(AX_PUL, BOWDEN_LENGTH - 500, filament_lookup_table[0][filament_type[active_extruder]],
                     false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
                 txRESEND         = false;
-                startRxFlag      = false;
                 pendingACK       = false;
-                txPayload((unsigned char*)"FS-");  // 'FS-' Starting FSensor checking on MK3
+                txPayload((unsigned char*)"FS---");  // 'FS-' Starting FSensor checking on MK3
                 IR_SENSOR = false;
 
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
@@ -174,7 +173,7 @@ loop:
             return true;
         }
         if (retries > 0) { set_idler_toLast_positions(active_extruder); retries = 0; goto loop; }
-        txPayload((unsigned char*)"ZL1"); // Report Loading failed to MK3
+        txPayload((unsigned char*)"ZL1--"); // Report Loading failed to MK3
         fixTheProblem();
         goto loop;
     }
@@ -195,7 +194,7 @@ bool unload_filament_withSensor(uint8_t extruder)
         engage_filament_pulley(true); // get in contact with filament
         uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
-        unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
+        unsigned char txUFR[5] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
         txPayload(txUFR);
         delay(40);
         moveSmooth(AX_PUL, -(70*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
@@ -210,7 +209,7 @@ bool unload_filament_withSensor(uint8_t extruder)
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
                        filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
         } else if (isFilamentLoaded()) {
-            txPayload((unsigned char*)"ZU-"); // Report Unloading failed to MK3
+            txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
             if (extruder != active_extruder) fixTheProblem(true);
             else fixTheProblem();
             homedOnUnload = true;
@@ -236,7 +235,7 @@ bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
         engage_filament_pulley(true); // get in contact with filament
         uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
-        unsigned char txUFR[3] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower};
+        unsigned char txUFR[5] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
         txPayload(txUFR);
         delay(40);
         if (moveSmooth(AX_PUL, (distance * -1),
@@ -249,7 +248,7 @@ bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
                        filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
         } else if (isFilamentLoaded()) {
-            txPayload((unsigned char*)"ZU-"); // Report Unloading failed to MK3
+            txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
             if (extruder != active_extruder) fixTheProblem(true);
             else fixTheProblem();
             homedOnUnload = true;
@@ -568,7 +567,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
               return MR_Success;
             }
             if (withIR_SENSORDetection && IR_SENSOR) {
-                txACK();      // Send  ACK Byte
                 IR_SENSOR = false;
                 return MR_Success;
             }

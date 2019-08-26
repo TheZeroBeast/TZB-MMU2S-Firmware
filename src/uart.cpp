@@ -1,94 +1,104 @@
 // uart.cpp
-
 #include "uart.h"
 
 volatile unsigned char readRxBuffer, rxData1 = 0, rxData2 = 0, rxData3 = 0,
-                                     rxCSUM1 = 0, rxCSUM2 = 0;
-volatile bool startRxFlag = false, confirmedPayload = false, txNAKNext = false,
+                                     rxData4 = 0, rxData5 = 0;
+volatile bool confirmedPayload = false, txNAKNext = false,
               txACKNext = false, txRESEND = false, pendingACK = false, IR_SENSOR = false;
-volatile uint8_t rxCount;
+enum class rx
+{
+    Idle,
+    Data1,
+    Data2,
+    Data3,
+    Data4,
+    Data5,
+    End
+};
 
-unsigned long startTXTimeout;
+inline rx& operator++(rx& byte, int)
+{
+    const int i = static_cast<int>(byte) + 1;
+    byte = static_cast<rx>((i) % 7);
+    return byte;
+}
 
-unsigned char lastTxPayload[] = {0, 0, 0};
+rx rxCount = rx::Idle;
+unsigned char lastTxPayload[] = {0, 0, 0, 0, 0}; // used to try resend once
 
 ISR(USART1_RX_vect)
 {
     cli();
     readRxBuffer = UDR1;
-    if ((readRxBuffer == 0x7F) && (!startRxFlag)) {// check for start of framing bytes
-        startRxFlag = true;
-        rxCount = 0;
+    switch (rxCount) {
+    case rx::Idle:
+        if (readRxBuffer == 0x7F) rxCount++;
+        if (readRxBuffer == 0x06) pendingACK = false;
+        if (readRxBuffer == 0x15) txRESEND = true;
+        break;
+    case rx::Data1:
+        rxData1 = readRxBuffer;
+        rxCount++;
+        break;
+    case rx::Data2:
+        rxData2 = readRxBuffer;
+        rxCount++;
+        break;
+    case rx::Data3:
+        rxData3 = readRxBuffer;
+        rxCount++;
+        break;
+    case rx::Data4:
+        rxData4 = readRxBuffer;
+        rxCount++;
+        break;
+    case rx::Data5:
+        rxData5 = readRxBuffer;
+        rxCount++;
+        break;
+    case rx::End:
+        if (rxData1 == 'I' && rxData2 == 'R' && rxData3 == 'S' && rxData4 == 'E' && rxData5 == 'N') IR_SENSOR = true;
+        if (readRxBuffer == 0xF7) { confirmedPayload = true; txACKNext = true;}
+        else txNAKNext = true;
+        rxCount = rx::Idle;
+        break;
     }
-    else   if ( startRxFlag == true) {
-        if (rxCount > 0) {
-            if (rxCount > 1) {
-                if (rxCount > 2) {
-                    if (rxCount > 3) {
-                        if (rxCount > 4) {
-                            if (readRxBuffer == 0xF7) {
-                                if ((rxData1 == 'F') && (rxData2 == 'S') && (rxData3 == '-')
-                                  && (rxCSUM1 == 0x00) && (rxCSUM2 == 0xC6)) IR_SENSOR = true;
-                                else confirmedPayload = true; // set confirm payload bit true for processing my main loop
-                            } else txNAKNext = true; // **send universal nack here **
-                        } else {
-                            rxCSUM2 = readRxBuffer;
-                            ++rxCount;
-                        }
-                    } else {
-                        rxCSUM1 = readRxBuffer;
-                        ++rxCount;
-                    }
-                } else {
-                    rxData3 = readRxBuffer;
-                    ++rxCount;
-                }
-            } else {
-                rxData2 = readRxBuffer;
-                ++rxCount;
-            }
-        } else {
-            rxData1 = readRxBuffer;
-            ++rxCount;
-        }
-    }
-    else if (readRxBuffer == 0x06) pendingACK = false;  // ACK Received Clear pending flag
-    else if (readRxBuffer == 0x15) txRESEND = true;     // Resend last message
     sei();
 }
 
-void txPayload(unsigned char payload[])
+void txPayload(unsigned char payload[], bool retry)
 {
-    for (uint8_t i = 0; i < 3; i++) lastTxPayload[i] = payload[i];  // Backup incase resend on NACK
-    uint16_t csum = 0;
+    if (retry) { // Allow only one retry then give up
+        confirmedPayload = false;
+        txRESEND         = false;
+        if (lastTxPayload == payload) {
+            pendingACK = false;
+            return;
+        }
+    }
+    for (uint8_t i = 0; i < 5; i++) lastTxPayload[i] = payload[i];
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
-    if (!txRESEND) UDR1 = 0x7F;                              // Start byte 0x7F
-    for (uint8_t i = 0; i < 3; i++) {             // Send data
+    UDR1 = 0x7F;
+    for (uint8_t i = 0; i < 5; i++) {
         loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
         if (!txRESEND) UDR1 = (0xFF & (int)payload[i]);
-        csum += (0xFF & (int)payload[i]);
     }
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
-    if (!txRESEND) UDR1 = ((0xFFFF & csum) >> 8);
-    loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
-    if (!txRESEND) UDR1 = (0xFF & csum);
-    loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
-    if (!txRESEND) UDR1 = 0xF7;
-    pendingACK = true;                        // Set flag to wait for ACK
-    startTXTimeout = millis();                // Start Tx timeout counter
+    UDR1 = 0xF7;
+    pendingACK = true;
 }
 
 void txACK(bool ACK)
 {
     confirmedPayload = false;
-    startRxFlag      = false;
     if (ACK) {
         loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
         UDR1 = 0x06; // ACK HEX
+        confirmedPayload = false;
+        txACKNext = false;
     } else {
         loop_until_bit_is_set(UCSR1A, UDRE1); // Do nothing until UDR is ready for more data to be written to it
         UDR1 = 0x15; // NACK HEX
         txNAKNext = false;
     }
-    delay(1);
 }

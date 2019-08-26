@@ -49,11 +49,11 @@ void setupMenu()
         shr16_clr_led();
         shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * _menu));
         if (_menu != _menu_last_cycle) {
-               if (_menu == 0) txPayload((unsigned char*)"X1-");
-          else if (_menu == 1) txPayload((unsigned char*)"X2-");
-          else if (_menu == 2) txPayload((unsigned char*)"X5-");
-          else if (_menu == 3) txPayload((unsigned char*)"X6-");
-          else if (_menu == 4) txPayload((unsigned char*)"X7-");
+               if (_menu == 0) txPayload((unsigned char*)"X1---");
+          else if (_menu == 1) txPayload((unsigned char*)"X2---");
+          else if (_menu == 2) txPayload((unsigned char*)"X5---");
+          else if (_menu == 3) txPayload((unsigned char*)"X6---");
+          else if (_menu == 4) txPayload((unsigned char*)"X7---");
         }
         _menu_last_cycle = _menu;
 
@@ -84,7 +84,7 @@ void setupMenu()
                 eraseLocked = false;
                 break;
             case 4: // exit menu
-                txPayload((unsigned char*)"ZZR");
+                txPayload((unsigned char*)"ZZR--");
                 _exit = true;
                 break;
             }
@@ -144,8 +144,8 @@ void settings_bowden_length()
     for (uint8_t i = 0; i < 5; i++) bowdenLength.increase();
     uint8_t tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
     uint8_t tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
-    unsigned char tempW[3] = {'W', tempBowLenUpper, tempBowLenLower};
-    unsigned char tempV[3] = {0,0,0};
+    unsigned char tempW[5] = {'W', tempBowLenUpper, tempBowLenLower, BLK, BLK};
+    unsigned char tempV[5] = {0,0,0,BLK,BLK};
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
@@ -161,7 +161,7 @@ void settings_bowden_length()
                 for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
                 bowdenLength.~BowdenLength();
                 BOWDEN_LENGTH = BowdenLength::get();
-                txPayload((unsigned char*)"ZZR");
+                txPayload((unsigned char*)"ZZR--");
                 break;
             case S::Extruded:
                 if (bowdenLength.increase())

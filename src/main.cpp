@@ -7,7 +7,6 @@ bool MMU2SLoading = false;
 bool m600RunoutChanging = false;
 bool duplicateTCmd = false;
 bool inErrorState = false;
-uint8_t txRetries = 10, txRetryCount = 0;
 long startWakeTime;
 
 uint8_t tmc2130_mode = NORMAL_MODE;
@@ -38,7 +37,6 @@ uint8_t tmc2130_mode = NORMAL_MODE;
 //! @n b - blinking
 void setup()
 {
-    delay(2000); // Allow MK3S Comms to be iniatilised
     permanentStorageInit();
     shr16_init(); // shift register
     startWakeTime = millis();
@@ -65,8 +63,7 @@ void setup()
 
     shr16_clr_led();
     homeIdlerSmooth(true);
-    if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR");
-    delay(100);
+    if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR--");
 }
 
 //! @brief Select filament menu
@@ -103,10 +100,10 @@ void manual_extruder_selector()
         switch (buttonClicked()) {
         case ADC_Btn_Right:
             if (active_extruder < EXTRUDERS) set_positions(active_extruder + 1, true);
-            if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1-");
+            if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1---");
             break;
         case ADC_Btn_Left:
-            if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ");
+            if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ--");
             if (active_extruder > 0) set_positions(active_extruder - 1, true);
             break;
         default:
@@ -116,10 +113,10 @@ void manual_extruder_selector()
         switch (buttonClicked()) {
           case ADC_Btn_Right:
           case ADC_Btn_Left:
-            txPayload((unsigned char*)"Z1-");
+            txPayload((unsigned char*)"Z1---");
             delay(1000);
             process_commands();
-            txPayload((unsigned char*)"ZZZ");
+            txPayload((unsigned char*)"ZZZ--");
             break;
           default:
             break;
@@ -154,7 +151,11 @@ void loop()
         if (ADC_Btn_Middle == buttonClicked()) {
             if (active_extruder < EXTRUDERS) {
                     feed_filament();
-            } else if (active_extruder == EXTRUDERS) setupMenu();
+            } else if (active_extruder == EXTRUDERS) 
+            {
+                txPayload((unsigned char*)"SETUP");
+                setupMenu();
+            }
         }
     } else if (isEjected) {
         switch (buttonClicked()) {
@@ -175,143 +176,112 @@ void loop()
 
 void process_commands()
 {
-    unsigned char tData1 = rxData1;                  // Copy volitale vars as local
+    // Copy volitale vars as local
+    unsigned char tData1 = rxData1;
     unsigned char tData2 = rxData2;
     unsigned char tData3 = rxData3;
-    int16_t  tCSUM = ((rxCSUM1 << 8) | rxCSUM2);
-    bool     confPayload = confirmedPayload;
-    bool pendACK = pendingACK;
-    if ((txRESEND) || (pendingACK && ((startTXTimeout + TXTimeout) < millis()))) {
-        txRESEND         = false;
-        confirmedPayload = false;
-        startRxFlag      = false;
-        txRetryCount++;
-        if (txRetryCount == txRetries) return;
-        txPayload(lastTxPayload);
-    }
-    if (IR_SENSOR) {
-        txACK();      // Send  ACK Byte
-        IR_SENSOR = false;
-    }
-    if (txNAKNext) uart2_txACK(false); // Send NACK Byte
-      if (confPayload && pendACK) 
-      {
-        if (!(tCSUM == (tData1 + tData2 + tData3)))
-        { // If confirmed with bad CSUM return has been requested
-          uart2_txACK(false); // Send NACK Byte
-          confPayload = false;
-          #ifdef MMU_DEBUG
-          puts_P(PSTR("Non-Conf Payload"));
-          #endif //MMU_DEBUG
-          tData1 = ' ';
-          tData2 = ' ';
-          tData3 = ' ';
-        } // If confirmed with NACK return has been requested
-        else
-        {
-          mmu_last_response = _millis(); // Update last response counter
-          uart2_txACK(); // Send ACK Byte
-          #ifdef MMU_DEBUG
-          printf_P(PSTR("MMU Conf Payload,0x%2X %2X %2X %2X%2X\n"), tData1, tData2, tData3, (tCSUM >> 8), tCSUM);
-          #endif
-        }
-      }
-      else
-      {
+    unsigned char tData4 = rxData4;
+    unsigned char tData5 = rxData5;
+    bool confPayload = confirmedPayload;
+
+    if (txACKNext) txACK();
+    if (txNAKNext) txACK(false);
+    if (txRESEND) txPayload(lastTxPayload, true);
+    if (!confPayload){
         tData1 = ' ';
         tData2 = ' ';
         tData3 = ' ';
-      }    
-        
-    if (confPayload && !inErrorState) {
-        txACK();      // Send  ACK Byte
-        if (tData1 == 'T') {
-            //Tx Tool Change CMD Received
-            if (tData2 < EXTRUDERS) {
-                if ((active_extruder == tData2) && isFilamentLoaded() && !m600RunoutChanging) {
-                    duplicateTCmd = true;
-                    txPayload(OK);
-                } else {
-                    m600RunoutChanging = false;
-                    MMU2SLoading = true;
-                    duplicateTCmd = false;
-                    toolChange(tData2);
-                    txPayload(OK);
-                }
-            }
-        } else if (tData1 == 'L') {
-            // Lx Load Filament CMD Received
-            if (tData2 < EXTRUDERS) {
-                if (isFilamentLoaded()) {
-                    txPayload((unsigned char*)"Z1-");
-                    delay(1000);
-                    process_commands();
-                    txPayload((unsigned char*)"ZZZ");
-                } else {
-                    set_positions(tData2, true);
-                    feed_filament(); // returns OK and active_extruder to update MK3
-                }
+        tData4 = ' ';
+        tData5 = ' ';
+    }
+    if (inErrorState) return;
+
+    if (tData1 == 'T') {
+        //Tx Tool Change CMD Received
+        if (tData2 < EXTRUDERS) {
+            if ((active_extruder == tData2) && isFilamentLoaded() && !m600RunoutChanging) {
+                duplicateTCmd = true;
                 txPayload(OK);
-            }
-        } else if ((tData1 == 'U') && (tData2 == '0')) {
-            // Ux Unload filament CMD Received
-            unload_filament_withSensor();
-            txPayload(OK);
-            isPrinting = false;
-            toolChanges = 0;
-            trackToolChanges = 0;
-        } else if (tData1 == 'S') {
-            // Sx Starting CMD Received
-            if (tData2 == '0') {
-                txPayload(OK);
-            } else if (tData2 == '1') {
-                unsigned char tempS1[3] = {(FW_VERSION >> 8), (0xFF & FW_VERSION), BLK};
-                txPayload(tempS1);
-            } else if (tData2 == '2') {
-                unsigned char tempS2[3] = {(FW_BUILDNR >> 8), (0xFF & FW_BUILDNR), BLK};
-                txPayload(tempS2);
-            } else if (tData2 == '3') {
-                unsigned char tempS3[3] = {'O', 'K', (uint8_t)active_extruder};
-                txPayload(tempS3);
-            }
-        } else if (tData1 == 'F') {
-            // Fxy Filament Type Set CMD Received
-            if ((tData2 < EXTRUDERS) && (tData3 < 3)) {
-                filament_type[tData2] = tData3;
-                txPayload(OK);
-            }
-        } else if ((tData1 == 'X') && (tData2 == '0')) {
-            // Xx RESET CMD Received (Done by starting program again)
-            asm("jmp 0");
-        } else if ((tData1 == 'P') && (tData2 == '0')) {
-            // P0 Read FINDA CMD Received
-            if (isPrinting) {
-              unsigned char txTemp[3] = {'P', 'K', (uint8_t)isFilamentLoaded()};
-              txPayload(txTemp);
             } else {
-              unsigned char txTemp[3] = {'P', 'K', 1};
-              txPayload(txTemp);
-            }
-        } else if ((tData1 == 'C') && (tData2 == '0')) {
-            // Cx Continue Load onto Bondtech Gears CMD Received
-            if (!duplicateTCmd) {
-                txPayload(OK);
-                delay(5);
-                load_filament_into_extruder();
-            } else txPayload(OK);
-        } else if (tData1 == 'E') {
-            // Ex Eject Filament X CMD Received
-            if (tData2 < EXTRUDERS) { // Ex: eject filament
-                m600RunoutChanging = true;
-                eject_filament(tData2);
+                m600RunoutChanging = false;
+                MMU2SLoading = true;
+                duplicateTCmd = false;
+                toolChange(tData2);
                 txPayload(OK);
             }
-        } else if ((tData1 == 'R') && (tData2 == '0')) {
-            // Rx Recover Post-Eject Filament X CMD Received
-            recover_after_eject();
+        }
+    } else if (tData1 == 'L') {
+        // Lx Load Filament CMD Received
+        if (tData2 < EXTRUDERS) {
+            if (isFilamentLoaded()) {
+                txPayload((unsigned char*)"Z1---");
+                delay(1000);
+                process_commands();
+                txPayload((unsigned char*)"ZZZ--");
+            } else {
+                set_positions(tData2, true);
+                feed_filament(); // returns OK and active_extruder to update MK3
+            }
             txPayload(OK);
-        } // End of Processing Commands
-    } // End of Confirmed with Valid CSUM
+        }
+    } else if ((tData1 == 'U') && (tData2 == '0')) {
+        // Ux Unload filament CMD Received
+        unload_filament_withSensor();
+        txPayload(OK);
+        isPrinting = false;
+        toolChanges = 0;
+        trackToolChanges = 0;
+    } else if (tData1 == 'S') {
+        // Sx Starting CMD Received
+        if (tData2 == '0') {
+            txPayload(OK);
+        } else if (tData2 == '1') {
+            unsigned char tempS1[5] = {'O','K',(FW_VERSION >> 8), (0xFF & FW_VERSION), BLK};
+            txPayload(tempS1);
+        } else if (tData2 == '2') {
+            unsigned char tempS2[5] = {'O','K',(FW_BUILDNR >> 8), (0xFF & FW_BUILDNR), BLK};
+            txPayload(tempS2);
+        } else if (tData2 == '3') {
+            unsigned char tempS3[5] = {'O','K',(uint8_t)active_extruder, BLK, BLK};
+            txPayload(tempS3);
+        }
+    } else if (tData1 == 'F') {
+        // Fxy Filament Type Set CMD Received
+        if ((tData2 < EXTRUDERS) && (tData3 < 3)) {
+            filament_type[tData2] = tData3;
+            txPayload(OK);
+        }
+    } else if ((tData1 == 'X') && (tData2 == '0')) {
+        // Xx RESET CMD Received (Done by starting program again)
+        asm("jmp 0");
+    } else if ((tData1 == 'P') && (tData2 == '0')) {
+        // P0 Read FINDA CMD Received
+        if (isPrinting) {
+            unsigned char txTemp[5] = {'P', 'K', (uint8_t)isFilamentLoaded(), BLK, BLK};
+            txPayload(txTemp);
+        } else {
+            unsigned char txTemp[5] = {'P', 'K', 1, BLK, BLK};
+            txPayload(txTemp);
+        }
+    } else if ((tData1 == 'C') && (tData2 == '0')) {
+        // Cx Continue Load onto Bondtech Gears CMD Received
+        if (!duplicateTCmd) {
+            txPayload(OK);
+            delay(5);
+            load_filament_into_extruder();
+        } else txPayload(OK);
+    } else if (tData1 == 'E') {
+        // Ex Eject Filament X CMD Received
+        if (tData2 < EXTRUDERS) { // Ex: eject filament
+            m600RunoutChanging = true;
+            eject_filament(tData2);
+            txPayload(OK);
+        }
+    } else if ((tData1 == 'R') && (tData2 == '0')) {
+        // Rx Recover Post-Eject Filament X CMD Received
+        recover_after_eject();
+        txPayload(OK);
+    } // End of Processing Commands
 }
 
 //****************************************************************************************************
@@ -396,7 +366,7 @@ void fixTheProblem(bool showPrevious) {
     tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
     inErrorState = false;
     process_commands();
-    txPayload((unsigned char*)"ZZZ"); // Clear MK3 Message
+    txPayload((unsigned char*)"ZZZ--"); // Clear MK3 Message
     home(true); // Home and return to previous active extruder
     trackToolChanges = 0;
 }

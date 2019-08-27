@@ -5,7 +5,7 @@
 // public variables:
 bool MMU2SLoading = false;
 bool m600RunoutChanging = false;
-bool duplicateTCmd = false;
+//bool duplicateTCmd = false;
 bool inErrorState = false;
 long startWakeTime;
 
@@ -199,16 +199,16 @@ void process_commands()
     if (tData1 == 'T') {
         //Tx Tool Change CMD Received
         if (tData2 < EXTRUDERS) {
-            if ((active_extruder == tData2) && isFilamentLoaded() && !m600RunoutChanging) {
+            /*if ((active_extruder == tData2) && isFilamentLoaded() && !m600RunoutChanging) {
                 duplicateTCmd = true;
                 txPayload(OK);
-            } else {
+            } else {*/
                 m600RunoutChanging = false;
                 MMU2SLoading = true;
-                duplicateTCmd = false;
+                //duplicateTCmd = false;
                 toolChange(tData2);
                 txPayload(OK);
-            }
+            //}
         }
     } else if (tData1 == 'L') {
         // Lx Load Filament CMD Received
@@ -265,11 +265,10 @@ void process_commands()
         }
     } else if ((tData1 == 'C') && (tData2 == '0')) {
         // Cx Continue Load onto Bondtech Gears CMD Received
-        if (!duplicateTCmd) {
+        //if (!duplicateTCmd) {
             txPayload(OK);
-            delay(5);
             load_filament_into_extruder();
-        } else txPayload(OK);
+        //} else txPayload(OK);
     } else if (tData1 == 'E') {
         // Ex Eject Filament X CMD Received
         if (tData2 < EXTRUDERS) { // Ex: eject filament

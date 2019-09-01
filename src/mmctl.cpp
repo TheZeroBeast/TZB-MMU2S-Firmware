@@ -108,7 +108,6 @@ bool toolChange(int new_extruder)
         homedOnUnload = false;
         _return = true;
     }
-    txPayload(OK);
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
     return _return;

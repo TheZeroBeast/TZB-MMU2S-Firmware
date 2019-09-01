@@ -199,16 +199,10 @@ void process_commands()
     if (tData1 == 'T') {
         //Tx Tool Change CMD Received
         if (tData2 < EXTRUDERS) {
-            /*if ((active_extruder == tData2) && isFilamentLoaded() && !m600RunoutChanging) {
-                duplicateTCmd = true;
-                txPayload(OK);
-            } else {*/
-                m600RunoutChanging = false;
-                MMU2SLoading = true;
-                //duplicateTCmd = false;
-                toolChange(tData2);
-                txPayload(OK);
-            //}
+            m600RunoutChanging = false;
+            MMU2SLoading = true;
+            toolChange(tData2);
+            txPayload(OK);
         }
     } else if (tData1 == 'L') {
         // Lx Load Filament CMD Received

@@ -154,7 +154,7 @@ loop:
                     false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
                 txRESEND         = false;
                 pendingACK       = false;
-                txPayload((unsigned char*)"FS---");  // 'FS-' Starting FSensor checking on MK3
+                txPayload((unsigned char*)"IRSEN");  // 'FS-' Starting FSensor checking on MK3
                 IR_SENSOR = false;
 
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,

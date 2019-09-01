@@ -57,8 +57,8 @@ ISR(USART1_RX_vect)
         rxCount++;
         break;
     case rx::End:
-        if (rxData1 == 'I' && rxData2 == 'R' && rxData3 == 'S' && rxData4 == 'E' && rxData5 == 'N') IR_SENSOR = true;
-        if (readRxBuffer == 0xF7) { confirmedPayload = true; txACKNext = true;}
+        if (readRxBuffer == 0xF7) { confirmedPayload = true; txACKNext = true;
+        if (rxData1 == 'I' && rxData2 == 'R' && rxData3 == 'S' && rxData4 == 'E' && rxData5 == 'N') IR_SENSOR = true; }
         else txNAKNext = true;
         rxCount = rx::Idle;
         break;

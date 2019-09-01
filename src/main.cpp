@@ -280,7 +280,9 @@ void process_commands()
         // Rx Recover Post-Eject Filament X CMD Received
         recover_after_eject();
         txPayload(OK);
-    } // End of Processing Commands
+    }/* else if ((tData1 == 'I') && (tData2 == 'R') && (tData3 == 'S') && (tData4 == 'E') && (tData5 == 'N')) {
+        txPayload(OK);
+    }*/ // End of Processing Commands
 }
 
 //****************************************************************************************************

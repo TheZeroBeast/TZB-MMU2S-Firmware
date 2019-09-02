@@ -142,7 +142,6 @@ loop:
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
-
         if (moveSmooth(AX_PUL, 2000, filament_lookup_table[5][filament_type[active_extruder]],
             false, false, ACC_NORMAL, true) == MR_Success) { // Move to Pulley
             if (setupBowLen != 0) moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
@@ -154,7 +153,7 @@ loop:
                     false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
                 txRESEND         = false;
                 pendingACK       = false;
-                txPayload((unsigned char*)"IRSEN");  // 'FS-' Starting FSensor checking on MK3
+                txPayload((unsigned char*)"IRSEN");
                 IR_SENSOR = false;
 
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,

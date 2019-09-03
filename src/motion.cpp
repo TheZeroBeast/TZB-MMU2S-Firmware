@@ -134,8 +134,8 @@ void recover_after_eject()
 bool load_filament_withSensor(uint16_t setupBowLen)
 {
     uint8_t retries = 1;
-loop:
-    {
+    bool _return = false;
+    do {
         if (!isHomed && (setupBowLen == 0)) home(true);
         engage_filament_pulley(true); // get in contact with filament
         tmc2130_init_axis(AX_PUL, tmc2130_mode);
@@ -158,24 +158,31 @@ loop:
 
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
                     false, false, ACC_NORMAL, false, true) == MR_Success) {
-                    moveSmooth(AX_PUL, filament_lookup_table[2][filament_type[active_extruder]],
-                    filament_lookup_table[5][filament_type[active_extruder]] * 0.8, false, false);   // Load from MK3-FSensor to Bontech gears, ready for loading into extruder with C0 command
-                } else {
-                    moveSmooth(AX_PUL, ((filament_lookup_table[4][filament_type[active_extruder]]) * -1),
-                        filament_lookup_table[5][filament_type[previous_extruder]],
-                        false, false, ACC_NORMAL, true);
+                    shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
+                    shr16_set_led(1 << 2 * (4 - active_extruder));
+                    _return = true;
+                }
+                else
+                {
+                    txPayload((unsigned char*)"ZL2"); // Report Loading failed to MK3
+                    fixTheProblem();
                 }
             }
-            shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU2S unit
-            shr16_set_led(1 << 2 * (4 - active_extruder));
-            MMU2SLoading = false;
-            return true;
         }
-        if (retries > 0) { set_idler_toLast_positions(active_extruder); retries = 0; goto loop; }
-        txPayload((unsigned char*)"ZL1--"); // Report Loading failed to MK3
-        fixTheProblem();
-        goto loop;
-    }
+        else
+        {
+            if (retries > 0)
+            { 
+                set_idler_toLast_positions(active_extruder);
+                retries--;
+            }
+            else
+            {
+                txPayload((unsigned char*)"ZL1--"); // Report Loading failed to MK3
+                fixTheProblem();
+            }
+        }
+    } while (!_return);
     startWakeTime = millis();  // Start/Reset wakeTimer
 }
 

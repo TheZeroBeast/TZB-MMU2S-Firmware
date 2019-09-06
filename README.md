@@ -20,7 +20,7 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
   5.  // action:mmuFailedUnload
   
 ### Compatibility
-   **Only the MK3S is compatible** with this firmware.
+   **Only the MK3S is compatible** with this firmware (If anyone has a MK2.5S:MMU2S setup and wants to test it's just the Printer side that'll need tweaking)
 
 # **STEPS TO FIRST GET SETUP AND PRINTING WITH THIS FW**  
 1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  

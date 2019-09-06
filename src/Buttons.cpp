@@ -84,6 +84,7 @@ void setupMenu()
                 eraseLocked = false;
                 break;
             case 4: // exit menu
+                set_positions(EXTRUDERS - 1, true);
                 txPayload((unsigned char*)"ZZR--");
                 _exit = true;
                 break;
@@ -141,7 +142,7 @@ void settings_bowden_length()
         Done
     };
     S state = S::NotExtruded;
-    for (uint8_t i = 0; i < 5; i++) bowdenLength.increase();
+    for (uint8_t i = 0; i < 3; i++) bowdenLength.increase();
     uint8_t tempBowLenUpper = (0xFF & (((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio) >> 8));
     uint8_t tempBowLenLower = (0xFF & ((bowdenLength.m_length - 150u)/AX_PUL_STEP_MM_Ratio));
     unsigned char tempW[5] = {'W', tempBowLenUpper, tempBowLenLower, BLK, BLK};
@@ -158,7 +159,7 @@ void settings_bowden_length()
             switch (state) {
             case S::NotExtruded:
                 state = S::Done;
-                for (uint8_t i = 0; i < 5; i++) bowdenLength.decrease();
+                for (uint8_t i = 0; i < 3; i++) bowdenLength.decrease();
                 bowdenLength.~BowdenLength();
                 BOWDEN_LENGTH = BowdenLength::get();
                 txPayload((unsigned char*)"ZZR--");

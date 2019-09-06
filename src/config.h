@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION  218 // example: 103 means version 1.0.3
-#define FW_BUILDNR  305 // number of commits in 'master'
+#define FW_VERSION  300 // example: 103 means version 1.0.3
+#define FW_BUILDNR  999 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 #define TXTimeout        (uint8_t)60        //60ms
@@ -63,25 +63,22 @@
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
-#define TMC2130_TCOOLTHRS_AX_PUL 450 // 450 = 33.8us which is equal to a speed of 115 full steps/s
-#define TMC2130_TCOOLTHRS_AX_SEL 400
-#define TMC2130_TCOOLTHRS_AX_IDL 400 // 400 1.0e9 ns/second / (200 uSteps/s * 256 uSteps/fullstep / 16 uStesp/fullstep)/75
+#define TMC2130_TCOOLTHRS_AX_PUL 450
+#define TMC2130_TCOOLTHRS_AX_SEL 450
+#define TMC2130_TCOOLTHRS_AX_IDL 450
 
 // currents for pulley, selector and idler
-#define CURRENT_HOLDING_STEALTH        { 1,  7, 16}
+#define CURRENT_HOLDING_STEALTH        { 1,  7, 22}
 #define CURRENT_HOLDING_NORMAL         { 1, 10, 10}
 #define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 40}
-#define CURRENT_RUNNING_STEALTH        {30, 35, 35}
+#define CURRENT_RUNNING_STEALTH        {35, 35, 45}
 #define CURRENT_RUNNING_NORMAL         {30, 35, 40}
 #define CURRENT_HOMING                 { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_SEL 6000 // micro steps
-#define MAX_SPEED_STEALTH_SEL 3500 // micro steps
-#define MAX_SPEED_IDL 6000 // micro steps
-#define ACC_NORMAL 80000 // micro steps / s²
-#define ACC_STEALTH 15000 // micro steps / s²
-#define ACC_IDL_NORMAL 80000 // micro steps / s²
+#define MAX_SPEED_SEL_DEF  6000 // micro steps
+#define MAX_SPEED_IDL_DEF  6000 // micro steps
+#define GLOBAL_ACC_DEF    80000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0
@@ -140,6 +137,7 @@
 
 // Type Definitions
 // filament types (0: default; 1:flex; 2: PVA)
+// NOTE: Stealth Mode cuts MAX PUL SPEED.
 // Default
 #define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
 #define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S

@@ -26,11 +26,8 @@ public:
     static const uint8_t stepSizeFSensor = 19u; //!< increase()/decrease() bowden length step size
     bool increase();
     bool decrease();
-    bool increaseFSensor();
-    bool decreaseFSensor();
     ~BowdenLength();
     uint16_t m_length;  //!< Selected filament bowden length
-    uint16_t m_FSensorSteps;
     BowdenLength();
 };
 

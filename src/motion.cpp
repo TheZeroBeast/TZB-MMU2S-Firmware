@@ -16,7 +16,9 @@
 BowdenLength bowdenLength;
 uint16_t BOWDEN_LENGTH = bowdenLength.get();
 int16_t tempFSensorSteps = 0; // Sensed at bondtech already
-
+uint16_t MAX_SPEED_SELECTOR =  MAX_SPEED_SEL_DEF; // micro steps
+uint16_t MAX_SPEED_IDLER    =  MAX_SPEED_IDL_DEF; // micro steps
+uint32_t GLOBAL_ACC         =  GLOBAL_ACC_DEF; // micro steps / s²
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 int filament_lookup_table[9][3] =
 {{TYPE_0_MAX_SPPED_PUL,               TYPE_1_MAX_SPPED_PUL,               TYPE_2_MAX_SPPED_PUL},
@@ -143,21 +145,22 @@ bool load_filament_withSensor(uint16_t setupBowLen)
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
         if (moveSmooth(AX_PUL, 2000, filament_lookup_table[5][filament_type[active_extruder]],
-            false, false, ACC_NORMAL, true) == MR_Success) { // Move to Pulley
-            if (setupBowLen != 0) moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
-                false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to MK3-FSensor
-            else {
+            false, false, GLOBAL_ACC, true) == MR_Success) { // Move to Pulley
+            if (setupBowLen != 0) {
+                moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
+                false, false, filament_lookup_table[1][filament_type[active_extruder]]); // Load filament down to MK3-FSensor
+                _return = true;
+            } else {
                 moveSmooth(AX_PUL, 500, filament_lookup_table[5][filament_type[active_extruder]],
-                    false, false);
+                    false, false); // Go 500 steps more to get past FINDA before ramping.
                 moveSmooth(AX_PUL, BOWDEN_LENGTH - 500, filament_lookup_table[0][filament_type[active_extruder]],
                     false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
-                txRESEND         = false;
-                pendingACK       = false;
+                txRESEND    = false;
+                pendingACK  = false;
                 txPayload((unsigned char*)"IRSEN");
-                IR_SENSOR = false;
-
+                IR_SENSOR   = false;
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
-                    false, false, ACC_NORMAL, false, true) == MR_Success) {
+                    false, false, GLOBAL_ACC, false, true) == MR_Success) {
                     shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
                     shr16_set_led(1 << 2 * (4 - active_extruder));
                     _return = true;
@@ -184,6 +187,7 @@ bool load_filament_withSensor(uint16_t setupBowLen)
         }
     } while (!_return);
     startWakeTime = millis();  // Start/Reset wakeTimer
+    return _return;
 }
 
 /**
@@ -200,20 +204,20 @@ bool unload_filament_withSensor(uint8_t extruder)
         engage_filament_pulley(true); // get in contact with filament
         uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
-        unsigned char txUFR[5] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
+        unsigned char txUFR[5] = {'U', mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
         txPayload(txUFR);
         delay(40);
         moveSmooth(AX_PUL, -(70*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
-                   false, false, ACC_NORMAL);
+                   false, false, GLOBAL_ACC);
         if (moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
         if (filament_type[extruder] == 1) unloadFINDACheckSteps = -5000;
         if (moveSmooth(AX_PUL, unloadFINDACheckSteps, filament_lookup_table[5][filament_type[extruder]],
-                       false, false, ACC_NORMAL, true) == MR_Success) {                                                  // move to trigger FINDA
+                       false, false, GLOBAL_ACC, true) == MR_Success) {                                                  // move to trigger FINDA
             loop:
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
-                       filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+                       filament_lookup_table[5][filament_type[extruder]], false, false, GLOBAL_ACC);                     // move to filament parking position
         } else if (isFilamentLoaded()) {
             txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
             if (extruder != active_extruder) fixTheProblem(true);
@@ -249,10 +253,10 @@ bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
         if (filament_type[extruder] == 1) unloadFINDACheckSteps = -5000;
         if (moveSmooth(AX_PUL, unloadFINDACheckSteps, filament_lookup_table[5][filament_type[extruder]],
-                       false, false, ACC_NORMAL, true) == MR_Success) {                                                  // move to trigger FINDA
+                       false, false, GLOBAL_ACC, true) == MR_Success) {                                                  // move to trigger FINDA
             loop:
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
-                       filament_lookup_table[5][filament_type[extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+                       filament_lookup_table[5][filament_type[extruder]], false, false, GLOBAL_ACC);                     // move to filament parking position
         } else if (isFilamentLoaded()) {
             txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
             if (extruder != active_extruder) fixTheProblem(true);
@@ -330,19 +334,13 @@ void load_filament_into_extruder()
  */
 void engage_filament_pulley(bool engage)
 {
-    uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
-    uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
-    uint8_t current_holding_loading[3] = CURRENT_HOLDING_NORMAL_LOADING;
+    tmc2130_init(tmc2130_mode);
 
     if (isIdlerParked && engage) { // get idler in contact with filament
-        tmc2130_init_axis_current_normal(AX_IDL, current_holding_loading[AX_IDL],
-                                         current_running_normal[AX_IDL], false);
         move_idler(IDLER_PARKING_STEPS);
         isIdlerParked = false;
     } else if (!isIdlerParked && !engage) { // park idler so filament can move freely
         move_idler(IDLER_PARKING_STEPS * -1);
-        tmc2130_init_axis_current_normal(AX_IDL, current_holding_normal[AX_IDL],
-                                         current_running_normal[AX_IDL], false);
         isIdlerParked = true;
     }
 }
@@ -374,12 +372,8 @@ void home(bool doToolSync)
 
 bool move_idler(int steps, uint16_t speed)
 {
-    if (speed > MAX_SPEED_IDL) {
-        speed = MAX_SPEED_IDL;
-    }
-
-    if (moveSmooth(AX_IDL, steps, MAX_SPEED_IDL, true, true, ACC_IDL_NORMAL) == MR_Failed)
-         return false;
+    if (speed > MAX_SPEED_IDLER) speed = MAX_SPEED_IDLER;
+    if (moveSmooth(AX_IDL, steps, speed, true, true, GLOBAL_ACC) == MR_Failed) return false;
     else return true;
 }
 
@@ -390,19 +384,11 @@ bool move_idler(int steps, uint16_t speed)
  */
 bool move_selector(int steps, uint16_t speed)
 {
-    if (speed > MAX_SPEED_SEL) {
-        speed = MAX_SPEED_SEL;
-    }
-    if (tmc2130_mode == STEALTH_MODE) {
-        if (speed > MAX_SPEED_STEALTH_SEL) {
-            speed = MAX_SPEED_STEALTH_SEL;
-        }
-    }
+    if (speed > MAX_SPEED_SELECTOR) speed = MAX_SPEED_SELECTOR;
     if (!isFilamentLoaded()) {
-        if (moveSmooth(AX_SEL, steps, speed) == MR_Failed)
-           return false;
+        if (moveSmooth(AX_SEL, steps, speed) == MR_Failed) return false;
     } else return false;
-           return true;
+    return true;
 }
 
 void move_pulley(int steps, uint16_t speed)
@@ -463,9 +449,12 @@ uint16_t set_pulley_direction(int steps)
 
 MotReturn homeSelectorSmooth()
 {
+    uint32_t acc_backup = GLOBAL_ACC;
     for (int c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
+        GLOBAL_ACC = GLOBAL_ACC_DEF;
         moveSmooth(AX_SEL, 4000, 2000, false);
+        GLOBAL_ACC = acc_backup;
         tmc2130_init(tmc2130_mode);  // trinamic, normal
         if (c > 1) moveSmooth(AX_SEL, -300, 2000, false);
     }
@@ -476,13 +465,17 @@ MotReturn homeSelectorSmooth()
 
 MotReturn homeIdlerSmooth(bool toLastFilament)
 {
+    uint32_t acc_backup = GLOBAL_ACC;
+    
     tmc2130_init(tmc2130_mode);  // trinamic, normal
-    moveSmooth(AX_IDL, -250, MAX_SPEED_IDL, false);
+    moveSmooth(AX_IDL, -250, MAX_SPEED_IDLER, false);
     for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
+        GLOBAL_ACC = GLOBAL_ACC_DEF;
         moveSmooth(AX_IDL, 2600, 7000, false, true, 80000);
+        GLOBAL_ACC = acc_backup;
         tmc2130_init(tmc2130_mode);  // trinamic, homing
-        if (c > 1) moveSmooth(AX_IDL, -400, MAX_SPEED_IDL, false, true, ACC_IDL_NORMAL);
+        if (c > 1) moveSmooth(AX_IDL, -400, MAX_SPEED_IDLER, false, true, GLOBAL_ACC);
         delay(50);
     }
     isIdlerParked = false;
@@ -524,11 +517,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
     startWakeTime = millis();
     MotReturn ret = MR_Success;
     if (withFindaDetection or withIR_SENSORDetection) ret = MR_Failed;
-
-    if (tmc2130_mode == STEALTH_MODE) {
-        withStallDetection = false;
-    }
-
     float vMax = speed;
     float v0 = 200; // steps/s, minimum speed
     float v = v0; // current speed
@@ -539,7 +527,6 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
     switch (axis) {
     case AX_PUL:
         stepsLeft = set_pulley_direction(steps);
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
         break;
     case AX_IDL:
         stepsLeft = set_idler_direction(steps);

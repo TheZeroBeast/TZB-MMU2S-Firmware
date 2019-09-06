@@ -63,6 +63,7 @@ void setup()
 
     shr16_clr_led();
     homeIdlerSmooth(true);
+    tmc2130_init(STEALTH_MODE);
     if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR--");
 }
 
@@ -162,7 +163,7 @@ void loop()
         case ADC_Btn_Right:
             engage_filament_pulley(true);
             moveSmooth(AX_PUL, (EJECT_PULLEY_STEPS * -1),
-        filament_lookup_table[5][filament_type[previous_extruder]], false, false, ACC_NORMAL);
+        filament_lookup_table[5][filament_type[previous_extruder]], false, false, GLOBAL_ACC);
             engage_filament_pulley(false);
             break;
         default:
@@ -180,10 +181,9 @@ void process_commands()
     unsigned char tData1 = rxData1;
     unsigned char tData2 = rxData2;
     unsigned char tData3 = rxData3;
-    unsigned char tData4 = rxData4;
-    unsigned char tData5 = rxData5;
+    // Currently unused. unsigned char tData4 = rxData4;
+    // Currently unused. unsigned char tData5 = rxData5;
     bool confPayload = confirmedPayload;
-
     if (txACKNext) txACK();
     if (txNAKNext) txACK(false);
     if (txRESEND) txPayload(lastTxPayload, true);
@@ -191,10 +191,9 @@ void process_commands()
         tData1 = ' ';
         tData2 = ' ';
         tData3 = ' ';
-        tData4 = ' ';
-        tData5 = ' ';
-    }
-    if (inErrorState) return;
+        // Currently unused. tData4 = ' ';
+        // Currently unused. tData5 = ' ';
+    } if (inErrorState) return;
 
     if (tData1 == 'T') {
         //Tx Tool Change CMD Received
@@ -202,6 +201,7 @@ void process_commands()
             m600RunoutChanging = false;
             MMU2SLoading = true;
             toolChange(tData2);
+            if (txACKNext) txACK();
             txPayload(OK);
         }
     } else if (tData1 == 'L') {
@@ -222,6 +222,7 @@ void process_commands()
         // Ux Unload filament CMD Received
         unload_filament_withSensor();
         txPayload(OK);
+        tmc2130_init(STEALTH_MODE);
         isPrinting = false;
         toolChanges = 0;
         trackToolChanges = 0;
@@ -239,6 +240,29 @@ void process_commands()
             unsigned char tempS3[5] = {'O','K',(uint8_t)active_extruder, BLK, BLK};
             txPayload(tempS3);
         }
+    } else if (tData1 == 'M') {
+            // Mx Modes CMD Received
+            // M0: set to normal mode; M1: set to stealth mode
+            if (tData2 == 0) {
+                filament_lookup_table[0][0] = TYPE_0_MAX_SPPED_PUL;
+                filament_lookup_table[0][1] = TYPE_1_MAX_SPPED_PUL;
+                filament_lookup_table[0][2] = TYPE_2_MAX_SPPED_PUL;
+                MAX_SPEED_IDLER = MAX_SPEED_SEL_DEF;
+                MAX_SPEED_SELECTOR = MAX_SPEED_SEL_DEF;
+                GLOBAL_ACC = GLOBAL_ACC_DEF;
+                tmc2130_mode =  NORMAL_MODE;
+            }
+            if (tData2 == 1) {
+                for (uint8_t i = 0; i < 3; i++) 
+                    if (filament_lookup_table[0][i] > 1500) filament_lookup_table[0][i] = 1400;
+                MAX_SPEED_IDLER = 1900;
+                MAX_SPEED_SELECTOR = 900;
+                GLOBAL_ACC = 15000;
+                tmc2130_mode = STEALTH_MODE;
+            }
+            tmc2130_init(tmc2130_mode);
+            unsigned char tempOKM[5] = {'O','K','M', tData2, BLK};
+            txPayload(tempOKM);
     } else if (tData1 == 'F') {
         // Fxy Filament Type Set CMD Received
         if ((tData2 < EXTRUDERS) && (tData3 < 3)) {
@@ -258,12 +282,9 @@ void process_commands()
             txPayload(txTemp);
         }
     } else if ((tData1 == 'C') && (tData2 == '0')) {
-        // Cx Continue Load onto Bondtech Gears CMD Received
-        //if (!duplicateTCmd) {
-            txPayload(OK);
-            load_filament_into_extruder();
-        //} else txPayload(OK);
-    } else if (tData1 == 'E') {
+        txPayload(OK);
+        load_filament_into_extruder();
+    } else if  (tData1 == 'E') {
         // Ex Eject Filament X CMD Received
         if (tData2 < EXTRUDERS) { // Ex: eject filament
             m600RunoutChanging = true;
@@ -274,9 +295,7 @@ void process_commands()
         // Rx Recover Post-Eject Filament X CMD Received
         recover_after_eject();
         txPayload(OK);
-    }/* else if ((tData1 == 'I') && (tData2 == 'R') && (tData3 == 'S') && (tData4 == 'E') && (tData5 == 'N')) {
-        txPayload(OK);
-    }*/ // End of Processing Commands
+    }
 }
 
 //****************************************************************************************************
@@ -300,9 +319,9 @@ void fixTheProblem(bool showPrevious) {
                     if (isFilamentLoaded()) {
                         if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH * 1.5) * -1),
                                        filament_lookup_table[5][filament_type[active_extruder]],
-                                       false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+                                       false, false, GLOBAL_ACC, true) == MR_Success) { // move to trigger FINDA
                             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]],
-                                       filament_lookup_table[5][filament_type[active_extruder]], false, false, ACC_NORMAL);                     // move to filament parking position
+                                       filament_lookup_table[5][filament_type[active_extruder]], false, false, GLOBAL_ACC); // move to filament parking position
                         }
                     } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[active_extruder]], false);
                     engage_filament_pulley(false);
@@ -330,9 +349,9 @@ void fixTheProblem(bool showPrevious) {
                     if (isFilamentLoaded()) {
                         if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH * 1.5) * -1),
                                        filament_lookup_table[5][filament_type[previous_extruder]]*1.8,
-                                       false, false, ACC_NORMAL, true) == MR_Success) {                                                      // move to trigger FINDA
+                                       false, false, GLOBAL_ACC, true) == MR_Success) { // move to trigger FINDA
                             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[previous_extruder]],
-                                       filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false, false, ACC_NORMAL);                     // move to filament parking position
+                                       filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false, false, GLOBAL_ACC); // move to filament parking position
                         }
                     } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false);
                     engage_filament_pulley(false);

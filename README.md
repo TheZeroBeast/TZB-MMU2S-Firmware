@@ -2,8 +2,8 @@
 MMU2S 3-axis TMC2130 Stepper controller
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files. 
-**MMU: V#: 2.1.8		B#:  305**  
-**MK3: B#: 2386**
+**MMU2S: V#: 3.0.0		B#:  320**  
+**MK3S:  V#: 3.0.0    B#: 2426**
 
 **https://github.com/TheZeroBeast/MMU2S-TZB-Firmware/releases**
 
@@ -11,10 +11,7 @@ MMU2S 3-axis TMC2130 Stepper controller
 You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW  
 Bowden Length is still important as load is optimised to minimise the posibility of grinding in the event of the  
 MK3-FSensor not triggering, rare if setup correct, dust/particles still build up over time.  
-**DEFAULT FACTORY BOWDEN LENGETH OF 350mm**  
-**POWER PANIC** is now operational and will allow autorecover/continue when SD Printing  
-**Jam Detection** is now able to be enabled for any filament with start gcode **M219 E** and will  
-aim to catch when a jam occurs usually resulting in missed layer/s. No longer requiring a Slic3rPE-Alpha slice.    
+**DEFAULT FACTORY BOWDEN LENGETH OF 350mm**   
 **Action commands** added for failure states that can be used for notifications in Octoprint
   1.  // action:m600
   2.  // action:mmuAttention
@@ -25,17 +22,17 @@ aim to catch when a jam occurs usually resulting in missed layer/s. No longer re
 ### Compatibility
    **Only the MK3S is compatible** with this firmware.
 
-# **STEPS TO FIRST GET SETUP AND PRINTING WITH MY FW**  
+# **STEPS TO FIRST GET SETUP AND PRINTING WITH THIS FW**  
 1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  
 **(NOTE ONLY FIRST FILAMENT CHANNEL IS CALIBRATED)**
    1. Move selector all the way to the **RIGHT** with **RIGHT** button to Position 6 which is **SERVICE POSITION**
-   1. Enter **SETUP** menu using **MIDDLE** button while on **SERVICE POSITION**
-   2. As per STOCK FW, use **LEFT** button to move LED to fourth position
-   3. Use **MIDDLE** button to enter calibration
-   4. Use **MIDDLE** button again to load for **Bowden Length** Calibration
-   4. Use **LEFT/RIGHT** buttons to adjust until flush with end of tube when detatched from extruder
-   5. Use **MIDDLE** button to unload
-   6. Use **LEFT** button to save and exit
+   2. Enter **SETUP** menu using **MIDDLE** button while on **SERVICE POSITION**
+   3. As per STOCK FW, use **LEFT** button to move LED to fourth position
+   4. Use **MIDDLE** button to enter calibration
+   5. Use **MIDDLE** button again to load for **Bowden Length** Calibration
+   6. Use **LEFT/RIGHT** buttons to adjust until flush with end of tube when detatched from extruder
+   7. Use **MIDDLE** button to unload
+   8. Use **LEFT** button to save and exit
 
 2. Blade isn't being used and can be removed. It has been known to add resistance to selector.
 
@@ -64,29 +61,13 @@ aim to catch when a jam occurs usually resulting in missed layer/s. No longer re
 * Push middle button to rehome and continue
   * If nothing happens, filament is in FINDA, check again
 
-## Example Octoprint Serial Communications for a successful load using MK3-IR_SENSOR
-![MMU2-OctoprintSerialLoadExample](/MMU2-OctoprintSerialLoadExample-2.1.8.png)
-
 # Building this custom setup
 This is configured to work directly with **MMU2S** with matching **MK3S** FW at link below to load filament to **Extruder Laser Filament Sensor** and unload to FINDA Sensor.
 
 https://github.com/TheZeroBeast/TZB-MK3S-Firmware
-
-
-## Table of contents
-
-<!--ts-->
-   * [Building](#building)
-     * [Cmake](#cmake)
-       * [Automatic, remote, using travis-ci](#automatic-remote-using-travis-ci)
-       * [Automatic, local, using script and prepared tools package](#automatic-local-using-script-and-prepared-tools-package)
-       * [Manually with installed tools](#manually-with-installed-tools)
-     * [Arduino](#arduino)
-     * [PlatformIO](#platformio)
-   * [Flashing](#flashing)
-   * [Building documentation](#building-documentation)
-
-<!--te-->
+### PlatformIO
+Download, open in PlatformIO and build.
+The HEX which is placed within the .pio root folder still requires the addition of the **; device = mm-control** line as bellow.
 
 ### Arduino
 Recomended version is arduino is the latest.
@@ -100,6 +81,8 @@ which contains only one board:
 Original Prusa i3 MK3 Multi Material 2.0
 
 Select board Original Prusa i3 MK3 Multi Material 2.0
+
+Download source, rename the "SRC" folder to "Firmware" then open MM-control-01.ino with ArduinoIDE.
 
 Hex file needs to be edited to be recognized as for MMUv2 in case of Arduino build. This is done automatically in cmake build.
 

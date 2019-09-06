@@ -1,5 +1,12 @@
 Changelog of MMU 2.0 Firmware
 =============================
+# V3.0.0 RMM  
+* Incorporated changes from 3.8.0-RC2 (7x7, ASA, Sheet Setups, menu updates & autodeplete)
+* Implemented timer0 @ 30Hz for PWM of Heatbed.
+* Overhaul of the TZB-Comms protocol, now with five data bytes, no CSUM used anymore.
+* Implemented STEALTH mode for those times you don't want sirens going off in your home, hahaha.
+* 
+
 # V2.1.8 RMM  
 * Fixed long bowden cal from 2.1.8-RC2
 * Idler holding current now much lower when not engaged, allowing proper continual homing  

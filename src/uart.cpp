@@ -102,3 +102,11 @@ void txACK(bool ACK)
         txNAKNext = false;
     }
 }
+
+void txACKMessageCheck(void)
+{
+    delay(1);
+    if (txACKNext) txACK();
+    if (txNAKNext) txACK(false);
+    if (txRESEND)  txPayload(lastTxPayload, true);
+}

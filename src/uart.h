@@ -24,5 +24,6 @@ extern unsigned char lastTxPayload[5];
 
 extern void txPayload(unsigned char*, bool retry = false);
 extern void txACK(bool ACK = true);
+extern void txACKMessageCheck(void);
 
 #endif //_UART_H

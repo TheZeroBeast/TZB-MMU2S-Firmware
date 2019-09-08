@@ -102,9 +102,11 @@ void manual_extruder_selector()
         case ADC_Btn_Right:
             if (active_extruder < EXTRUDERS) set_positions(active_extruder + 1, true);
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1---");
+            txACKMessageCheck();
             break;
         case ADC_Btn_Left:
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ--");
+            txACKMessageCheck();
             if (active_extruder > 0) set_positions(active_extruder - 1, true);
             break;
         default:
@@ -115,9 +117,10 @@ void manual_extruder_selector()
           case ADC_Btn_Right:
           case ADC_Btn_Left:
             txPayload((unsigned char*)"Z1---");
+            txACKMessageCheck();
             delay(1000);
-            process_commands();
             txPayload((unsigned char*)"ZZZ--");
+            txACKMessageCheck();
             break;
           default:
             break;
@@ -155,6 +158,7 @@ void loop()
             } else if (active_extruder == EXTRUDERS) 
             {
                 txPayload((unsigned char*)"SETUP");
+                txACKMessageCheck();
                 setupMenu();
             }
         }
@@ -186,7 +190,7 @@ void process_commands()
     bool confPayload = confirmedPayload;
     if (txACKNext) txACK();
     if (txNAKNext) txACK(false);
-    if (txRESEND) txPayload(lastTxPayload, true);
+    if (txRESEND)  txPayload(lastTxPayload, true);
     if (!confPayload){
         tData1 = ' ';
         tData2 = ' ';
@@ -201,7 +205,6 @@ void process_commands()
             m600RunoutChanging = false;
             MMU2SLoading = true;
             toolChange(tData2);
-            if (txACKNext) txACK();
             txPayload(OK);
         }
     } else if (tData1 == 'L') {
@@ -209,9 +212,10 @@ void process_commands()
         if (tData2 < EXTRUDERS) {
             if (isFilamentLoaded()) {
                 txPayload((unsigned char*)"Z1---");
-                delay(1000);
-                process_commands();
+                txACKMessageCheck();
+                delay(1500);
                 txPayload((unsigned char*)"ZZZ--");
+                txACKMessageCheck();
             } else {
                 set_positions(tData2, true);
                 feed_filament(); // returns OK and active_extruder to update MK3

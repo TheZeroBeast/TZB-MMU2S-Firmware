@@ -5,7 +5,7 @@ MMU2S 3-axis TMC2130 Stepper controller
 **MMU2S: V#: 3.0.0		B#:  320**  
 **MK3S:  V#: 3.0.0    B#: 2426**
 
-**https://github.com/TheZeroBeast/MMU2S-TZB-Firmware/releases**
+**https://github.com/TheZeroBeast/TZB-MMU2S-Firmware/releases**
 
 ## Points of Notes  
 You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW  
@@ -20,7 +20,7 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
   5.  // action:mmuFailedUnload
   
 ### Compatibility
-   **Only the MK3S is compatible** with this firmware.
+   **Only the MK3S is compatible** with this firmware (If anyone has a MK2.5S:MMU2S setup and wants to test it's just the Printer side that'll need tweaking)
 
 # **STEPS TO FIRST GET SETUP AND PRINTING WITH THIS FW**  
 1. Adjust **BOWDEN_LENGTH** in **SETUP** menu **(MK3 LCD Messages to guide you will appear)**  

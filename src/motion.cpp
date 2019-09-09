@@ -56,7 +56,6 @@ bool set_positions(uint8_t _next_extruder, bool update_extruders)
         FilamentLoaded::set(active_extruder);
         unsigned char temp[5] = {'A', 'E', (uint8_t)active_extruder, BLK, BLK};
         txPayload(temp);
-        txACKMessageCheck();
     }
     if (!isHomed) home(true);
     else {
@@ -156,10 +155,7 @@ bool load_filament_withSensor(uint16_t setupBowLen)
                     false, false); // Go 500 steps more to get past FINDA before ramping.
                 moveSmooth(AX_PUL, BOWDEN_LENGTH - 500, filament_lookup_table[0][filament_type[active_extruder]],
                     false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
-                txRESEND    = false;
-                pendingACK  = false;
                 txPayload((unsigned char*)"IRSEN");
-                txACKMessageCheck();
                 IR_SENSOR   = false;
                 if (moveSmooth(AX_PUL, filament_lookup_table[4][filament_type[active_extruder]], 200,
                     false, false, GLOBAL_ACC, false, true) == MR_Success) {
@@ -170,7 +166,6 @@ bool load_filament_withSensor(uint16_t setupBowLen)
                 else
                 {
                     txPayload((unsigned char*)"ZL2"); // Report Loading failed to MK3
-                    txACKMessageCheck();
                     fixTheProblem();
                 }
             }
@@ -185,7 +180,7 @@ bool load_filament_withSensor(uint16_t setupBowLen)
             else
             {
                 txPayload((unsigned char*)"ZL1--"); // Report Loading failed to MK3
-                txACKMessageCheck();
+                //txACKMessageCheck();
                 fixTheProblem();
             }
         }
@@ -210,7 +205,6 @@ bool unload_filament_withSensor(uint8_t extruder)
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
         unsigned char txUFR[5] = {'U', mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
         txPayload(txUFR);
-        txACKMessageCheck();
         delay(40);
         moveSmooth(AX_PUL, -(70*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
                    false, false, GLOBAL_ACC);
@@ -225,7 +219,6 @@ bool unload_filament_withSensor(uint8_t extruder)
                        filament_lookup_table[5][filament_type[extruder]], false, false, GLOBAL_ACC);                     // move to filament parking position
         } else if (isFilamentLoaded()) {
             txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
-            txACKMessageCheck();
             if (extruder != active_extruder) fixTheProblem(true);
             else fixTheProblem();
             homedOnUnload = true;
@@ -253,7 +246,6 @@ bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
         unsigned char txUFR[5] = {'U',mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
         txPayload(txUFR);
-        txACKMessageCheck();
         delay(40);
         if (moveSmooth(AX_PUL, (distance * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
@@ -266,7 +258,6 @@ bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
                        filament_lookup_table[5][filament_type[extruder]], false, false, GLOBAL_ACC);                     // move to filament parking position
         } else if (isFilamentLoaded()) {
             txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
-            txACKMessageCheck();
             if (extruder != active_extruder) fixTheProblem(true);
             else fixTheProblem();
             homedOnUnload = true;

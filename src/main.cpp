@@ -102,11 +102,10 @@ void manual_extruder_selector()
         case ADC_Btn_Right:
             if (active_extruder < EXTRUDERS) set_positions(active_extruder + 1, true);
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1---");
-            txACKMessageCheck();
+            //txACKMessageCheck();
             break;
         case ADC_Btn_Left:
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ--");
-            txACKMessageCheck();
             if (active_extruder > 0) set_positions(active_extruder - 1, true);
             break;
         default:
@@ -117,10 +116,8 @@ void manual_extruder_selector()
           case ADC_Btn_Right:
           case ADC_Btn_Left:
             txPayload((unsigned char*)"Z1---");
-            txACKMessageCheck();
             delay(1000);
             txPayload((unsigned char*)"ZZZ--");
-            txACKMessageCheck();
             break;
           default:
             break;
@@ -153,12 +150,10 @@ void loop()
     if (!isPrinting && !isEjected) {
         manual_extruder_selector();
         if (ADC_Btn_Middle == buttonClicked()) {
-            if (active_extruder < EXTRUDERS) {
-                    feed_filament();
-            } else if (active_extruder == EXTRUDERS) 
+            if (active_extruder < EXTRUDERS) feed_filament();
+            else if (active_extruder == EXTRUDERS) 
             {
                 txPayload((unsigned char*)"SETUP");
-                txACKMessageCheck();
                 setupMenu();
             }
         }
@@ -188,10 +183,8 @@ void process_commands()
     // Currently unused. unsigned char tData4 = rxData4;
     // Currently unused. unsigned char tData5 = rxData5;
     bool confPayload = confirmedPayload;
-    if (txACKNext) txACK();
-    if (txNAKNext) txACK(false);
-    if (txRESEND)  txPayload(lastTxPayload, true);
-    if (!confPayload){
+    if (confPayload) confirmedPayload = false;
+    else {
         tData1 = ' ';
         tData2 = ' ';
         tData3 = ' ';
@@ -212,10 +205,8 @@ void process_commands()
         if (tData2 < EXTRUDERS) {
             if (isFilamentLoaded()) {
                 txPayload((unsigned char*)"Z1---");
-                txACKMessageCheck();
                 delay(1500);
                 txPayload((unsigned char*)"ZZZ--");
-                txACKMessageCheck();
             } else {
                 set_positions(tData2, true);
                 feed_filament(); // returns OK and active_extruder to update MK3
@@ -267,6 +258,7 @@ void process_commands()
             tmc2130_init(tmc2130_mode);
             unsigned char tempOKM[5] = {'O','K','M', tData2, BLK};
             txPayload(tempOKM);
+            return;
     } else if (tData1 == 'F') {
         // Fxy Filament Type Set CMD Received
         if ((tData2 < EXTRUDERS) && (tData3 < 3)) {
@@ -277,14 +269,7 @@ void process_commands()
         // Xx RESET CMD Received (Done by starting program again)
         asm("jmp 0");
     } else if ((tData1 == 'P') && (tData2 == '0')) {
-        // P0 Read FINDA CMD Received
-        if (isPrinting) {
-            unsigned char txTemp[5] = {'P', 'K', (uint8_t)isFilamentLoaded(), BLK, BLK};
-            txPayload(txTemp);
-        } else {
-            unsigned char txTemp[5] = {'P', 'K', 1, BLK, BLK};
-            txPayload(txTemp);
-        }
+        txFINDAStatus();
     } else if ((tData1 == 'C') && (tData2 == '0')) {
         txPayload(OK);
         load_filament_into_extruder();

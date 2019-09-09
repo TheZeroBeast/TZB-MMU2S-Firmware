@@ -58,10 +58,10 @@ bool feed_filament(void)
         engage_filament_pulley(false);
     } else {
         txPayload((unsigned char*)"Z1---");
-        txACKMessageCheck();
+        //txACKMessageCheck();
         delay(1500);
         txPayload((unsigned char*)"ZZZ--");
-        txACKMessageCheck();
+        //txACKMessageCheck();
     }
     return _loaded;
 }
@@ -103,7 +103,7 @@ bool toolChange(int new_extruder)
         uint8_t toolChangesLower = (0xFF & toolChanges);
         unsigned char txTCU[5] = {'T',toolChangesUpper, toolChangesLower, BLK, BLK};
         txPayload(txTCU);
-        txACKMessageCheck();
+        //txACKMessageCheck();
         shr16_clr_led();
         shr16_set_led(2 << 2 * (4 - active_extruder));
         load_filament_withSensor();

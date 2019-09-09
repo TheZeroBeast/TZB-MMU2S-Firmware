@@ -14,16 +14,12 @@
 #include <avr/interrupt.h>
 #include "Arduino.h"
 #include "config.h"
+#include "main.h"
 
 extern volatile unsigned char rxData1, rxData2, rxData3, rxData4, rxData5;
-extern volatile bool confirmedPayload, txNAKNext, txACKNext,
-       txRESEND, pendingACK, IR_SENSOR;
-extern unsigned long startTXTimeout;
+extern volatile bool confirmedPayload, IR_SENSOR;
 
-extern unsigned char lastTxPayload[5];
-
-extern void txPayload(unsigned char*, bool retry = false);
-extern void txACK(bool ACK = true);
-extern void txACKMessageCheck(void);
+extern void txPayload(unsigned char*);
+extern void txFINDAStatus(void);
 
 #endif //_UART_H

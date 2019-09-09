@@ -176,6 +176,7 @@ void loop()
 
 void process_commands()
 {
+    cli();
     // Copy volitale vars as local
     unsigned char tData1 = rxData1;
     unsigned char tData2 = rxData2;
@@ -184,13 +185,9 @@ void process_commands()
     // Currently unused. unsigned char tData5 = rxData5;
     bool confPayload = confirmedPayload;
     if (confPayload) confirmedPayload = false;
-    else {
-        tData1 = ' ';
-        tData2 = ' ';
-        tData3 = ' ';
-        // Currently unused. tData4 = ' ';
-        // Currently unused. tData5 = ' ';
-    } if (inErrorState) return;
+    else { tData1 = ' '; tData2 = ' '; tData3 = ' '; // Currently unused. tData4 = ' '; Currently unused. tData5 = ' ';
+    } sei();
+    if (inErrorState) return;
 
     if (tData1 == 'T') {
         //Tx Tool Change CMD Received

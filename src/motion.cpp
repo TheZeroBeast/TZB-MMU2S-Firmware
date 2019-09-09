@@ -208,7 +208,7 @@ bool unload_filament_withSensor(uint8_t extruder)
         delay(40);
         moveSmooth(AX_PUL, -(70*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
                    false, false, GLOBAL_ACC);
-        if (moveSmooth(AX_PUL, (BOWDEN_LENGTH * -1),
+        if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH - 100) * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
         if (filament_type[extruder] == 1) unloadFINDACheckSteps = -5000;

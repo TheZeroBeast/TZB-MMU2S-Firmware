@@ -1,11 +1,13 @@
 Changelog of MMU 2.0 Firmware
 =============================
 # V3.0.0 RMM  
-* Incorporated changes from 3.8.0-RC2 (7x7, ASA, Sheet Setups, menu updates & autodeplete)
+* Incorporated changes from 3.8.0 (7x7, ASA, Sheet Setups, menu updates & autodeplete)
 * Implemented timer0 @ 30Hz for PWM of Heatbed.
 * Overhaul of the TZB-Comms protocol, now with five data bytes, no CSUM used anymore.
 * Implemented STEALTH mode for those times you don't want sirens going off in your home, hahaha.
-* 
+* Changed FINDA Status updates to be received in the background via UART2 ISR. Still requested in the same way.
+* Removed ACK & NACK as I wasn't currently using it and other resend/retry methods are in place for the rare missed payload.
+* Implemented a payload RX timeout on MK3S UART2 ISR at 5microseconds past 7 byte reception. This is to reset the protocol if any garbage appears on the input line.
 
 # V2.1.8 RMM  
 * Fixed long bowden cal from 2.1.8-RC2

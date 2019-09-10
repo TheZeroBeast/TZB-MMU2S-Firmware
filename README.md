@@ -2,7 +2,7 @@
 MMU2S 3-axis TMC2130 Stepper controller
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files. 
-**MMU2S: V#: 3.0.0		B#:  327**  
+**MMU2S: V#: 3.0.0		B#:  331**  
 **MK3S:  V#: 3.0.0    B#: 2431**  
 
 **https://github.com/TheZeroBeast/TZB-MMU2S-Firmware/releases**
@@ -15,9 +15,15 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
 **Action commands** added for failure states that can be used for notifications in Octoprint
   1.  // action:m600
   2.  // action:mmuAttention
-  3.  // action:mmuFailedLoad1
-  4.  // action:mmuFailedLoad2
+  3.  // action:mmuFailedLoadFINDA
+  4.  // action:mmuFailedLoadIR_SENSOR
   5.  // action:mmuFailedUnload
+  6.  // action:JamDetected
+  
+### Example telegram system command to use with Octoprint Plugin **Action Command**  
+`curl https://api.telegram.org/`**YOUR_BOT_ADDRESS**`/sendMessage -d chat_id="`**YOUR_CHAT_ID**`" -d text="MMU2S ‘I failed to load past the IR_SENSOR (possible Jam). Please fix me MeatBag’"`
+  
+![MMU2S-Octoprint-Action-Command-Setup](/MMU2S-Octoprint-Action-Command-Setup-3.0.0-RC2.png)
   
 ### Compatibility
    **Only the MK3S is compatible** with this firmware (If anyone has a MK2.5S:MMU2S setup and wants to test it's just the Printer side that'll need tweaking)

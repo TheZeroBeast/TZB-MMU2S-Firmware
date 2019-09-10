@@ -145,8 +145,6 @@ void manual_extruder_selector()
 //! @copydoc manual_extruder_selector()
 void loop()
 {
-    process_commands();
-
     if (!isPrinting && !isEjected) {
         manual_extruder_selector();
         if (ADC_Btn_Middle == buttonClicked()) {
@@ -174,7 +172,7 @@ void loop()
          !isPrinting && (shr16_get_ena() != 111)) disableAllSteppers();
 }
 
-void process_commands()
+void process_commands(void)
 {
     cli();
     // Copy volitale vars as local
@@ -185,7 +183,7 @@ void process_commands()
     // Currently unused. unsigned char tData5 = rxData5;
     bool confPayload = confirmedPayload;
     if (confPayload) confirmedPayload = false;
-    else { tData1 = ' '; tData2 = ' '; tData3 = ' '; // Currently unused. tData4 = ' '; Currently unused. tData5 = ' ';
+    else { tData1 = ' '; tData2 = ' '; tData3 = ' '; // Currently unused. tData4 = ' '; tData5 = ' ';
     } sei();
     if (inErrorState) return;
 
@@ -297,7 +295,6 @@ void fixTheProblem(bool showPrevious) {
 
     while ((ADC_Btn_Middle != buttonClicked()) || isFilamentLoaded()) {
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
-        process_commands();
         if (!showPrevious) {
             switch (buttonClicked()) {
                 case ADC_Btn_Right:
@@ -365,7 +362,6 @@ void fixTheProblem(bool showPrevious) {
     tmc2130_init_axis(AX_SEL, tmc2130_mode);           // turn ON the selector stepper motor
     tmc2130_init_axis(AX_IDL, tmc2130_mode);           // turn ON the idler stepper motor
     inErrorState = false;
-    process_commands();
     txPayload((unsigned char*)"ZZZ--"); // Clear MK3 Message
     home(true); // Home and return to previous active extruder
     trackToolChanges = 0;
@@ -378,7 +374,6 @@ void fixSelCrash(void) {
     inErrorState = true;
 
     while (ADC_Btn_Middle != buttonClicked()) {
-        process_commands();
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         delay(100);
         shr16_clr_led();
@@ -398,7 +393,6 @@ void fixIdlCrash(void) {
     inErrorState = true;
 
     while (ADC_Btn_Middle != buttonClicked()) {
-        process_commands();
         //  wait until key is entered to proceed  (this is to allow for operator intervention)
         delay(100);
         shr16_clr_led();

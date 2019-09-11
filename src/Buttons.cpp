@@ -45,7 +45,6 @@ void setupMenu()
     inErrorState = true;
 
     do {
-        process_commands();
         shr16_clr_led();
         shr16_set_led((1 << 2 * 4) | (2 << 2 * 4) | (2 << 2 * _menu));
         if (_menu != _menu_last_cycle) {
@@ -153,7 +152,6 @@ void settings_bowden_length()
     txPayload(tempW);
     do {
         delay(10);
-        process_commands();
         switch (buttonClicked()) {
         case ADC_Btn_Left:
             switch (state) {

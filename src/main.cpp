@@ -8,6 +8,7 @@ bool m600RunoutChanging = false;
 //bool duplicateTCmd = false;
 bool inErrorState = false;
 long startWakeTime;
+void process_commands(void);
 
 uint8_t tmc2130_mode = NORMAL_MODE;
 

@@ -145,6 +145,7 @@ void manual_extruder_selector()
 //! @copydoc manual_extruder_selector()
 void loop()
 {
+    process_commands();    
     if (!isPrinting && !isEjected) {
         manual_extruder_selector();
         if (ADC_Btn_Middle == buttonClicked()) {

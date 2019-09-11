@@ -106,9 +106,7 @@ void set_sel_toLast_positions(uint8_t _next_extruder)
 void eject_filament(uint8_t extruder)
 {
     // if there is still filament detected by PINDA unload it first
-    if (isFilamentLoaded()) {
-        unload_filament_withSensor();
-    }
+    if (isFilamentLoaded()) unload_filament_withSensor();
 
     set_positions(extruder, true);
     if (active_extruder == (EXTRUDERS - 1)) steps2setSEL2pos(0);
@@ -133,10 +131,10 @@ void recover_after_eject()
     isEjected = false;
 }
 
-bool load_filament_withSensor(uint16_t setupBowLen)
+void load_filament_withSensor(uint16_t setupBowLen)
 {
     uint8_t retries = 1;
-    bool _return = false;
+    bool _retry = false;
     do {
         if (!isHomed && (setupBowLen == 0)) home(true);
         engage_filament_pulley(true); // get in contact with filament
@@ -149,7 +147,7 @@ bool load_filament_withSensor(uint16_t setupBowLen)
             if (setupBowLen != 0) {
                 moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
                 false, false, filament_lookup_table[1][filament_type[active_extruder]]); // Load filament down to MK3-FSensor
-                _return = true;
+                _retry = true;
             } else {
                 moveSmooth(AX_PUL, 500, filament_lookup_table[5][filament_type[active_extruder]],
                     false, false); // Go 500 steps more to get past FINDA before ramping.
@@ -161,11 +159,11 @@ bool load_filament_withSensor(uint16_t setupBowLen)
                     false, false, GLOBAL_ACC, false, true) == MR_Success) {
                     shr16_clr_led(); //shr16_set_led(0x000);                                                 // Clear all 10 LEDs on MMU unit
                     shr16_set_led(1 << 2 * (4 - active_extruder));
-                    _return = true;
+                    _retry = true;
                 }
                 else
                 {
-                    txPayload((unsigned char*)"ZL2"); // Report Loading failed to MK3
+                    txPayload((unsigned char*)"ZL2"); // Report Loading failed @ IR_SENSOR
                     fixTheProblem();
                 }
             }
@@ -179,21 +177,19 @@ bool load_filament_withSensor(uint16_t setupBowLen)
             }
             else
             {
-                txPayload((unsigned char*)"ZL1--"); // Report Loading failed to MK3
-                //txACKMessageCheck();
+                txPayload((unsigned char*)"ZL1--"); // Report Loading failed @ FINDA
                 fixTheProblem();
             }
         }
-    } while (!_return);
+    } while (!_retry);
     startWakeTime = millis();  // Start/Reset wakeTimer
-    return _return;
 }
 
 /**
  * @brief unload_filament_withSensor
  * unloads filament from extruder - filament is above Bondtech gears
  */
-bool unload_filament_withSensor(uint8_t extruder)
+void unload_filament_withSensor(uint8_t extruder)
 {
     int unloadFINDACheckSteps = -3000;
     if (isFilamentLoaded()) {
@@ -227,14 +223,13 @@ bool unload_filament_withSensor(uint8_t extruder)
     
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
-    return true;
 }
 
 /**
  * @brief unload_filament_withSensor
  * unloads filament from extruder - filament is above Bondtech gears
  */
-bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
+void unload_filament_forSetup(uint16_t distance, uint8_t extruder)
 {
     int unloadFINDACheckSteps = -3000;
     if (isFilamentLoaded()) {
@@ -266,7 +261,6 @@ bool unload_filament_forSetup(uint16_t distance, uint8_t extruder)
     
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
-    return true;
 }
 
 /**

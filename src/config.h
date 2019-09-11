@@ -5,7 +5,6 @@
 #define FW_BUILDNR  327 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
-#define TXTimeout        (uint8_t)60        //60ms
 
 //#define green_board
 

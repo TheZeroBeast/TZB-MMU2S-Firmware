@@ -18,7 +18,7 @@ MK3-FSensor not triggering, rare if setup correct, dust/particles still build up
   3.  // action:mmuFailedLoadFINDA
   4.  // action:mmuFailedLoadIR_SENSOR
   5.  // action:mmuFailedUnload
-  6.  // action:JamDetected
+  6.  // action:jamDetected
   
 ### Example telegram system command to use with Octoprint Plugin **Action Command**  
 `curl https://api.telegram.org/`**YOUR_BOT_ADDRESS**`/sendMessage -d chat_id="`**YOUR_CHAT_ID**`" -d text="MMU2S ‘I failed to load past the IR_SENSOR (possible Jam). Please fix me MeatBag’"`

@@ -26,7 +26,6 @@ void manual_extruder_selector();
 extern bool MMU2SLoading;
 extern bool inErrorState;
 //extern bool initialised;
-void process_commands(void);
 void fixTheProblem(bool showPrevious = false);
 void fixSelCrash(void);
 void fixIdlCrash(void);

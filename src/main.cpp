@@ -64,7 +64,7 @@ void setup()
 
     shr16_clr_led();
     homeIdlerSmooth(true);
-    tmc2130_init(STEALTH_MODE);
+    tmc2130_init(tmc2130_mode);
     if (active_extruder != EXTRUDERS) txPayload((unsigned char*)"STR--");
 }
 
@@ -103,7 +103,6 @@ void manual_extruder_selector()
         case ADC_Btn_Right:
             if (active_extruder < EXTRUDERS) set_positions(active_extruder + 1, true);
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"X1---");
-            //txACKMessageCheck();
             break;
         case ADC_Btn_Left:
             if (active_extruder == EXTRUDERS) txPayload((unsigned char*)"ZZZ--");
@@ -213,8 +212,8 @@ void process_commands(void)
     } else if ((tData1 == 'U') && (tData2 == '0')) {
         // Ux Unload filament CMD Received
         unload_filament_withSensor();
+        homedOnUnload = false; // Clear this flag as unload_filament_withSensor() method uses it within the 'T' cmds
         txPayload(OK);
-        tmc2130_init(STEALTH_MODE);
         isPrinting = false;
         toolChanges = 0;
         trackToolChanges = 0;

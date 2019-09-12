@@ -8,6 +8,7 @@ Changelog of MMU 2.0 Firmware
 * Changed FINDA Status updates to be received in the background via UART2 ISR. Still requested in the same way.
 * Removed ACK & NACK as I wasn't currently using it and other resend/retry methods are in place for the rare missed payload.
 * Implemented a payload RX timeout on MK3S UART2 ISR at 5microseconds past 7 byte reception. This is to reset the protocol if any garbage appears on the input line.
+* Implemented a seperate 3 byte payload to update FINDA in the background so it doesn't interfear with cmd execution.
 
 # V2.1.8 RMM  
 * Fixed long bowden cal from 2.1.8-RC2

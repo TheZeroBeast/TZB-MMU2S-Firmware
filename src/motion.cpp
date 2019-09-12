@@ -204,15 +204,15 @@ void unload_filament_withSensor(uint8_t extruder)
         delay(40);
         moveSmooth(AX_PUL, -(70*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
                    false, false, GLOBAL_ACC);
-        if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH - 100) * -1),
+        if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH - 150) * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
         if (filament_type[extruder] == 1) unloadFINDACheckSteps = -5000;
         if (moveSmooth(AX_PUL, unloadFINDACheckSteps, filament_lookup_table[5][filament_type[extruder]],
-                       false, false, GLOBAL_ACC, true) == MR_Success) {                                                  // move to trigger FINDA
+                       false, false, GLOBAL_ACC, true) == MR_Success) { // move to trigger FINDA
             loop:
             moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[extruder]],
-                       filament_lookup_table[5][filament_type[extruder]], false, false, GLOBAL_ACC);                     // move to filament parking position
+                       filament_lookup_table[5][filament_type[extruder]], false, false, GLOBAL_ACC); // move to filament parking position
         } else if (isFilamentLoaded()) {
             txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
             if (extruder != active_extruder) fixTheProblem(true);
@@ -328,7 +328,6 @@ void load_filament_into_extruder()
 void engage_filament_pulley(bool engage)
 {
     tmc2130_init(tmc2130_mode);
-
     if (isIdlerParked && engage) { // get idler in contact with filament
         move_idler(IDLER_PARKING_STEPS);
         isIdlerParked = false;

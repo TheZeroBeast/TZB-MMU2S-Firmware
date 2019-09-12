@@ -2,10 +2,12 @@
 MMU2S 3-axis TMC2130 Stepper controller
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files. 
-**MMU2S: V#: 3.0.0		B#:  331**  
-**MK3S:  V#: 3.0.0    B#: 2431**  
+**MMU2S: V#: 3.0.0		B#:  342**  
+**MK3S:  V#: 3.0.0    B#: 2436**  
 
 **https://github.com/TheZeroBeast/TZB-MMU2S-Firmware/releases**
+
+  Stay tuned for a bunch more helpful content with utilising your TZB-MMU2S more effectively in my [Wiki](https://github.com/TheZeroBeast/TZB-MMU2S-Firmware/wiki).
 
 ## Points of Notes  
 You **DO NOT** have to reset to factory settings, all the same EEPROM data structures are used as STOCK-PRUSA-FW  

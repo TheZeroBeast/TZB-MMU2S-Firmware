@@ -64,9 +64,8 @@ bool feed_filament(void)
     return _loaded;
 }
 
-bool toolChange(int new_extruder)
+void toolChange(int new_extruder)
 {
-    bool _return = false;
     isPrinting = true;
 
     shr16_clr_led();
@@ -81,9 +80,6 @@ bool toolChange(int new_extruder)
             shr16_clr_led();
             shr16_set_led(2 << 2 * (4 - active_extruder));
             load_filament_withSensor();
-            _return = true;
-        } else {
-            _return = true; // nothing really happened
         }
     } else {
         if (isFilamentLoaded()) unload_filament_withSensor(previous_extruder); //unload filament if you need to
@@ -105,11 +101,9 @@ bool toolChange(int new_extruder)
         shr16_set_led(2 << 2 * (4 - active_extruder));
         load_filament_withSensor();
         homedOnUnload = false;
-        _return = true;
     }
     shr16_clr_led();
     shr16_set_led(1 << 2 * (4 - active_extruder));
-    return _return;
 }
 
 void led_blink(int _no)

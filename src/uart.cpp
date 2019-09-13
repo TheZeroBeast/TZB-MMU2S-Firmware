@@ -72,7 +72,7 @@ void txPayload(unsigned char payload[])
     UDR1 = 0xF7;
 }
 
-void txFINDAStatus()
+void txFINDAStatus(void)
 {
     loop_until_bit_is_set(UCSR1A, UDRE1);     // Do nothing until UDR is ready for more data to be written to it
     UDR1 = 0x06;

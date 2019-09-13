@@ -2,7 +2,7 @@
 MMU2S 3-axis TMC2130 Stepper controller
 
 ## Latest stable versions & link to **RELEASES** for Precompiled HEX files. 
-**MMU2S: V#: 3.0.0		B#:  342**  
+**MMU2S: V#: 3.0.0		B#:  344**  
 **MK3S:  V#: 3.0.0    B#: 2436**  
 
 **https://github.com/TheZeroBeast/TZB-MMU2S-Firmware/releases**

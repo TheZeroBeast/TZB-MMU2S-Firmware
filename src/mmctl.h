@@ -19,7 +19,7 @@ extern uint16_t toolChanges;
 extern uint16_t trackToolChanges;
 
 // functions:
-bool toolChange(int new_extruder);
+void toolChange(int new_extruder);
 bool feed_filament(void);
 void led_blink(int _no);
 

@@ -144,6 +144,7 @@ void load_filament_withSensor(uint16_t setupBowLen)
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
         if (moveSmooth(AX_PUL, 2000, filament_lookup_table[5][filament_type[active_extruder]],
             false, false, GLOBAL_ACC, true) == MR_Success) { // Move to Pulley
+            txFINDAStatus();
             if (setupBowLen != 0) {
                 moveSmooth(AX_PUL, setupBowLen, filament_lookup_table[0][filament_type[active_extruder]],
                 false, false, filament_lookup_table[1][filament_type[active_extruder]]); // Load filament down to MK3-FSensor

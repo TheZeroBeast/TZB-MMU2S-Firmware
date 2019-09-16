@@ -13,8 +13,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "Arduino.h"
-#include "config.h"
-#include "main.h"
 
 extern volatile unsigned char rxData1, rxData2, rxData3, rxData4, rxData5;
 extern volatile bool confirmedPayload, IR_SENSOR;

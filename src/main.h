@@ -12,11 +12,11 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "Buttons.h"
-#include <avr/wdt.h>
 #include "permanent_storage.h"
-#include <inttypes.h>
 #include "config.h"
 #include "uart.h"
+#include <avr/wdt.h>
+#include <inttypes.h>
 
 #define isFilamentLoaded() digitalRead(A1)
 

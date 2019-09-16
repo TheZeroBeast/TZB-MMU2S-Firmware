@@ -7,15 +7,11 @@
 #include <Arduino.h>
 #include "main.h"
 #include "uart.h"
-#include "mmctl.h"
 #include "Buttons.h"
-#include "permanent_storage.h"
-#include "config.h"
 
 // public variables:
 BowdenLength bowdenLength;
 uint16_t BOWDEN_LENGTH = bowdenLength.get();
-int16_t tempFSensorSteps = 0; // Sensed at bondtech already
 uint16_t MAX_SPEED_SELECTOR =  MAX_SPEED_SEL_DEF; // micro steps
 uint16_t MAX_SPEED_IDLER    =  MAX_SPEED_IDL_DEF; // micro steps
 uint32_t GLOBAL_ACC         =  GLOBAL_ACC_DEF; // micro steps / s²
@@ -23,7 +19,7 @@ int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 int filament_lookup_table[9][3] =
 {{TYPE_0_MAX_SPPED_PUL,               TYPE_1_MAX_SPPED_PUL,               TYPE_2_MAX_SPPED_PUL},
  {TYPE_0_ACC_FEED_PUL,                TYPE_1_ACC_FEED_PUL,                TYPE_2_ACC_FEED_PUL},
- {tempFSensorSteps,                   tempFSensorSteps+10,                tempFSensorSteps},
+ {0,                                  0,                                  0},  // Not used with IR_SENSOR
  {TYPE_0_FILAMENT_PARKING_STEPS,      TYPE_1_FILAMENT_PARKING_STEPS,      TYPE_2_FILAMENT_PARKING_STEPS},
  {TYPE_0_FSensor_Sense_STEPS,         TYPE_1_FSensor_Sense_STEPS,         TYPE_2_FSensor_Sense_STEPS},
  {TYPE_0_FEED_SPEED_PUL,              TYPE_1_FEED_SPEED_PUL,              TYPE_2_FEED_SPEED_PUL},
@@ -36,7 +32,7 @@ int filament_lookup_table[9][3] =
 const uint8_t IDLER_PARKING_STEPS = (355 / 2) + 40;      // 217
 const uint16_t EJECT_PULLEY_STEPS = 2000;
 
-const int selectorStepPositionsFromHome[EXTRUDERS+2] = {-3700, -3000, -2300, -1600, -900, -100, 0};
+const int selectorStepPositionsFromHome[EXTRUDERS+2] = {-3700, -3002, -2305, -1607, -910, -100, 0};
 const int idlerStepPositionsFromHome[EXTRUDERS+1] = {-130, -485, -840, -1195, -1550, 0};
 
 uint8_t selSGFailCount = 0;
@@ -138,7 +134,7 @@ void load_filament_withSensor(uint16_t setupBowLen)
     do {
         if (!isHomed && (setupBowLen == 0)) home(true);
         engage_filament_pulley(true); // get in contact with filament
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
+        //tmc2130_init_axis(AX_PUL, tmc2130_mode); duplicate as it's done at the start of engage_filament_pulley
 
         // load filament until FINDA senses end of the filament, means correctly loaded into the selector
         // we can expect something like 570 steps to get in sensor, try 1000 incase user is feeding to pulley
@@ -194,9 +190,6 @@ void unload_filament_withSensor(uint8_t extruder)
 {
     int unloadFINDACheckSteps = -3000;
     if (isFilamentLoaded()) {
-        tmc2130_init_axis(AX_PUL, tmc2130_mode);
-        tmc2130_init_axis(AX_IDL, tmc2130_mode);
-        
         engage_filament_pulley(true); // get in contact with filament
         uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
         uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
@@ -221,7 +214,6 @@ void unload_filament_withSensor(uint8_t extruder)
             homedOnUnload = true;
         }
     }
-    
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);
 }
@@ -328,13 +320,16 @@ void load_filament_into_extruder()
  */
 void engage_filament_pulley(bool engage)
 {
-    tmc2130_init(tmc2130_mode);
     if (isIdlerParked && engage) { // get idler in contact with filament
+        isLoading = true;
+        tmc2130_init(tmc2130_mode);
         move_idler(IDLER_PARKING_STEPS);
         isIdlerParked = false;
     } else if (!isIdlerParked && !engage) { // park idler so filament can move freely
         move_idler(IDLER_PARKING_STEPS * -1);
         isIdlerParked = true;
+        isLoading = false;
+        tmc2130_init(tmc2130_mode);
     }
 }
 

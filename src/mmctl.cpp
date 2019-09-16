@@ -10,6 +10,8 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "Buttons.h"
+#include "config.h"
+#include "uart.h"
 
 // public variables:
 int8_t active_extruder = -1;

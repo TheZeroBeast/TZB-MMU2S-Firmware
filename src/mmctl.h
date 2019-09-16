@@ -3,7 +3,6 @@
 #define _MMCTL_H
 
 #include <inttypes.h>
-#include "config.h"
 
 // public variables:
 extern bool isPrinting;

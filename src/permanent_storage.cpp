@@ -3,6 +3,7 @@
 
 #include "permanent_storage.h"
 #include "mmctl.h"
+#include "config.h"
 #include <avr/eeprom.h>
 
 #define ARR_SIZE(ARRAY) (sizeof(ARRAY)/sizeof(ARRAY[0]))

@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  300 // example: 103 means version 1.0.3
-#define FW_BUILDNR  344 // number of commits in 'master'
+#define FW_BUILDNR  345 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -57,7 +57,7 @@
 //   decrese treshold, if stall detection triggers too late
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 5
-#define TMC2130_SG_THR_IDL 6
+#define TMC2130_SG_THR_IDL 7
 #define TMC2130_SG_THR_HOM_IDL 2
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
@@ -147,9 +147,9 @@
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
 #define TYPE_0_UnloadSpeed                     855  //  S/S
 // Flex
-#define TYPE_1_MAX_SPPED_PUL                   600  //  S/S from 300
+#define TYPE_1_MAX_SPPED_PUL                  2000  //  S/S from 300
 #define TYPE_1_ACC_FEED_PUL                    100  //  S/S/S
-#define TYPE_1_FILAMENT_PARKING_STEPS         -630  //  STEPS
+#define TYPE_1_FILAMENT_PARKING_STEPS         -650  //  STEPS
 #define TYPE_1_FSensor_Sense_STEPS            3000  //  STEPS
 #define TYPE_1_FEED_SPEED_PUL                  285  //  S/S
 #define TYPE_1_L2ExStageOne                    200  //  S/S

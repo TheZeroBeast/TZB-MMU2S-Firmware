@@ -1,8 +1,10 @@
 // tmc2130.c - Trinamic stepper driver
 
 #include "tmc2130.h"
-#include <avr/io.h>
+#include "config.h"
+#include "shr16.h"
 #include "spi.h"
+#include <avr/io.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
 
@@ -49,6 +51,8 @@
 
 #define tmc2130_rd(axis, addr, rval) tmc2130_rx(axis, addr, rval)
 #define tmc2130_wr(axis, addr, wval) tmc2130_tx(axis, addr | 0x80, wval)
+
+bool isLoading = false;
 
 static void tmc2130_tx(uint8_t axis, uint8_t addr, uint32_t wval);
 uint8_t tmc2130_rx(uint8_t axis, uint8_t addr, uint32_t *rval);
@@ -180,6 +184,7 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
     uint8_t current_running_normal[3] = CURRENT_RUNNING_NORMAL;
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
+    uint8_t current_holding_normal_laoding[3] = CURRENT_HOLDING_NORMAL_LOADING;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
     uint8_t current_homing[3] = CURRENT_HOMING;
 
@@ -189,8 +194,11 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
                                                current_homing[axis], true);
         break; //drivers in normal mode, homing currents
     case NORMAL_MODE:
-        ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis],
+        if (isLoading) ret = tmc2130_init_axis_current_normal(axis, current_holding_normal_laoding[axis],
                                                current_running_normal[axis], false);
+        else ret = tmc2130_init_axis_current_normal(axis, current_holding_normal[axis],
+                                               current_running_normal[axis], false);
+
         break; //drivers in normal mode
     case STEALTH_MODE:
         ret = tmc2130_init_axis_current_stealth(axis, current_holding_stealth[axis],

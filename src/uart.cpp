@@ -1,5 +1,7 @@
 // uart.cpp
 #include "uart.h"
+#include "config.h"
+#include "main.h"
 
 volatile unsigned char readRxBuffer, rxData1 = 0, rxData2 = 0, rxData3 = 0,
                                      rxData4 = 0, rxData5 = 0;

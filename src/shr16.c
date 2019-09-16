@@ -1,6 +1,7 @@
 // shr16.c - 16bit shift register (2x74595)
 
 #include "shr16.h"
+#include "config.h"
 #include <avr/io.h>
 
 // public variables:

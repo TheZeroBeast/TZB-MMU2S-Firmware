@@ -5,7 +5,6 @@
 #define PERMANENT_STORAGE_H_
 
 #include <stdint.h>
-//#include "motion.h"
 
 void permanentStorageInit();
 

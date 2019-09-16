@@ -3,15 +3,11 @@
 #ifndef _MOTION_h
 #define _MOTION_h
 
-#include "config.h"
-#include "shr16.h"
-#include "tmc2130.h"
-#include "mmctl.h"
-#include "motion.h"
-#include "permanent_storage.h"
-#include "main.h"
 #include <inttypes.h>
 #include <stdbool.h>
+#include "permanent_storage.h"
+#include "config.h"
+#include "mmctl.h"
 
 extern int8_t filament_type[EXTRUDERS];
 extern int filament_lookup_table[9][3]; // [X][Y]Two-dimensional Array of extruder and used variables

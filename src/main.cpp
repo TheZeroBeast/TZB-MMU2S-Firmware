@@ -287,7 +287,6 @@ void process_commands(void)
 //* this routine is the common routine called for fixing the filament issues (loading or unloading)
 //****************************************************************************************************
 void fixTheProblem(bool showPrevious) {
-
     engage_filament_pulley(false);                    // park the idler stepper motor
     shr16_clr_ena(AX_SEL);                            // turn OFF the selector stepper motor
     shr16_clr_ena(AX_IDL);                            // turn OFF the idler stepper motor
@@ -309,12 +308,14 @@ void fixTheProblem(bool showPrevious) {
                         }
                     } else moveSmooth(AX_PUL, -300, filament_lookup_table[5][filament_type[active_extruder]], false);
                     engage_filament_pulley(false);
+                    shr16_clr_ena(AX_SEL);                    
                     shr16_clr_ena(AX_IDL);
                     break;
                 case ADC_Btn_Left:
                     engage_filament_pulley(true);
                     moveSmooth(AX_PUL, 300, filament_lookup_table[5][filament_type[previous_extruder]]*1.8, false);
                     engage_filament_pulley(false);
+                    shr16_clr_ena(AX_SEL);                    
                     shr16_clr_ena(AX_IDL);
                     break;
                 default:

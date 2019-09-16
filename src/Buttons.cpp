@@ -2,6 +2,12 @@
 
 #include "Buttons.h"
 #include "main.h"
+#include "shr16.h"
+#include "tmc2130.h"
+#include "mmctl.h"
+#include "motion.h"
+#include "permanent_storage.h"
+#include "uart.h"
 
 const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
 uint16_t countL = 0;

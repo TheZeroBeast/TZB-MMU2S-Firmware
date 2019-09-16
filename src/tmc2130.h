@@ -4,8 +4,8 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
-#include "config.h"
-#include "shr16.h"
+
+extern bool isLoading;
 
 #define TMC2130_SG_THR         4       // SG_THR default
 #define TMC2130_TCOOLTHRS      450     // TCOOLTHRS default

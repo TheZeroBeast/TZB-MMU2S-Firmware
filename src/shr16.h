@@ -18,7 +18,6 @@
 #define _SHR16_H
 
 #include <inttypes.h>
-#include "config.h"
 
 #if defined(__cplusplus)
 extern "C" {

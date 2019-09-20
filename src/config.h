@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  300 // example: 103 means version 1.0.3
-#define FW_BUILDNR  346 // number of commits in 'master'
+#define FW_BUILDNR  352 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -141,7 +141,7 @@
 #define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
 #define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
 #define TYPE_0_FILAMENT_PARKING_STEPS         -650  //  STEPS
-#define TYPE_0_FSensor_Sense_STEPS            1000  //  STEPS
+#define TYPE_0_FSensor_Sense_STEPS            1500  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
 #define TYPE_0_L2ExStageTwo                    440  //  S/S
@@ -159,7 +159,7 @@
 #define TYPE_2_MAX_SPPED_PUL                  2800  //  S/S
 #define TYPE_2_ACC_FEED_PUL                   2000  //  S/S/S
 #define TYPE_2_FILAMENT_PARKING_STEPS         -650  //  STEPS
-#define TYPE_2_FSensor_Sense_STEPS            1000  //  STEPS
+#define TYPE_2_FSensor_Sense_STEPS            1500  //  STEPS
 #define TYPE_2_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S
 #define TYPE_2_L2ExStageTwo                    440  //  S/S

@@ -2,6 +2,7 @@ Changelog of MMU 2.0 Firmware
 =============================
 # V3.0.0 RMM  
 * Incorporated changes from 3.8.0 (7x7, ASA, Sheet Setups, menu updates & autodeplete)
+  * Exactly PRUSA Stock FW COMMIT_NR:3274 of 3.8.0+
 * Implemented timer0 @ 30Hz for PWM of Heatbed.
 * Overhaul of the TZB-Comms protocol, now with five data bytes, no CSUM used anymore.
 * Implemented STEALTH mode for those times you don't want sirens going off in your home, hahaha.

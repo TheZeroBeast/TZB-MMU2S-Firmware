@@ -12,9 +12,9 @@
 // public variables:
 BowdenLength bowdenLength;
 uint16_t BOWDEN_LENGTH = bowdenLength.get();
-uint16_t MAX_SPEED_SELECTOR =  MAX_SPEED_SEL_DEF; // micro steps
-uint16_t MAX_SPEED_IDLER    =  MAX_SPEED_IDL_DEF; // micro steps
-uint32_t GLOBAL_ACC         =  GLOBAL_ACC_DEF; // micro steps / s²
+uint16_t MAX_SPEED_SELECTOR =  MAX_SPEED_SEL_DEF_STEALTH; // micro steps
+uint16_t MAX_SPEED_IDLER    =  MAX_SPEED_IDL_DEF_STEALTH; // micro steps
+uint32_t GLOBAL_ACC         =  GLOBAL_ACC_DEF_STEALTH; // micro steps / s²
 int8_t filament_type[EXTRUDERS] = { 0, 0, 0, 0, 0};
 int filament_lookup_table[9][3] =
 {{TYPE_0_MAX_SPPED_PUL,               TYPE_1_MAX_SPPED_PUL,               TYPE_2_MAX_SPPED_PUL},
@@ -55,14 +55,14 @@ bool set_positions(uint8_t _next_extruder, bool update_extruders)
     }
     if (!isHomed) home(true);
     else {
-        _return0 = steps2setIDL2pos(_next_extruder);
-        _return1 = steps2setSEL2pos(_next_extruder);
+        _return0 = setIDL2pos(_next_extruder);
+        _return1 = setSEL2pos(_next_extruder);
     }
     if (!_return0 || !_return1) return false;
     else return true;
 }
 
-bool steps2setIDL2pos(uint8_t _next_extruder)
+bool setIDL2pos(uint8_t _next_extruder)
 {
     bool _return = false;
     if (_next_extruder == EXTRUDERS) _next_extruder -= 1;
@@ -71,7 +71,7 @@ bool steps2setIDL2pos(uint8_t _next_extruder)
     return _return;
 }
 
-bool steps2setSEL2pos(uint8_t _next_extruder)
+bool setSEL2pos(uint8_t _next_extruder)
 {
     bool _return = false;
     int _selector_steps = (selectorStepPositionsFromHome[_next_extruder] - selectorStepPositionsFromHome[activeSelPos]);
@@ -83,14 +83,14 @@ void set_idler_toLast_positions(uint8_t _next_extruder)
 {
     bool previouslyEngaged = !isIdlerParked;
     homeIdlerSmooth();
-    if (!steps2setIDL2pos(_next_extruder)) fixTheProblem();
+    if (!setIDL2pos(_next_extruder)) fixTheProblem();
     engage_filament_pulley(previouslyEngaged);
 }
 
 void set_sel_toLast_positions(uint8_t _next_extruder)
 {
     homeSelectorSmooth();
-    if (!steps2setSEL2pos(_next_extruder)) fixTheProblem();
+    if (!setSEL2pos(_next_extruder)) fixTheProblem();
 }
 
 /**
@@ -105,8 +105,8 @@ void eject_filament(uint8_t extruder)
     if (isFilamentLoaded()) unload_filament_withSensor();
 
     set_positions(extruder, true);
-    if (active_extruder == (EXTRUDERS - 1)) steps2setSEL2pos(0);
-    else steps2setSEL2pos(EXTRUDERS);
+    if (active_extruder == (EXTRUDERS - 1)) setSEL2pos(0);
+    else setSEL2pos(EXTRUDERS);
     isEjected = true;
 
     engage_filament_pulley(true);
@@ -358,11 +358,21 @@ void home(bool doToolSync)
     }
 }
 
+/**
+ * @brief move_idler
+ * @param steps, number of micro steps
+ */
 bool move_idler(int steps, uint16_t speed)
 {
+    bool ret, isLoadingBackup = isLoading;
+    isLoading = true;
+    tmc2130_init(tmc2130_mode);
     if (speed > MAX_SPEED_IDLER) speed = MAX_SPEED_IDLER;
-    if (moveSmooth(AX_IDL, steps, speed, true, true, GLOBAL_ACC) == MR_Failed) return false;
-    else return true;
+    if (moveSmooth(AX_IDL, steps, speed, true, true, GLOBAL_ACC) == MR_Failed) ret = false;
+    else ret = true;
+    isLoading = isLoadingBackup;
+    tmc2130_init(tmc2130_mode);
+    return ret;
 }
 
 /**
@@ -440,7 +450,7 @@ MotReturn homeSelectorSmooth()
     uint32_t acc_backup = GLOBAL_ACC;
     for (int c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
-        GLOBAL_ACC = GLOBAL_ACC_DEF;
+        GLOBAL_ACC = GLOBAL_ACC_DEF_NORMAL;
         moveSmooth(AX_SEL, 4000, 2000, false);
         GLOBAL_ACC = acc_backup;
         tmc2130_init(tmc2130_mode);  // trinamic, normal
@@ -459,7 +469,7 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
     moveSmooth(AX_IDL, -250, MAX_SPEED_IDLER, false);
     for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
-        GLOBAL_ACC = GLOBAL_ACC_DEF;
+        GLOBAL_ACC = GLOBAL_ACC_DEF_NORMAL;
         moveSmooth(AX_IDL, 2600, 7000, false, true, 80000);
         GLOBAL_ACC = acc_backup;
         tmc2130_init(tmc2130_mode);  // trinamic, homing
@@ -472,7 +482,7 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
         uint8_t filament = 0;
         FilamentLoaded::get(filament);
         active_extruder = filament;
-        steps2setIDL2pos(active_extruder);
+        setIDL2pos(active_extruder);
         engage_filament_pulley(false);
     }
     return MR_Success;
@@ -501,6 +511,8 @@ MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                      bool withStallDetection, float acc,
                      bool withFindaDetection, bool withIR_SENSORDetection)
 {
+    // if in stealth mode don't look for stallguard
+    if (tmc2130_mode == STEALTH_MODE) rehomeOnFail = false;
     shr16_set_ena(axis);
     startWakeTime = millis();
     MotReturn ret = MR_Success;

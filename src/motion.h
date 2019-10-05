@@ -30,8 +30,8 @@ void unload_filament_forSetup(uint16_t distance, uint8_t extruder = active_extru
 void load_filament_into_extruder();
 
 bool set_positions(uint8_t _next_extruder, bool update_extruders = false);
-bool steps2setIDL2pos(uint8_t _next_extruder);
-bool steps2setSEL2pos(uint8_t _next_extruder);
+bool setIDL2pos(uint8_t _next_extruder);
+bool setSEL2pos(uint8_t _next_extruder);
 void set_idler_toLast_positions(uint8_t _next_extruder);
 void set_sel_toLast_positions(uint8_t _next_extruder);
 

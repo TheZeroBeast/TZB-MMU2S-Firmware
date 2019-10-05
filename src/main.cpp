@@ -10,7 +10,7 @@ bool inErrorState = false;
 long startWakeTime;
 void process_commands(void);
 
-uint8_t tmc2130_mode = NORMAL_MODE;
+uint8_t tmc2130_mode = STEALTH_MODE;
 
 //! @brief Initialization after reset
 //!
@@ -234,21 +234,23 @@ void process_commands(void)
     } else if (tData1 == 'M') {
             // Mx Modes CMD Received
             // M0: set to normal mode; M1: set to stealth mode
-            if (tData2 == 0) {
+            uint8_t sysV = getMMU2S_System_Voltage();
+            // Only allow NORMAL mode if voltage is between 18v and 26v
+            if (tData2 == 0 && (sysV < 260 && sysV > 180 && tData2 == 0)) {
                 filament_lookup_table[0][0] = TYPE_0_MAX_SPPED_PUL;
                 filament_lookup_table[0][1] = TYPE_1_MAX_SPPED_PUL;
                 filament_lookup_table[0][2] = TYPE_2_MAX_SPPED_PUL;
-                MAX_SPEED_IDLER = MAX_SPEED_SEL_DEF;
-                MAX_SPEED_SELECTOR = MAX_SPEED_SEL_DEF;
-                GLOBAL_ACC = GLOBAL_ACC_DEF;
+                MAX_SPEED_IDLER = MAX_SPEED_IDL_DEF_NORMAL;
+                MAX_SPEED_SELECTOR = MAX_SPEED_SEL_DEF_NORMAL;
+                GLOBAL_ACC = GLOBAL_ACC_DEF_NORMAL;
                 tmc2130_mode =  NORMAL_MODE;
             }
             if (tData2 == 1) {
-                for (uint8_t i = 0; i < 3; i++) 
+                for (uint8_t i = 0; i < 3; i++)
                     if (filament_lookup_table[0][i] > 1500) filament_lookup_table[0][i] = 1400;
-                MAX_SPEED_IDLER = 1900;
-                MAX_SPEED_SELECTOR = 900;
-                GLOBAL_ACC = 15000;
+                MAX_SPEED_IDLER = MAX_SPEED_IDL_DEF_STEALTH;
+                MAX_SPEED_SELECTOR = MAX_SPEED_SEL_DEF_STEALTH;
+                GLOBAL_ACC = GLOBAL_ACC_DEF_STEALTH;
                 tmc2130_mode = STEALTH_MODE;
             }
             tmc2130_init(tmc2130_mode);

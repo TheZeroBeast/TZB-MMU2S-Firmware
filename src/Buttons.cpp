@@ -9,7 +9,7 @@
 #include "permanent_storage.h"
 #include "uart.h"
 
-const int ButtonPin = A2; // we use an analog input with different DC-levels for each button
+const uint8_t ButtonPin = A2; // we use an analog input with different DC-levels for each button
 uint16_t countL = 0;
 uint16_t countM = 0;
 uint16_t countR = 0;

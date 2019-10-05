@@ -12,6 +12,7 @@
 #include "mmctl.h"
 #include "motion.h"
 #include "Buttons.h"
+#include "Detect12V24V.h"
 #include "permanent_storage.h"
 #include "config.h"
 #include "uart.h"

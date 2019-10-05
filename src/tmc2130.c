@@ -185,6 +185,7 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
     uint8_t current_running_stealth[3] = CURRENT_RUNNING_STEALTH;
     uint8_t current_holding_normal[3] = CURRENT_HOLDING_NORMAL;
     uint8_t current_holding_normal_laoding[3] = CURRENT_HOLDING_NORMAL_LOADING;
+    uint8_t current_holding_stealth_loading[3] = CURRENT_HOLDING_STEALTH_LOADING;
     uint8_t current_holding_stealth[3] = CURRENT_HOLDING_STEALTH;
     uint8_t current_homing[3] = CURRENT_HOMING;
 
@@ -201,7 +202,10 @@ int8_t tmc2130_init_axis(uint8_t axis, uint8_t mode)
 
         break; //drivers in normal mode
     case STEALTH_MODE:
-        ret = tmc2130_init_axis_current_stealth(axis, current_holding_stealth[axis],
+        if (isLoading) ret = tmc2130_init_axis_current_stealth(axis, current_holding_stealth_loading[axis],
+                                                current_running_stealth[axis]);
+                                                
+        else ret = tmc2130_init_axis_current_stealth(axis, current_holding_stealth[axis],
                                                 current_running_stealth[axis]);
         break; //drivers in stealth mode
     default:

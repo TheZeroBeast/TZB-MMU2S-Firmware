@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  300 // example: 103 means version 1.0.3
-#define FW_BUILDNR  357 // number of commits in 'master'
+#define FW_BUILDNR  358 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -58,7 +58,7 @@
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 5
 #define TMC2130_SG_THR_IDL 7
-#define TMC2130_SG_THR_HOM_IDL 2
+#define TMC2130_SG_THR_HOM_IDL 6
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled
@@ -67,17 +67,21 @@
 #define TMC2130_TCOOLTHRS_AX_IDL 450
 
 // currents for pulley, selector and idler
-#define CURRENT_HOLDING_STEALTH        { 1,  7, 22}
-#define CURRENT_HOLDING_NORMAL         { 1, 10, 10}
-#define CURRENT_HOLDING_NORMAL_LOADING { 1, 10, 40}
-#define CURRENT_RUNNING_STEALTH        {35, 35, 45}
-#define CURRENT_RUNNING_NORMAL         {30, 35, 40}
-#define CURRENT_HOMING                 { 1, 35, 35}
+#define CURRENT_HOLDING_STEALTH         { 1,  7, 10}
+#define CURRENT_HOLDING_STEALTH_LOADING { 1,  7, 40}
+#define CURRENT_HOLDING_NORMAL          { 1, 10, 10}
+#define CURRENT_HOLDING_NORMAL_LOADING  { 1, 10, 40}
+#define CURRENT_RUNNING_STEALTH         {35, 35, 40}
+#define CURRENT_RUNNING_NORMAL          {30, 35, 40}
+#define CURRENT_HOMING                  { 1, 35, 35}
 
 // speeds and accelerations
-#define MAX_SPEED_SEL_DEF  6000 // micro steps
-#define MAX_SPEED_IDL_DEF  6000 // micro steps
-#define GLOBAL_ACC_DEF    80000 // micro steps / s²
+#define MAX_SPEED_SEL_DEF_NORMAL  6000 // micro steps
+#define MAX_SPEED_IDL_DEF_NORMAL  6000 // micro steps
+#define GLOBAL_ACC_DEF_NORMAL    80000 // micro steps / s²
+#define MAX_SPEED_SEL_DEF_STEALTH 2000 // micro steps
+#define MAX_SPEED_IDL_DEF_STEALTH 3000 // micro steps
+#define GLOBAL_ACC_DEF_STEALTH   30000 // micro steps / s²
 
 //mode
 #define HOMING_MODE 0

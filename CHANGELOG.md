@@ -5,6 +5,7 @@ Changelog of MMU 2.0 Firmware
   * Initial home is in stealth mode for 12v situations
   * PinA0 A2D used to sens supply voltage and so far prevent going to Normal mode if not at 24v
 * Pulled thermistor table for SE HT sensor on Bondtech builds
+* Rebased to Stock 3.8.1-RC1
 
 # V3.0.0 RMM  
 * Incorporated changes from 3.8.0 (7x7, ASA, Sheet Setups, menu updates & autodeplete)

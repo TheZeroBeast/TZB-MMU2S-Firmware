@@ -236,7 +236,7 @@ void process_commands(void)
             // M0: set to normal mode; M1: set to stealth mode
             uint8_t sysV = getMMU2S_System_Voltage();
             // Only allow NORMAL mode if voltage is between 18v and 26v
-            if (tData2 == 0 && (sysV < 260 && sysV > 180 && tData2 == 0)) {
+            if (tData2 == 0 && (sysV < 254 && sysV > 180)) {
                 filament_lookup_table[0][0] = TYPE_0_MAX_SPPED_PUL;
                 filament_lookup_table[0][1] = TYPE_1_MAX_SPPED_PUL;
                 filament_lookup_table[0][2] = TYPE_2_MAX_SPPED_PUL;

@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  301 // example: 103 means version 1.0.3
-#define FW_BUILDNR  360 // number of commits in 'master'
+#define FW_BUILDNR  361 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -58,7 +58,7 @@
 #define TMC2130_SG_THR_PUL 5
 #define TMC2130_SG_THR_SEL 5
 #define TMC2130_SG_THR_IDL 7
-#define TMC2130_SG_THR_HOM_IDL 6
+#define TMC2130_SG_THR_HOM_IDL 5
 
 // TCOOLTHRS coolstep treshold, usable range 400-600, unit is 1/13MHz ~= 75ns
 // below that equivalent speed the stall detection is disabled

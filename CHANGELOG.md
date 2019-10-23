@@ -1,5 +1,11 @@
 Changelog of MMU 2.0 Firmware
 =============================
+# v3.0.2 RMM
+* Printer FW Changes
+  * Added LA1.5 Support
+  * Eject unheated when not loaded in hotend.
+  * M600 Eject issue fixed.
+  * SE HT Thermistor fix, brought to my attention by gussner
 # v3.0.1 RMM
 * MK2.5S Changes
   * Initial home is in stealth mode for 12v situations

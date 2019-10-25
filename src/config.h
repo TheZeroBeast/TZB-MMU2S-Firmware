@@ -1,18 +1,12 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION  301 // example: 103 means version 1.0.3
-#define FW_BUILDNR  361 // number of commits in 'master'
+#define FW_VERSION  302 // example: 103 means version 1.0.3
+#define FW_BUILDNR  362 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
 //#define green_board
-
-// shr16 - 16bit shift register
-// pinout - hardcoded
-//#define SHR16_CLK //signal d13 - PC7
-//#define SHR16_LAT //signal d10 - PB6
-//#define SHR16_DAT //signal d9  - PB5
 
 // shift register outputs
 // LEDS - hardcoded

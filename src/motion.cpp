@@ -464,16 +464,15 @@ MotReturn homeSelectorSmooth()
 MotReturn homeIdlerSmooth(bool toLastFilament)
 {
     uint32_t acc_backup = GLOBAL_ACC;
-    
     tmc2130_init(tmc2130_mode);  // trinamic, normal
     moveSmooth(AX_IDL, -250, MAX_SPEED_IDLER, false);
     for (uint8_t c = 2; c > 0; c--) { // touch end 2 times
         tmc2130_init(HOMING_MODE);  // trinamic, homing
         GLOBAL_ACC = GLOBAL_ACC_DEF_NORMAL;
-        moveSmooth(AX_IDL, 2600, 7000, false, true, 80000);
-        GLOBAL_ACC = acc_backup;
+        moveSmooth(AX_IDL, 2600, 6350, false, true);
         tmc2130_init(tmc2130_mode);  // trinamic, homing
-        if (c > 1) moveSmooth(AX_IDL, -400, MAX_SPEED_IDLER, false, true, GLOBAL_ACC);
+        GLOBAL_ACC = acc_backup;
+        if (c > 1) moveSmooth(AX_IDL, -600, MAX_SPEED_IDLER, false);
         delay(50);
     }
     isIdlerParked = false;

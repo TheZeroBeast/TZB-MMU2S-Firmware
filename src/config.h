@@ -1,8 +1,8 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION  302 // example: 103 means version 1.0.3
-#define FW_BUILDNR  362 // number of commits in 'master'
+#define FW_VERSION  303 // example: 103 means version 1.0.3
+#define FW_BUILDNR  363 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -67,7 +67,7 @@
 #define CURRENT_HOLDING_NORMAL_LOADING  { 1, 10, 40}
 #define CURRENT_RUNNING_STEALTH         {35, 35, 40}
 #define CURRENT_RUNNING_NORMAL          {30, 35, 40}
-#define CURRENT_HOMING                  { 1, 35, 35}
+#define CURRENT_HOMING                  { 1, 35, 30}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL_DEF_NORMAL  6000 // micro steps

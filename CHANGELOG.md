@@ -1,5 +1,11 @@
-Changelog of MMU 2.0 Firmware
+Changelog of MMU2S Firmware
 =============================
+# v3.0.3 RMM
+* Implemented PlatformIO build scripts for variants
+* Pulled Printer Code upstream to 3.9.0-RC1
+* Resolved M600 on stock start gcode issue
+* Current tuning for MMU2S drivers to improve reliability
+
 # v3.0.2 RMM
 * Printer FW Changes
   * Added LA1.5 Support
@@ -7,6 +13,7 @@ Changelog of MMU 2.0 Firmware
   * M600 Eject issue fixed.
   * SE HT Thermistor fix, brought to my attention by gussner
   * Pulled printer FW to 3.8.1 Final
+
 # v3.0.1 RMM
 * MK2.5S Changes
   * Initial home is in stealth mode for 12v situations
@@ -14,7 +21,7 @@ Changelog of MMU 2.0 Firmware
 * Pulled thermistor table for SE HT sensor on Bondtech builds
 * Rebased to Stock 3.8.1-RC1
 
-# V3.0.0 RMM  
+# V3.0.0 RMM
 * Incorporated changes from 3.8.0 (7x7, ASA, Sheet Setups, menu updates & autodeplete)
   * Exactly PRUSA Stock FW COMMIT_NR:3274 of 3.8.0+
 * Implemented timer0 @ 30Hz for PWM of Heatbed.

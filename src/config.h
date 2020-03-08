@@ -2,7 +2,7 @@
 
 
 #define FW_VERSION  303 // example: 103 means version 1.0.3
-#define FW_BUILDNR  363 // number of commits in 'master'
+#define FW_BUILDNR  364 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -61,17 +61,17 @@
 #define TMC2130_TCOOLTHRS_AX_IDL 450
 
 // currents for pulley, selector and idler
-#define CURRENT_HOLDING_STEALTH         { 1,  7, 10}
+#define CURRENT_HOLDING_STEALTH         { 1,  7, 20}
 #define CURRENT_HOLDING_STEALTH_LOADING { 1,  7, 40}
-#define CURRENT_HOLDING_NORMAL          { 1, 10, 10}
-#define CURRENT_HOLDING_NORMAL_LOADING  { 1, 10, 40}
+#define CURRENT_HOLDING_NORMAL          { 1,  7, 20}
+#define CURRENT_HOLDING_NORMAL_LOADING  { 1,  7, 40}
 #define CURRENT_RUNNING_STEALTH         {35, 35, 40}
 #define CURRENT_RUNNING_NORMAL          {30, 35, 40}
 #define CURRENT_HOMING                  { 1, 35, 30}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL_DEF_NORMAL  6000 // micro steps
-#define MAX_SPEED_IDL_DEF_NORMAL  6000 // micro steps
+#define MAX_SPEED_IDL_DEF_NORMAL  5000 // micro steps
 #define GLOBAL_ACC_DEF_NORMAL    80000 // micro steps / s²
 #define MAX_SPEED_SEL_DEF_STEALTH 2000 // micro steps
 #define MAX_SPEED_IDL_DEF_STEALTH 3000 // micro steps
@@ -138,7 +138,7 @@
 // Default
 #define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
 #define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
-#define TYPE_0_FILAMENT_PARKING_STEPS         -650  //  STEPS
+#define TYPE_0_FILAMENT_PARKING_STEPS         -670  //  STEPS
 #define TYPE_0_FSensor_Sense_STEPS            1500  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_0_L2ExStageOne                    350  //  S/S
@@ -156,7 +156,7 @@
 // PVA
 #define TYPE_2_MAX_SPPED_PUL                  2800  //  S/S
 #define TYPE_2_ACC_FEED_PUL                   2000  //  S/S/S
-#define TYPE_2_FILAMENT_PARKING_STEPS         -650  //  STEPS
+#define TYPE_2_FILAMENT_PARKING_STEPS         -670  //  STEPS
 #define TYPE_2_FSensor_Sense_STEPS            1500  //  STEPS
 #define TYPE_2_FEED_SPEED_PUL                  760  //  S/S
 #define TYPE_2_L2ExStageOne                    350  //  S/S

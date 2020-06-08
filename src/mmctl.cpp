@@ -46,9 +46,13 @@ bool feed_filament(void)
                 break;
             } else {
                 if (_c < 1) {                     // Two attempt to load then give up
+                    delay(10);
+                    moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, GLOBAL_ACC);
                     fixTheProblem();
                     engage_filament_pulley(true);
                 } else {
+                    delay(10);
+                    moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, GLOBAL_ACC);
                     engage_filament_pulley(false);
                     _loaded = false;
                     break;

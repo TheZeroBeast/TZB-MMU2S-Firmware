@@ -1,5 +1,8 @@
 Changelog of MMU2S Firmware
 =============================
+# v3.1.0 RMM
+* Pulled Printer Code upstream to 3.9.2
+
 # v3.0.3 RMM
 * Implemented PlatformIO build scripts for variants
 * Pulled Printer Code upstream to 3.9.0-RC1

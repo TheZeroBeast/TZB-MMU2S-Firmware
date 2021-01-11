@@ -1,5 +1,9 @@
 Changelog of MMU2S Firmware
 =============================
+# v3.2.0 RMM
+* Pulled Printer Code upstream to 3.9.3
+* Added SE_HT Mosquito variant
+
 # v3.1.0 RMM
 * Pulled Printer Code upstream to 3.9.2
 

@@ -28,6 +28,7 @@ void load_filament_withSensor(uint16_t setupBowLen = 0);
 void unload_filament_withSensor(uint8_t extruder = active_extruder);
 void unload_filament_forSetup(uint16_t distance, uint8_t extruder = active_extruder);
 void load_filament_into_extruder();
+void mmctl_cut_filament();
 
 bool set_positions(uint8_t _next_extruder, bool update_extruders = false);
 bool setIDL2pos(uint8_t _next_extruder);

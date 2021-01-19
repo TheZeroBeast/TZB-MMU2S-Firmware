@@ -94,6 +94,34 @@ void set_sel_toLast_positions(uint8_t _next_extruder)
 }
 
 /**
+* @Cut off a tip that isn't loading correctly
+* move selector sideways and push filament forward a little bit, move selector to cut tip with SG to home if loss of step,
+* pull filament back a bit. parent method would then attempt to gently feed filament again
+*/
+void mmctl_cut_filament()
+{
+    const int cutStepsPre = 700;
+    const int cutStepsPost = 150;
+
+    engage_filament_pulley(true);
+
+    // Set normal mode for cut
+    if (!tmc2130_mode == NORMAL_MODE) tmc2130_init(NORMAL_MODE);
+
+    setSEL2pos(active_extruder + 1);
+    moveSmooth(AX_PUL, cutStepsPre, filament_lookup_table[5][filament_type[active_extruder]], 
+    false, false, GLOBAL_ACC_DEF_NORMAL);                                           // Set filament for the chop :)
+    moveSmooth(AX_SEL, selectorStepPositionsFromHome[activeSelPos - 2] - selectorStepPositionsFromHome[activeSelPos],
+    MAX_SPEED_SEL_DEF_NORMAL, false, false, GLOBAL_ACC_DEF_NORMAL);                 // The CHOP!!
+    moveSmooth(AX_PUL, cutStepsPost, filament_lookup_table[5][filament_type[active_extruder]], 
+    false, false, GLOBAL_ACC_DEF_NORMAL);                                           // re-park filament post chop
+    engage_filament_pulley(false);
+    if (!tmc2130_mode == NORMAL_MODE) tmc2130_init(tmc2130_mode);
+    homeSelectorSmooth();
+    set_positions(active_extruder);
+}
+
+/**
  * @brief Eject Filament
  * move selector sideways and push filament forward little bit, so user can catch it,
  * unpark idler at the end to user can pull filament out
@@ -288,15 +316,15 @@ void load_filament_into_extruder()
     }
     move_pulley(170, filament_lookup_table[6][filament_type[active_extruder]]);
 
-    // set current to 25%
+    // set current to 50%
     if (tmc2130_mode == NORMAL_MODE) {
         tmc2130_init_axis_current_normal(AX_PUL, current_holding_normal[AX_PUL],
-                                         current_running_normal[AX_PUL] / 4, false);
+                                         current_running_normal[AX_PUL] / 2, false);
     } else {
         tmc2130_init_axis_current_stealth(AX_PUL, current_holding_stealth[AX_PUL],
-                                          current_running_stealth[AX_PUL] / 4);
+                                          current_running_stealth[AX_PUL] / 2);
     }
-    move_pulley(650, filament_lookup_table[7][filament_type[active_extruder]]);
+    move_pulley(820, filament_lookup_table[7][filament_type[active_extruder]]);
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false); // release contact with filament
 

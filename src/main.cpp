@@ -282,6 +282,11 @@ void process_commands(void)
         // Rx Recover Post-Eject Filament X CMD Received
         recover_after_eject();
         txPayload(OK);
+    } else if (tData1 == 'K') {
+        if (tData2 < EXTRUDERS) { // Kx: cut filament
+            mmctl_cut_filament();
+            txPayload(OK);
+        }
     }
 }
 

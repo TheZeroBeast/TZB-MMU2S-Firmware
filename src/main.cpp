@@ -283,8 +283,9 @@ void process_commands(void)
         recover_after_eject();
         txPayload(OK);
     } else if (tData1 == 'K') {
-        if (tData2 < EXTRUDERS) { // Kx: cut filament
-            mmctl_cut_filament();
+        // Kx Cut filament
+        if (tData2 < EXTRUDERS) {
+            mmctl_cut_filament(tData2);
             txPayload(OK);
         }
     }

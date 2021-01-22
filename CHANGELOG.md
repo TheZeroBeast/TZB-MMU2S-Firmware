@@ -2,7 +2,12 @@ Changelog of MMU2S Firmware
 =============================
 # v3.2.0 RMM
 * Pulled Printer Code upstream to 3.9.3
-* Added SE_HT Mosquito variant
+* MMU2S Cutter implemented and tested with stock blade location #187
+* Increased MAX_TEMP for all SE HT variants
+* Fixed single print regression issue #192
+* Implemented MMU2S retry #193
+* Variant "MK3S Bondtech Mosquito SE HT Thermistor" added #189
+* MMU2S Code re-organisation
 
 # v3.1.0 RMM
 * Pulled Printer Code upstream to 3.9.2

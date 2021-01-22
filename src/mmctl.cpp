@@ -447,8 +447,8 @@ void set_sel_toLast_positions(uint8_t _next_extruder)
 */
 void mmctl_cut_filament(uint8_t _next_extruder)
 {
-    const int pulCutStepsPre = 700;
-    const int pulCutStepsPost = -150;
+    const int pulCutStepsPre = 500;
+    const int pulCutStepsPost = -200;
 
     previous_extruder = active_extruder;
     active_extruder = _next_extruder;

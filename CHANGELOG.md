@@ -8,6 +8,8 @@ Changelog of MMU2S Firmware
 * Implemented MMU2S retry #193
 * Variant "MK3S Bondtech Mosquito SE HT Thermistor" added #189
 * MMU2S Code re-organisation
+----------------------------
+* Added variant for gizzburn [#195](https://github.com/TheZeroBeast/TZB-MMU2S-Firmware/issues/195)
 
 # v3.1.0 RMM
 * Pulled Printer Code upstream to 3.9.2

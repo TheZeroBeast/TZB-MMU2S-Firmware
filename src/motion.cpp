@@ -32,7 +32,11 @@ int filament_lookup_table[9][3] =
 const uint8_t IDLER_PARKING_STEPS = (355 / 2) + 40;      // 217
 const uint16_t EJECT_PULLEY_STEPS = 2000;
 
+#ifdef doublecutter
+const int selectorStepPositionsFromHome[EXTRUDERS+2] = {-3178, -2479, -1782, -1085, -387, -27, 0} ;
+#else
 const int selectorStepPositionsFromHome[EXTRUDERS+2] = {-3700, -3002, -2305, -1607, -910, -100, 0};
+#endif // doublecutter
 const int idlerStepPositionsFromHome[EXTRUDERS+1] = {-130, -485, -840, -1195, -1550, 0};
 
 uint8_t selSGFailCount = 0;

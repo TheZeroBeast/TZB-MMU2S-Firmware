@@ -21,9 +21,6 @@ This is configured to work directly with **MMU2S** with matching **MK3S** FW at 
 https://github.com/TheZeroBeast/TZB-MK3S-Firmware
 ### PlatformIO
 Download, open in PlatformIO
-Follow these steps to install EINSY board
-https://community.platformio.org/t/error-when-building-latest-3d-printer-firmware/9506/2
-Build.
 The HEX which is placed within the .pio root folder still requires the addition of the **; device = mm-control** line as bellow.
 
 ### Arduino

@@ -2,7 +2,7 @@ Changelog of MMU2S Firmware
 =============================
 # v3.3.0 RMM
 * Pulled Printer Code upstream to 3.10.0
-* Implemented BLTouch support for MK3S
+* Implemented BLTouch support for MK3S and created and added extruder hardware to support this.
 * Updated custom variant of MMU2S code for @gizzburn(and others) on issue #210 - double selector blades
 * Fixed issue Error on failure recovery #205
 * Updated readme to reflect new printer FW build environment changes

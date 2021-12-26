@@ -1,5 +1,9 @@
 Changelog of MMU2S Firmware
 =============================
+# v4.0.1 RMM
+* Pulled Printer Code upstream to 3.10.1
+* Minimal BLTouch refinements for MK3S printers
+
 # v3.3.0 RMM
 * Pulled Printer Code upstream to 3.10.0
 * Implemented BLTouch support for MK3S and created and added extruder hardware to support this.

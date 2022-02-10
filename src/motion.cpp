@@ -194,7 +194,6 @@ MotReturn homeIdlerSmooth(bool toLastFilament)
  *   in homing commands, to prevent endless loops and stack overflow.
  * @return
  */
-// TODO 3: compensate delay for computation time, to get accurate speeds
 MotReturn moveSmooth(uint8_t axis, int steps, int speed, bool rehomeOnFail,
                      bool withStallDetection, float acc,
                      bool withFindaDetection, bool withIR_SENSORDetection)

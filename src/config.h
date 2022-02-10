@@ -2,8 +2,8 @@
 
 #include "config_tzb.h"
 
-#define FW_VERSION  401 // example: 103 means version 1.0.3
-#define FW_BUILDNR  376 // number of commits in 'master'
+#define FW_VERSION  402 // example: 103 means version 1.0.3
+#define FW_BUILDNR  377 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 
@@ -68,7 +68,7 @@
 #define CURRENT_HOLDING_NORMAL_LOADING  { 1,  7, 40}
 #define CURRENT_RUNNING_STEALTH         {35, 35, 40}
 #define CURRENT_RUNNING_NORMAL          {30, 35, 40}
-#define CURRENT_HOMING                  { 1, 35, 30}
+#define CURRENT_HOMING                  { 1, 35, 40}
 
 // speeds and accelerations
 #define MAX_SPEED_SEL_DEF_NORMAL  6000 // micro steps
@@ -138,7 +138,7 @@
 // NOTE: Stealth Mode cuts MAX PUL SPEED.
 // Default
 #define TYPE_0_MAX_SPPED_PUL                  4000  //  S/S
-#define TYPE_0_ACC_FEED_PUL                   3000  //  S/S/S
+#define TYPE_0_ACC_FEED_PUL                   5000  //  S/S/S
 #define TYPE_0_FILAMENT_PARKING_STEPS         -670  //  STEPS
 #define TYPE_0_FSensor_Sense_STEPS            1500  //  STEPS
 #define TYPE_0_FEED_SPEED_PUL                  760  //  S/S

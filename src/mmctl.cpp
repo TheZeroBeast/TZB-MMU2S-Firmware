@@ -39,6 +39,9 @@ bool feed_filament(void)
     
             if (moveSmooth(AX_PUL, 4000, filament_lookup_table[5][filament_type[active_extruder]], false, true, GLOBAL_ACC, true) == MR_Success) {
                 delay(10);
+                moveSmooth(AX_PUL, 500, filament_lookup_table[5][filament_type[active_extruder]], false, false, GLOBAL_ACC);
+                moveSmooth(AX_PUL, -500, filament_lookup_table[5][filament_type[active_extruder]], false, true, GLOBAL_ACC, true);
+                delay(10);
                 moveSmooth(AX_PUL, filament_lookup_table[3][filament_type[active_extruder]], filament_lookup_table[5][filament_type[active_extruder]], false, false, GLOBAL_ACC);
                 shr16_clr_led();
                 shr16_set_led(1 << 2 * (4 - active_extruder));
@@ -178,9 +181,9 @@ void load_filament_withSensor(uint16_t setupBowLen)
                 false, false, filament_lookup_table[1][filament_type[active_extruder]]); // Load filament down to MK3-FSensor
                 _retry = true;
             } else {
-                moveSmooth(AX_PUL, 500, filament_lookup_table[5][filament_type[active_extruder]],
-                    false, false); // Go 500 steps more to get past FINDA before ramping.
-                moveSmooth(AX_PUL, BOWDEN_LENGTH - 500, filament_lookup_table[0][filament_type[active_extruder]],
+                moveSmooth(AX_PUL, 1000, filament_lookup_table[5][filament_type[active_extruder]],
+                    false, false); // Go 1000 steps more to get past FINDA before ramping.
+                moveSmooth(AX_PUL, BOWDEN_LENGTH - 1000, filament_lookup_table[0][filament_type[active_extruder]],
                     false, false, filament_lookup_table[1][filament_type[active_extruder]]);      // Load filament down to near MK3-FSensor
                 txPayload((unsigned char*)"IRSEN");
                 IR_SENSOR   = false;
@@ -221,15 +224,16 @@ void load_filament_withSensor(uint16_t setupBowLen)
 void unload_filament_withSensor(uint8_t extruder)
 {
     int unloadFINDACheckSteps = -3000;
+    engage_filament_pulley(true); // get in contact with filament
+    uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
+    uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
+    unsigned char txUFR[5] = {'U', mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
+    txPayload(txUFR);
+    delay(40);
+    moveSmooth(AX_PUL, -(30*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
+                false, false, GLOBAL_ACC);
+
     if (isFilamentLoaded()) {
-        engage_filament_pulley(true); // get in contact with filament
-        uint8_t mmPerSecSpeedUpper = (0xFF & ((filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio) >> 8));
-        uint8_t mmPerSecSpeedLower = (0xFF & (filament_lookup_table[8][filament_type[extruder]] / AX_PUL_STEP_MM_Ratio));
-        unsigned char txUFR[5] = {'U', mmPerSecSpeedUpper, mmPerSecSpeedLower, BLK, BLK};
-        txPayload(txUFR);
-        delay(40);
-        moveSmooth(AX_PUL, -(20*AX_PUL_STEP_MM_Ratio), filament_lookup_table[8][filament_type[extruder]],
-                   false, false, GLOBAL_ACC);
         if (moveSmooth(AX_PUL, ((BOWDEN_LENGTH -(20*AX_PUL_STEP_MM_Ratio)) * -1),
                    filament_lookup_table[0][filament_type[extruder]], false, false,
                    filament_lookup_table[1][filament_type[extruder]], true) == MR_Success) goto loop;
@@ -245,6 +249,12 @@ void unload_filament_withSensor(uint8_t extruder)
             else fixTheProblem();
             homedOnUnload = true;
         }
+    }
+    else
+    {
+        txPayload((unsigned char*)"ZU---"); // Report Unloading failed to MK3
+        if (extruder != active_extruder) fixTheProblem(true);
+        else fixTheProblem();
     }
     shr16_clr_ena(AX_PUL);
     engage_filament_pulley(false);

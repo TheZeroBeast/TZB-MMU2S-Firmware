@@ -283,10 +283,16 @@ void process_commands(void)
         recover_after_eject();
         txPayload(OK);
     } else if (tData1 == 'K') {
-        // Kx Cut filament
-        if (tData2 < EXTRUDERS) {
-            mmctl_cut_filament(tData2);
-            txPayload(OK);
+        if (isFilamentLoaded()) {
+            txPayload((unsigned char*)"Z1---");
+            delay(1500);
+            txPayload((unsigned char*)"ZZZ--");
+        } else {
+            // Kx Cut filament
+            if (tData2 < EXTRUDERS) {
+                mmctl_cut_filament(tData2);
+                txPayload(OK);
+            }
         }
     }
 }

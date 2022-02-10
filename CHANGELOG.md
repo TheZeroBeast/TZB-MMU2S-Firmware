@@ -1,5 +1,10 @@
 Changelog of MMU2S Firmware
 =============================
+# v4.0.2 RMM
+* Idler home current increased
+* Pulley acceleration increased for normal filament type
+* Fixed #223 with reboot recovery implementation and fixed unload bug that failed in some cases
+
 # v4.0.1 RMM
 * Pulled Printer Code upstream to 3.10.1
 * Minimal BLTouch refinements for MK3S printers

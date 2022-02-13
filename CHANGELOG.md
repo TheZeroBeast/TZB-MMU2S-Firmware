@@ -4,6 +4,10 @@ Changelog of MMU2S Firmware
 * Idler home current increased
 * Pulley acceleration increased for normal filament type
 * Fixed #223 with reboot recovery implementation and fixed unload bug that failed in some cases
+* #220 fixed, printer now heats, unloads and cuts active filament. Other filaments can then be selected for cut
+* #217 & #219 Issue identified with autodeplete system and fixed that most likely caused this issues
+* #197 implemented new variant for MK3S Bear, not tested by applicant due to lack of comunication
+* MMU Selector made dual blade by default, new models updated [here](https://www.prusaprinters.org/prints/133891-mmu2s-tzb2-dual-blade-filament-path-refinement-mod)
 
 # v4.0.1 RMM
 * Pulled Printer Code upstream to 3.10.1

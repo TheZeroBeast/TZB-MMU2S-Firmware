@@ -283,11 +283,7 @@ void process_commands(void)
         recover_after_eject();
         txPayload(OK);
     } else if (tData1 == 'K') {
-        if (isFilamentLoaded()) {
-            txPayload((unsigned char*)"Z1---");
-            delay(1500);
-            txPayload((unsigned char*)"ZZZ--");
-        } else {
+        if (!isFilamentLoaded()) {
             // Kx Cut filament
             if (tData2 < EXTRUDERS) {
                 mmctl_cut_filament(tData2);

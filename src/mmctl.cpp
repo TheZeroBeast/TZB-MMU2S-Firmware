@@ -431,6 +431,7 @@ bool setIDL2pos(uint8_t _next_extruder)
 bool setSEL2pos(uint8_t _next_extruder)
 {
     bool _return = false;
+    if (_next_extruder > 6) _next_extruder = 6;
     int _selector_steps = (selectorStepPositionsFromHome[_next_extruder] - selectorStepPositionsFromHome[activeSelPos]);
     if (move_selector(_selector_steps)) { activeSelPos = _next_extruder; _return = true; }
     return _return;
@@ -457,19 +458,22 @@ void set_sel_toLast_positions(uint8_t _next_extruder)
 */
 void mmctl_cut_filament(uint8_t _next_extruder)
 {
-    const int pulCutStepsPre = 500;
-    const int pulCutStepsPost = -200;
+    const int pulCutStepsPre = 300;
+    const int pulCutStepsPost = -100;
+    uint8_t cut_offset = 0;
 
     previous_extruder = active_extruder;
     active_extruder = _next_extruder;
     if (!isHomed) home();
     setIDL2pos(_next_extruder);
-    setSEL2pos(_next_extruder + 1);
+    if ((_next_extruder + 2) > 6) cut_offset = 1;
+    else cut_offset = 2;
+    setSEL2pos(_next_extruder + cut_offset);
     engage_filament_pulley(true);
     if (!(tmc2130_mode == NORMAL_MODE)) tmc2130_init(NORMAL_MODE);                  // Set normal mode for cut
     moveSmooth(AX_PUL, pulCutStepsPre, filament_lookup_table[5][filament_type[_next_extruder]], 
     false, false, GLOBAL_ACC_DEF_NORMAL);                                           // Set filament for the chop :)
-    int _selector_steps = (selectorStepPositionsFromHome[activeSelPos - 1] - selectorStepPositionsFromHome[activeSelPos]);
+    int _selector_steps = (selectorStepPositionsFromHome[activeSelPos - cut_offset] - selectorStepPositionsFromHome[activeSelPos]);
     moveSmooth(AX_SEL, _selector_steps, filament_lookup_table[0][filament_type[_next_extruder]],
     false, false, GLOBAL_ACC_DEF_NORMAL);                                           // The CHOP!!
     moveSmooth(AX_PUL, pulCutStepsPost, filament_lookup_table[5][filament_type[_next_extruder]], 

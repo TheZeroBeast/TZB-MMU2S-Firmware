@@ -3,7 +3,7 @@
 #include "config_tzb.h"
 
 #define FW_VERSION  402 // example: 103 means version 1.0.3
-#define FW_BUILDNR  379 // number of commits in 'master'
+#define FW_BUILDNR  380 // number of commits in 'master'
 
 #define WAKE_TIMER            300000        // 5m
 

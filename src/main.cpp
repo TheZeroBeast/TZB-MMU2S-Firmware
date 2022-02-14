@@ -43,6 +43,9 @@ void setup()
     startWakeTime = millis();
     
     led_blink(1);
+    
+    Serial.begin(UART0_BDR, SERIAL_8N2); //serial0 - USB
+    
     //Setup USART1 Interrupt Registers
     UCSR1A = (0 << U2X1); // baudrate multiplier
     UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (0 << UCSZ12);   // Turn on the transmission and reception circuitry
